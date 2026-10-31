@@ -1,0 +1,1008 @@
+<template>
+	<view class="login" :style="{ paddingTop: safeTop + 'px' }">
+		<view class="login__glow login__glow--pink" />
+		<view class="login__glow login__glow--core" />
+
+		<view class="login__brand" @click="openHome">
+			<image class="login__brand-logo" src="/static/brand-logo.svg" mode="aspectFit" />
+		</view>
+
+		<scroll-view class="login__scroll" scroll-y>
+			<view class="login__content">
+				<view class="login__card">
+					<view class="login__shimmer login__shimmer--top" />
+					<button class="login__dev-entry" :class="{ 'login__dev-entry--active': devEnabled }" @click="onDevTap">{{ DEV_ICON }}</button>
+
+					<view class="login__body">
+						<view class="login__titles">
+							<text class="login__subtitle">欢迎体验</text>
+							<image class="login__title-logo" src="/static/logo.png" mode="aspectFit" />
+							<text class="login__tagline">EASEMOB IM DEMO · FOR VUE</text>
+						</view>
+
+						<view v-if="devEnabled" class="login__dev-config">
+							<view class="login__dev-divider">
+								<view class="login__dev-line" />
+								<text class="login__dev-divider-text">开发者配置</text>
+								<view class="login__dev-line" />
+							</view>
+
+							<view class="login__dev-row">
+								<text class="login__dev-row-label">持久化配置</text>
+								<view class="login__switch" :class="{ 'login__switch--active': persistEnabled }" @click="onPersistToggle">
+									<view class="login__switch-dot" :class="{ 'login__switch-dot--active': persistEnabled }" />
+								</view>
+							</view>
+
+							<view class="login__dev-row">
+								<text class="login__dev-row-label">使用自定义 AppKey</text>
+							</view>
+
+							<view class="login__dev-field">
+								<text class="login__dev-label">AppKey</text>
+								<input
+									class="login__input"
+									:class="{ 'login__input--focused': focused === 'devAppKey' }"
+									v-model="devAppKey"
+									placeholder="xxxx#xxxx"
+									placeholder-style="color: #b0bec5"
+									cursor-color="#009eff"
+									@focus="onFocus('devAppKey')"
+									@blur="onBlur"
+								/>
+							</view>
+
+							<view class="login__dev-row">
+								<text class="login__dev-row-label">使用私有服务器</text>
+								<view class="login__switch" :class="{ 'login__switch--active': usePrivateServer }" @click="onPrivateServerToggle">
+									<view class="login__switch-dot" :class="{ 'login__switch-dot--active': usePrivateServer }" />
+								</view>
+							</view>
+
+							<template v-if="usePrivateServer">
+								<view class="login__dev-field">
+									<text class="login__dev-label">IM 服务器地址</text>
+									<input
+										class="login__input"
+										:class="{ 'login__input--focused': focused === 'devIm' }"
+										v-model="devImServer"
+										placeholder="im-api-v2.easemob.com"
+										placeholder-style="color: #b0bec5"
+										cursor-color="#009eff"
+										@focus="onFocus('devIm')"
+										@blur="onBlur"
+									/>
+								</view>
+								<view class="login__dev-field">
+									<text class="login__dev-label">REST 服务器地址</text>
+									<input
+										class="login__input"
+										:class="{ 'login__input--focused': focused === 'devRest' }"
+										v-model="devRestServer"
+										placeholder="a1.easemob.com"
+										placeholder-style="color: #b0bec5"
+										cursor-color="#009eff"
+										@focus="onFocus('devRest')"
+										@blur="onBlur"
+									/>
+								</view>
+							</template>
+
+							<view class="login__dev-actions">
+								<button class="login__dev-save" :class="{ 'login__dev-save--success': devSaveState === 'success', 'login__dev-save--error': devSaveState === 'error' }" @click="onDevSave">
+									{{ devSaveText }}
+								</button>
+								<button class="login__dev-exit" @click="onDevExit">退出</button>
+							</view>
+
+							<view class="login__dev-divider login__dev-divider--light">
+								<view class="login__dev-line login__dev-line--light" />
+								<text class="login__dev-divider-text login__dev-divider-text--light">登录</text>
+								<view class="login__dev-line login__dev-line--light" />
+							</view>
+						</view>
+
+						<view class="login__form">
+							<template v-if="devEnabled">
+								<input
+									class="login__input login__input--standalone"
+									:class="{ 'login__input--focused': focused === 'userId' }"
+									v-model="userId"
+									placeholder="请输入 userId"
+									placeholder-style="color: #b0bec5"
+									cursor-color="#009eff"
+									@focus="onFocus('userId')"
+									@blur="onBlur"
+								/>
+								<input
+									class="login__input login__input--standalone"
+									:class="{ 'login__input--focused': focused === 'token' }"
+									v-model="token"
+									placeholder="请输入 token"
+									placeholder-style="color: #b0bec5"
+									cursor-color="#009eff"
+									@focus="onFocus('token')"
+									@blur="onBlur"
+								/>
+							</template>
+							<template v-else>
+								<view class="login__phone" :class="{ 'login__phone--focused': focused === 'phone' }">
+									<text class="login__phone-prefix">+86</text>
+									<view class="login__phone-divider" />
+									<input
+										class="login__phone-input"
+										v-model="phone"
+										type="tel"
+										placeholder="请输入手机号"
+										placeholder-style="color: #b0bec5"
+										cursor-color="#009eff"
+										maxlength="11"
+										@focus="onFocus('phone')"
+										@blur="onBlur"
+									/>
+								</view>
+
+								<view class="login__sms-row">
+									<view class="login__sms-input-wrap" :class="{ 'login__sms-input-wrap--focused': focused === 'sms' }">
+										<input
+											class="login__sms-input"
+											v-model="smsCode"
+											type="text"
+											inputmode="numeric"
+											placeholder="短信验证码"
+											placeholder-style="color: #b0bec5"
+											cursor-color="#009eff"
+											maxlength="6"
+											@focus="onFocus('sms')"
+											@blur="onBlur"
+										/>
+									</view>
+									<button
+										class="login__sms-btn"
+										:class="{ 'login__sms-btn--disabled': !canSendSms }"
+										:disabled="!canSendSms"
+										@click="onGetSms"
+									>{{ smsButtonText }}</button>
+								</view>
+							</template>
+
+							<text v-if="errorText !== ''" class="login__error">{{ errorText }}</text>
+							<text v-if="noticeText !== ''" class="login__notice">{{ noticeText }}</text>
+
+							<button class="login__submit" :class="{ 'login__submit--busy': loginLoading }" :disabled="loginLoading" @click="onLogin">
+								{{ loginLoading ? '登录中...' : '立即登录' }}
+							</button>
+
+							<view v-if="!devEnabled" class="login__terms">
+								<button class="login__checkbox" :class="{ 'login__checkbox--checked': agreed }" @click="toggleAgreement">
+									<text v-if="agreed" class="login__checkbox-mark">✓</text>
+								</button>
+								<text class="login__terms-text">我已阅读并同意环信<text class="login__terms-link" @click="openTerms">服务条款</text>和<text class="login__terms-link" @click="openPrivacy">隐私政策</text></text>
+							</view>
+						</view>
+					</view>
+					<view class="login__shimmer login__shimmer--bottom" />
+				</view>
+			</view>
+		</scroll-view>
+
+		<view class="login__footer" :style="{ paddingBottom: (24 + safeBottom) + 'px' }">
+			<text class="login__footer-copyright">© 2026 环信</text>
+			<text class="login__footer-version">SDK版本：5.1.3  UIKit版本：VUE 3.11.0  Demo版本：0.6.4</text>
+		</view>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { loginByPhone, mapPhoneLoginError } from '@/common/auth-api'
+	import { DevConfig, getDevConfig, getEffectiveAppKey, getPersistEnabled, setDevConfig, setPersistEnabled } from '@/common/dev-config'
+
+	const DEV_ICON = '</>'
+	const windowInfo = uni.getWindowInfo()
+	const safeTop = windowInfo.safeAreaInsets?.top ?? 0
+	const safeBottom = windowInfo.safeAreaInsets?.bottom ?? 0
+
+	const phone = ref('')
+	const smsCode = ref('')
+	const agreed = ref(false)
+	const focused = ref('')
+	const loginLoading = ref(false)
+	const errorText = ref('')
+	const noticeText = ref('')
+
+	const userId = ref('')
+	const token = ref('')
+	const devEnabled = ref(false)
+	const devTapCount = ref(0)
+
+	const persistEnabled = ref(true)
+	const usePrivateServer = ref(false)
+	const devAppKey = ref('')
+	const devImServer = ref('')
+	const devRestServer = ref('')
+	const devSaveState = ref('idle')
+	const devSaveText = computed((): string => {
+		if (devSaveState.value === 'success') return '✓ 已保存'
+		if (devSaveState.value === 'error') return '请检查必填项'
+		return '保存配置'
+	})
+
+	const smsCountdown = ref(0)
+	const smsLoading = ref(false)
+	let smsTimer: number | null = null
+	let devResetTimer: number | null = null
+	let devSaveTimer: number | null = null
+
+	const canSendSms = computed((): boolean => phone.value.length === 11 && smsCountdown.value === 0 && !smsLoading.value)
+	const smsButtonText = computed((): string => {
+		if (smsLoading.value) return '发送中...'
+		if (smsCountdown.value > 0) return `${smsCountdown.value}s`
+		return '获取验证码'
+	})
+
+	onMounted(() => {
+		const config = getDevConfig()
+		devAppKey.value = config.appKey
+		devImServer.value = config.imServer
+		devRestServer.value = config.restServer
+		usePrivateServer.value = config.usePrivateServer
+		persistEnabled.value = getPersistEnabled()
+		userId.value = config.devUserId
+		token.value = config.devToken
+	})
+
+	onUnmounted(() => {
+		clearSmsTimer()
+		clearDevResetTimer()
+		clearDevSaveTimer()
+	})
+
+	function onFocus(field: string) {
+		focused.value = field
+	}
+
+	function onBlur() {
+		focused.value = ''
+	}
+
+	function clearSmsTimer() {
+		if (smsTimer != null) {
+			clearInterval(smsTimer)
+			smsTimer = null
+		}
+	}
+
+	function startSmsCountdown() {
+		clearSmsTimer()
+		smsCountdown.value = 60
+		smsTimer = setInterval(() => {
+			smsCountdown.value -= 1
+			if (smsCountdown.value <= 0) {
+				clearSmsTimer()
+				smsCountdown.value = 0
+			}
+		}, 1000)
+	}
+
+	function clearDevResetTimer() {
+		if (devResetTimer != null) {
+			clearTimeout(devResetTimer)
+			devResetTimer = null
+		}
+	}
+
+	function clearDevSaveTimer() {
+		if (devSaveTimer != null) {
+			clearTimeout(devSaveTimer)
+			devSaveTimer = null
+		}
+	}
+
+	function isValidAppKey(value: string): boolean {
+		return /^[^#\s]+#[^#\s]+$/.test(value.trim())
+	}
+
+	function onPersistToggle() {
+		persistEnabled.value = !persistEnabled.value
+		setPersistEnabled(persistEnabled.value)
+	}
+
+	function onPrivateServerToggle() {
+		usePrivateServer.value = !usePrivateServer.value
+	}
+
+	function onDevSave() {
+		const appKey = devAppKey.value.trim()
+		const imServer = devImServer.value.trim()
+		const restServer = devRestServer.value.trim()
+		if (!isValidAppKey(appKey)) {
+			devSaveState.value = 'error'
+		} else if (usePrivateServer.value && (imServer === '' || restServer === '')) {
+			devSaveState.value = 'error'
+		} else {
+			devSaveState.value = 'success'
+			const existing = getDevConfig()
+			setDevConfig(new DevConfig(appKey, imServer, restServer, usePrivateServer.value, existing.devUserId, existing.devToken))
+			uni.showToast({ title: '配置已保存', icon: 'none' })
+		}
+		clearDevSaveTimer()
+		devSaveTimer = setTimeout(() => {
+			devSaveState.value = 'idle'
+			devSaveTimer = null
+		}, devSaveState.value === 'success' ? 2500 : 2000)
+	}
+
+	function onDevExit() {
+		devEnabled.value = false
+		devTapCount.value = 0
+		clearDevResetTimer()
+		clearDevSaveTimer()
+		devSaveState.value = 'idle'
+		errorText.value = ''
+		noticeText.value = ''
+	}
+
+	function onDevTap() {
+		if (devEnabled.value) {
+			devEnabled.value = false
+			devTapCount.value = 0
+			errorText.value = ''
+			noticeText.value = ''
+			return
+		}
+		devTapCount.value += 1
+		if (devTapCount.value >= 7) {
+			devEnabled.value = true
+			devTapCount.value = 0
+			clearDevResetTimer()
+			errorText.value = ''
+			noticeText.value = ''
+			uni.showToast({ title: '已进入开发者模式', icon: 'none' })
+			return
+		}
+		clearDevResetTimer()
+		devResetTimer = setTimeout(() => {
+			devTapCount.value = 0
+			devResetTimer = null
+		}, 3000)
+		if (devTapCount.value > 4) {
+			uni.showToast({ title: `再点 ${7 - devTapCount.value} 次进入开发者模式`, icon: 'none' })
+		}
+	}
+
+	function toggleAgreement() {
+		agreed.value = !agreed.value
+		if (agreed.value && errorText.value === '请先同意环信服务条款和隐私政策') {
+			errorText.value = ''
+		}
+	}
+
+	function errorMessage(error: any): string {
+		if (error instanceof Error) return error.message
+		return '请求失败，请检查网络后重试'
+	}
+
+	function validPhone(): boolean {
+		return /^1[3-9]\d{9}$/.test(phone.value)
+	}
+
+	async function onGetSms() {
+		errorText.value = ''
+		noticeText.value = ''
+		if (!validPhone()) {
+			errorText.value = '请输入正确的手机号码'
+			return
+		}
+		if (!canSendSms.value) return
+		smsLoading.value = true
+		try {
+			await new Promise<void>((resolve) => {
+				setTimeout(() => resolve(), 500)
+			})
+			startSmsCountdown()
+			noticeText.value = '开发环境模拟发送成功，已启动 60 秒倒计时'
+		} finally {
+			smsLoading.value = false
+		}
+	}
+
+	async function onLogin() {
+		if (loginLoading.value) return
+		errorText.value = ''
+		noticeText.value = ''
+		if (devEnabled.value) {
+			if (userId.value.trim() === '' || token.value.trim() === '') {
+				errorText.value = '请输入 userId 和 token'
+				return
+			}
+			const config = getDevConfig()
+			setDevConfig(new DevConfig(config.appKey, config.imServer, config.restServer, config.usePrivateServer, userId.value.trim(), token.value.trim()))
+			// TODO: 后续通过 UIKit skills 在这里接入初始化和登录（appKey 使用 getEffectiveAppKey()）。
+			noticeText.value = '登录参数已就绪，待接入 UIKit 登录'
+			return
+		}
+		if (!agreed.value) {
+			errorText.value = '请先同意环信服务条款和隐私政策'
+			return
+		}
+		if (!validPhone()) {
+			errorText.value = '请输入正确的手机号码'
+			return
+		}
+		if (smsCode.value.trim() === '') {
+			errorText.value = '验证码不能为空'
+			return
+		}
+		loginLoading.value = true
+		try {
+			const result = await loginByPhone(phone.value, smsCode.value)
+			userId.value = result.chatUserName
+			token.value = result.token
+			// TODO: 后续通过 UIKit skills 在这里接入初始化和登录。
+			noticeText.value = '账号凭证已获取，待接入 UIKit 登录'
+		} catch (error: any) {
+			errorText.value = mapPhoneLoginError(errorMessage(error), phone.value)
+		} finally {
+			loginLoading.value = false
+		}
+	}
+
+	function openPage(url: string, title: string) {
+		uni.navigateTo({ url: `/pages/webview/webview?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}` })
+	}
+
+	function openHome() {
+		openPage('https://www.easemob.com', '环信')
+	}
+
+	function openTerms() {
+		openPage('https://www.easemob.com/demo/agreement', '服务条款')
+	}
+
+	function openPrivacy() {
+		openPage('https://www.easemob.com/console/privacy', '隐私政策')
+	}
+</script>
+
+<style>
+	.login {
+		display: flex;
+		flex-direction: column;
+		position: relative;
+		height: 100%;
+		min-height: 100vh;
+		box-sizing: border-box;
+		padding-left: 24px;
+		padding-right: 24px;
+		background-color: #100c35;
+		background-image: linear-gradient(150deg, #100c35 0%, #1e1272 30%, #133080 60%, #0062c0 100%);
+	}
+
+	.login__glow {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+	}
+
+	.login__glow--pink {
+		background-image: linear-gradient(245deg, rgba(232, 92, 255, 0.52) 0%, rgba(196, 64, 255, 0.3) 12%, rgba(150, 40, 240, 0.1) 28%, rgba(150, 40, 240, 0) 46%);
+	}
+
+	.login__glow--core {
+		background-image: linear-gradient(225deg, rgba(255, 214, 255, 0.5) 0%, rgba(255, 120, 255, 0.3) 8%, rgba(220, 80, 255, 0.1) 18%, rgba(220, 80, 255, 0) 30%);
+	}
+
+	.login__brand {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-start;
+		height: 60px;
+		padding-top: 24px;
+		padding-left: 8px;
+		z-index: 10;
+	}
+
+	.login__brand-logo {
+		width: 220px;
+		height: 36px;
+	}
+
+	.login__scroll {
+		flex: 1;
+		height: 0;
+		z-index: 10;
+	}
+
+	.login__content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		min-height: 100%;
+		padding-top: 32px;
+		padding-bottom: 32px;
+	}
+
+	.login__card {
+		position: relative;
+		width: 100%;
+		max-width: 440px;
+		border-radius: 24px;
+		border-width: 1px;
+		border-style: solid;
+		border-color: rgba(255, 255, 255, 0.1);
+		background-color: rgba(12, 8, 40, 0.78);
+		overflow: hidden;
+	}
+
+	.login__shimmer {
+		width: 100%;
+		height: 1px;
+	}
+
+	.login__shimmer--top {
+		background-image: linear-gradient(90deg, rgba(0, 158, 255, 0) 0%, rgba(0, 158, 255, 0.8) 40%, rgba(108, 99, 255, 0.8) 60%, rgba(108, 99, 255, 0) 100%);
+	}
+
+	.login__shimmer--bottom {
+		background-image: linear-gradient(90deg, rgba(108, 99, 255, 0) 0%, rgba(108, 99, 255, 0.4) 50%, rgba(108, 99, 255, 0) 100%);
+	}
+
+	.login__dev-entry {
+		position: absolute;
+		top: 12px;
+		right: 16px;
+		width: 40px;
+		height: 28px;
+		padding: 0;
+		border-radius: 6px;
+		border-width: 1px;
+		border-style: solid;
+		border-color: transparent;
+		background-color: transparent;
+		color: rgba(255, 255, 255, 0.12);
+		font-size: 13px;
+		font-weight: 700;
+		line-height: 26px;
+		z-index: 5;
+	}
+
+	.login__dev-entry::after {
+		border-width: 0;
+	}
+
+	.login__dev-entry--active {
+		background-color: rgba(139, 92, 246, 0.1);
+		border-color: rgba(139, 92, 246, 0.25);
+		color: #a78bfa;
+	}
+
+	.login__body {
+		display: flex;
+		flex-direction: column;
+		padding: 36px 40px;
+	}
+
+	.login__titles {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 32px;
+	}
+
+	.login__subtitle {
+		font-size: 16px;
+		font-weight: 500;
+		color: rgba(255, 255, 255, 0.45);
+		letter-spacing: 0.6px;
+		margin-bottom: 4px;
+	}
+
+	.login__title-logo {
+		width: 100%;
+		height: 44px;
+	}
+
+	.login__tagline {
+		margin-top: 6px;
+		padding-top: 4px;
+		padding-bottom: 4px;
+		font-size: 12px;
+		font-weight: 500;
+		line-height: 18px;
+		color: rgba(255, 255, 255, 0.3);
+		letter-spacing: 4.8px;
+	}
+
+	.login__form {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.login__phone,
+	.login__sms-input-wrap {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		height: 50px;
+		border-radius: 8px;
+		border-width: 1.5px;
+		border-style: solid;
+		border-color: rgba(255, 255, 255, 0.1);
+		background-color: rgba(255, 255, 255, 0.06);
+		box-sizing: border-box;
+		overflow: hidden;
+	}
+
+	.login__phone--focused,
+	.login__sms-input-wrap--focused {
+		border-color: rgba(0, 158, 255, 0.7);
+	}
+
+	.login__phone-prefix {
+		padding-left: 16px;
+		font-size: 14px;
+		font-weight: 700;
+		color: #009eff;
+	}
+
+	.login__phone-divider {
+		width: 1px;
+		height: 16px;
+		margin-left: 8px;
+		margin-right: 8px;
+		background-color: rgba(255, 255, 255, 0.12);
+	}
+
+	.login__phone-input,
+	.login__sms-input {
+		flex: 1;
+		width: 0;
+		height: 47px;
+		padding: 0 14px 0 0;
+		background-color: transparent;
+		border-width: 0;
+		font-size: 14px;
+		font-weight: 500;
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.login__sms-input {
+		padding-left: 14px;
+	}
+
+	.login__sms-row {
+		display: flex;
+		flex-direction: row;
+		margin-top: 16px;
+	}
+
+	.login__sms-input-wrap {
+		flex: 1;
+	}
+
+	.login__sms-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		min-width: 116px;
+		height: 50px;
+		margin-left: 10px;
+		padding: 0 14px;
+		border-radius: 8px;
+		border-width: 1.5px;
+		border-style: solid;
+		border-color: transparent;
+		background-image: linear-gradient(135deg, #009eff 0%, #6c63ff 100%);
+		font-size: 14px;
+		font-weight: 700;
+		line-height: 47px;
+		color: #ffffff;
+	}
+
+	.login__sms-btn::after,
+	.login__submit::after,
+	.login__checkbox::after,
+	.login__dev-save::after,
+	.login__dev-exit::after {
+		border-width: 0;
+	}
+
+	.login__sms-btn.login__sms-btn--disabled {
+		background-image: none;
+		background-color: rgba(255, 255, 255, 0.06);
+		border-color: rgba(255, 255, 255, 0.08);
+		color: rgba(255, 255, 255, 0.25);
+	}
+
+	.login__input {
+		height: 50px;
+		padding: 0 14px;
+		border-radius: 8px;
+		border-width: 1.5px;
+		border-style: solid;
+		border-color: rgba(255, 255, 255, 0.1);
+		background-color: rgba(255, 255, 255, 0.06);
+		box-sizing: border-box;
+		font-size: 14px;
+		font-weight: 500;
+		color: rgba(255, 255, 255, 0.92);
+	}
+
+	.login__input--standalone {
+		margin-bottom: 16px;
+	}
+
+	.login__input--focused {
+		border-color: rgba(0, 158, 255, 0.7);
+	}
+
+	.login__dev-config {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 24px;
+	}
+
+	.login__dev-divider {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 16px;
+	}
+
+	.login__dev-line {
+		flex: 1;
+		height: 1px;
+		background-color: rgba(167, 139, 250, 0.15);
+	}
+
+	.login__dev-divider-text {
+		margin-left: 12px;
+		margin-right: 12px;
+		font-size: 10px;
+		line-height: 14px;
+		color: rgba(167, 139, 250, 0.5);
+		letter-spacing: 1.2px;
+	}
+
+	.login__dev-divider--light {
+		padding-top: 4px;
+	}
+
+	.login__dev-line--light {
+		background-color: rgba(255, 255, 255, 0.07);
+	}
+
+	.login__dev-divider-text--light {
+		color: rgba(255, 255, 255, 0.2);
+		letter-spacing: 1px;
+	}
+
+	.login__dev-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		padding-left: 2px;
+		padding-right: 2px;
+		margin-bottom: 16px;
+	}
+
+	.login__dev-row-label {
+		font-size: 13px;
+		line-height: 18px;
+		color: rgba(255, 255, 255, 0.55);
+	}
+
+	.login__switch {
+		position: relative;
+		width: 36px;
+		height: 20px;
+		border-radius: 10px;
+		background-color: rgba(255, 255, 255, 0.12);
+	}
+
+	.login__switch--active {
+		background-color: rgba(0, 158, 255, 0.85);
+	}
+
+	.login__switch-dot {
+		position: absolute;
+		top: 4px;
+		left: 4px;
+		width: 12px;
+		height: 12px;
+		border-radius: 6px;
+		background-color: #ffffff;
+		transition-property: transform;
+		transition-duration: 0.2s;
+	}
+
+	.login__switch-dot--active {
+		transform: translateX(12px);
+	}
+
+	.login__dev-field {
+		margin-bottom: 16px;
+	}
+
+	.login__dev-label {
+		margin-bottom: 4px;
+		padding-left: 2px;
+		font-size: 11px;
+		line-height: 16px;
+		color: rgba(255, 255, 255, 0.3);
+		letter-spacing: 0.44px;
+	}
+
+	.login__dev-actions {
+		display: flex;
+		flex-direction: row;
+		margin-bottom: 16px;
+	}
+
+	.login__dev-save {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		height: 44px;
+		margin-right: 10px;
+		padding: 0 16px;
+		border-radius: 8px;
+		border-width: 1.5px;
+		border-style: solid;
+		border-color: rgba(0, 0, 0, 0);
+		background-image: linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(109, 40, 217, 0.6));
+		font-size: 14px;
+		font-weight: 700;
+		line-height: 42px;
+		color: #ffffff;
+		letter-spacing: 1.12px;
+	}
+
+	.login__dev-save--success {
+		background-image: linear-gradient(135deg, #34d399, #059669);
+	}
+
+	.login__dev-save--error {
+		background-image: none;
+		background-color: rgba(239, 68, 68, 0.2);
+		border-color: rgba(239, 68, 68, 0.5);
+		color: rgba(239, 68, 68, 0.9);
+	}
+
+	.login__dev-exit {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		height: 44px;
+		padding: 0 18px;
+		border-radius: 8px;
+		border-width: 1.5px;
+		border-style: solid;
+		border-color: rgba(255, 255, 255, 0.1);
+		background-color: rgba(255, 255, 255, 0.05);
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 42px;
+		color: rgba(255, 255, 255, 0.4);
+		letter-spacing: 0.52px;
+	}
+
+	.login__error,
+	.login__notice {
+		margin-top: 12px;
+		font-size: 12px;
+		line-height: 18px;
+		color: rgba(239, 100, 100, 0.9);
+	}
+
+	.login__notice {
+		color: rgba(130, 220, 255, 0.9);
+	}
+
+	.login__submit {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 50px;
+		margin-top: 16px;
+		padding: 0 16px;
+		border-radius: 8px;
+		background-color: #009eff;
+		line-height: 50px;
+		font-size: 16px;
+		font-weight: 700;
+		color: #ffffff;
+		letter-spacing: 2px;
+	}
+
+	.login__submit--busy {
+		opacity: 0.6;
+	}
+
+	.login__terms {
+		display: flex;
+		flex-direction: row;
+		align-items: flex-start;
+		justify-content: center;
+		margin-top: 18px;
+	}
+
+	.login__checkbox {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
+		margin-top: 2px;
+		margin-right: 10px;
+		padding: 0;
+		border-radius: 4px;
+		border-width: 1.5px;
+		border-style: solid;
+		border-color: rgba(255, 255, 255, 0.24);
+		background-color: transparent;
+		line-height: 13px;
+	}
+
+	.login__checkbox--checked {
+		background-color: #009eff;
+		border-color: transparent;
+	}
+
+	.login__checkbox-mark {
+		font-size: 11px;
+		font-weight: 700;
+		color: #ffffff;
+	}
+
+	.login__terms-text {
+		flex: 1;
+		font-size: 11px;
+		line-height: 20px;
+		white-space: nowrap;
+		color: rgba(255, 255, 255, 0.35);
+	}
+
+	.login__terms-link {
+		font-size: 11px;
+		font-weight: 600;
+		color: #009eff;
+	}
+
+	.login__footer {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding-top: 16px;
+		z-index: 10;
+	}
+
+	.login__footer-copyright {
+		font-size: 14px;
+		line-height: 24px;
+		color: rgba(255, 255, 255, 0.35);
+	}
+
+	.login__footer-version {
+		max-width: 440px;
+		margin-top: 4px;
+		padding-left: 16px;
+		padding-right: 16px;
+		text-align: center;
+		font-size: 14px;
+		line-height: 24px;
+		color: rgba(255, 255, 255, 0.25);
+	}
+</style>

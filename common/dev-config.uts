@@ -1,0 +1,131 @@
+const DEV_CONFIG_KEY = 'easemob-demo-dev-config'
+const DEV_PERSIST_KEY = 'easemob-demo-dev-persist'
+
+export class DevConfig {
+	appKey: string
+	imServer: string
+	restServer: string
+	usePrivateServer: boolean
+	devUserId: string
+	devToken: string
+
+	constructor(appKey: string = '', imServer: string = '', restServer: string = '', usePrivateServer: boolean = false, devUserId: string = '', devToken: string = '') {
+		this.appKey = appKey
+		this.imServer = imServer
+		this.restServer = restServer
+		this.usePrivateServer = usePrivateServer
+		this.devUserId = devUserId
+		this.devToken = devToken
+	}
+}
+
+// uni-app x 无 sessionStorage：非持久化配置保存在内存中，应用重启即失
+let sessionRaw: string | null = null
+
+function emptyConfig(): DevConfig {
+	return new DevConfig()
+}
+
+function normalizeConfig(parsed: Record<string, any> | null): DevConfig {
+	const config = emptyConfig()
+	if (parsed == null) {
+		return config
+	}
+	const appKey = parsed['appKey']
+	if (typeof appKey === 'string') {
+		config.appKey = appKey
+	}
+	const imServer = parsed['imServer']
+	if (typeof imServer === 'string') {
+		config.imServer = imServer
+	}
+	const restServer = parsed['restServer']
+	if (typeof restServer === 'string') {
+		config.restServer = restServer
+	}
+	const usePrivateServer = parsed['usePrivateServer']
+	if (typeof usePrivateServer === 'boolean') {
+		config.usePrivateServer = usePrivateServer
+	}
+	const devUserId = parsed['devUserId']
+	if (typeof devUserId === 'string') {
+		config.devUserId = devUserId
+	}
+	const devToken = parsed['devToken']
+	if (typeof devToken === 'string') {
+		config.devToken = devToken
+	}
+	return config
+}
+
+function readRaw(persist: boolean): string | null {
+	if (!persist) {
+		return sessionRaw
+	}
+	const raw = uni.getStorageSync(DEV_CONFIG_KEY)
+	if (typeof raw === 'string' && raw !== '') {
+		return raw
+	}
+	return null
+}
+
+function writeRaw(persist: boolean, raw: string | null) {
+	if (raw == null) {
+		return
+	}
+	if (persist) {
+		uni.setStorageSync(DEV_CONFIG_KEY, raw)
+	} else {
+		sessionRaw = raw
+	}
+}
+
+function clearRaw(persist: boolean) {
+	if (persist) {
+		uni.removeStorageSync(DEV_CONFIG_KEY)
+	} else {
+		sessionRaw = null
+	}
+}
+
+export function getPersistEnabled(): boolean {
+	const raw = uni.getStorageSync(DEV_PERSIST_KEY)
+	return raw !== 'false'
+}
+
+export function setPersistEnabled(persist: boolean) {
+	const prev = getPersistEnabled()
+	if (prev == persist) {
+		return
+	}
+	const raw = readRaw(prev)
+	clearRaw(prev)
+	writeRaw(persist, raw)
+	uni.setStorageSync(DEV_PERSIST_KEY, persist ? 'true' : 'false')
+}
+
+export function getDevConfig(): DevConfig {
+	const raw = readRaw(getPersistEnabled())
+	if (raw == null) {
+		return emptyConfig()
+	}
+	try {
+		const parsed = JSON.parse(raw) as Record<string, any> | null
+		return normalizeConfig(parsed)
+	} catch (e) {
+		return emptyConfig()
+	}
+}
+
+export function setDevConfig(config: DevConfig) {
+	const raw = JSON.stringify(config)
+	if (getPersistEnabled()) {
+		uni.setStorageSync(DEV_CONFIG_KEY, raw)
+	} else {
+		sessionRaw = raw
+	}
+}
+
+export function getEffectiveAppKey(): string {
+	return getDevConfig().appKey
+}
