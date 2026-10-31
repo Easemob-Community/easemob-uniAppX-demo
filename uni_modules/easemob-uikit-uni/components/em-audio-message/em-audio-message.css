@@ -1,0 +1,60 @@
+@import '../../libs/style/variables.css';
+@import '../../libs/style/bubble.css';
+
+/* 壳收口 .em-bubble（含 --self 底色覆写）；padding 走 token（宿主可调） */
+.em-audio-message {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-audio-bubble-padding-y) var(--em-audio-bubble-padding-x);
+}
+
+/* 播放态波形：对齐 vue voice-message__wave（3 根 2px 柱，圆角 1px，间距 2px）。
+   柱高由组件 JS 定时器逐帧写内联 style（蒸汽端不跑 @keyframes），这里只给静态尺寸 */
+.em-audio-message__wave {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 12px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.em-audio-message__wave-bar {
+  width: 2px;
+  border-radius: 1px;
+  background-color: var(--em-bubble-text-other);
+}
+
+.em-audio-message__wave-bar--self {
+  background-color: var(--em-bubble-text-self);
+}
+
+/* v-for 第 2/3 根与前一根的间距（BEM 修饰类，避免内联 margin） */
+.em-audio-message--wave-bar-gap {
+  margin-left: 2px;
+}
+
+/* 播放态整体压暗（对齐 vue voice-message__bubble--playing） */
+.em-audio-message--playing {
+  opacity: 0.85;
+}
+
+.em-audio-message__icon {
+  color: var(--em-bubble-text-other);
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.em-audio-message__icon--self {
+  color: var(--em-bubble-text-self);
+}
+
+.em-audio-message__duration {
+  font-size: var(--em-font-size-15);
+  color: var(--em-bubble-text-other);
+}
+
+.em-audio-message__duration--self {
+  color: var(--em-bubble-text-self);
+}

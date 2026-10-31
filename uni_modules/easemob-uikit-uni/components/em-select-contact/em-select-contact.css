@@ -1,0 +1,180 @@
+@import '../../libs/style/variables.css';
+
+.em-select-contact__sheet {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--em-bg-elevated);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+/* multiple 全屏形态（对齐 vue mobileFullscreen）：贴屏顶去圆角 */
+.em-select-contact__sheet--full {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.em-select-contact__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.em-select-contact__title {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  color: var(--em-text-primary);
+}
+
+.em-select-contact__close {
+  position: absolute;
+  right: var(--em-spacing-3);
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+}
+
+.em-select-contact__close-icon {
+  color: var(--em-text-tertiary);
+}
+
+.em-select-contact__list {
+  flex: 1;
+  height: 100%;
+}
+
+/* multiple：列表区 relative 容器供字母索引条 absolute 覆盖（同 em-contact-list-page__body 口径） */
+.em-select-contact__body {
+  flex: 1;
+  height: 0;
+  position: relative;
+}
+
+/* multiple：已选头像条（横向滚动，对齐 vue contact-transfer-modal__strip） */
+.em-select-contact__strip {
+  flex-shrink: 0;
+  min-height: 68px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+}
+
+.em-select-contact__strip-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-3) var(--em-spacing-4);
+}
+
+.em-select-contact__strip-item {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  margin-right: var(--em-spacing-3);
+  overflow: visible;
+}
+
+/* 右上角 × 角标（点头像任意处即移除）；根节点 overflow: visible 防裁切 */
+.em-select-contact__strip-remove {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: var(--em-text-tertiary);
+}
+
+.em-select-contact__strip-remove-icon {
+  color: var(--em-text-inverse);
+}
+
+.em-select-contact__strip-empty {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  color: var(--em-text-tertiary);
+}
+
+/* multiple：分组头（28px 高、11px/500、弱化灰，与 em-contact-list-page 分组头同口径）；
+   必须显式 flex-direction: row——uvue/mp 端 view 默认 flex-direction: column，
+   缺省时 align-items: center 会把字母水平居中（实测 mp 渲染成居中字母） */
+.em-select-contact__group-header {
+  height: 28px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 var(--em-spacing-4);
+  background-color: var(--em-bg-elevated);
+}
+
+.em-select-contact__group-header-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-text-tertiary);
+}
+
+/* multiple：checkbox 图形由 em-icon 承担（选中 filled/circle/checked，未选 circle/empty，对齐 vue EmCheckbox），
+   容器只做 20×20 占位与行内间距，不再画描边/底色，避免与字体图标叠加成双圈 */
+.em-select-contact__checkbox {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--em-spacing-3);
+  flex-shrink: 0;
+}
+
+/* 未选：弱化灰（vue --uikit-text-tertiary）；选中：主色（vue --uikit-primary-color）。
+   双类选择器压过 em-icon.css 的 `.em-icon { color: var(--em-icon-muted) }`（同单类时依赖样式注入顺序） */
+.em-select-contact__checkbox .em-select-contact__checkbox-icon {
+  color: var(--em-text-tertiary);
+}
+
+.em-select-contact__checkbox .em-select-contact__checkbox-icon--checked {
+  color: var(--em-primary-color);
+}
+
+.em-select-contact__row--disabled {
+  opacity: 0.4;
+}
+
+/* multiple：底部通栏确认按钮区（对齐 vue contact-transfer-modal__mobile-footer） */
+.em-select-contact__footer {
+  flex-shrink: 0;
+  padding: var(--em-spacing-2) var(--em-spacing-4) var(--em-spacing-3);
+}
+
+.em-select-contact__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-2) var(--em-spacing-4);
+}
+
+.em-select-contact__name-host {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--em-spacing-3);
+}
+
+.em-select-contact__name {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}

@@ -1,0 +1,102 @@
+@import '../../libs/style/variables.css';
+@import '../../libs/style/bubble.css';
+
+/* 壳底色收口 .em-bubble（含 --self 覆写）；圆角为文件卡专属 --em-file-card-radius，保留；
+   padding 与宽度上下限走 token（宿主可调） */
+.em-file-message {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: var(--em-file-card-min-width);
+  max-width: var(--em-file-card-max-width);
+  padding: var(--em-file-card-padding-y) var(--em-file-card-padding-x);
+  border-radius: var(--em-file-card-radius);
+}
+
+.em-file-message__icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--em-radius);
+  background-color: var(--em-file-icon-file);
+  margin-right: var(--em-spacing-3);
+  flex-shrink: 0;
+}
+
+.em-file-message__icon--pdf {
+  background-color: var(--em-file-icon-pdf);
+}
+
+.em-file-message__icon--xls {
+  background-color: var(--em-file-icon-xls);
+}
+
+.em-file-message__icon--doc {
+  background-color: var(--em-file-icon-doc);
+}
+
+.em-file-message__icon--ppt {
+  background-color: var(--em-file-icon-ppt);
+}
+
+.em-file-message__icon--md {
+  background-color: var(--em-file-icon-md);
+}
+
+.em-file-message__icon--img {
+  background-color: var(--em-file-icon-img);
+}
+
+.em-file-message__icon--video {
+  background-color: var(--em-file-icon-video);
+}
+
+.em-file-message__icon--audio {
+  background-color: var(--em-file-icon-audio);
+}
+
+/* 图标本体固定白色（token 注释既定口径） */
+.em-file-message__icon-glyph {
+  color: #ffffff;
+}
+
+.em-file-message__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.em-file-message__name {
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-bubble-text-other);
+}
+
+.em-file-message__name--self {
+  color: var(--em-bubble-text-self);
+}
+
+.em-file-message__size {
+  font-size: var(--em-font-size-11);
+  color: var(--em-text-tertiary);
+  margin-top: 2px;
+}
+
+.em-file-message__size--self {
+  color: var(--em-bubble-text-self-secondary);
+}
+
+/* 上传进度（file 气泡内，文件名/大小下方）：主题色强调发送中，完成即随状态清空 */
+.em-file-message__progress {
+  font-size: var(--em-font-size-11);
+  line-height: 14px;
+  margin-top: 2px;
+  color: var(--em-primary-color);
+}
+
+.em-file-message__progress--self {
+  color: var(--em-bubble-text-self-secondary);
+}

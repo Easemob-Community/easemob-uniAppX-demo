@@ -1,0 +1,40 @@
+@import '../../libs/style/variables.css';
+
+/* 容器 padding 对齐 vue 版 conversation-tabs（上 12 右 12 下 8 左 16，与列表项内容左缘对齐） */
+.em-conversation-tabs {
+  display: flex;
+  flex-direction: row;
+  padding: var(--em-spacing-3) var(--em-spacing-3) var(--em-spacing-2) var(--em-spacing-4);
+  white-space: nowrap;
+}
+
+.em-conversation-tabs__track {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+/* 胶囊：4px 12px、圆角 999、灰底（vue 版 --uikit-bg-secondary）；间距 8px 用 margin（ucss 禁 gap） */
+.em-conversation-tabs__tab {
+  padding: var(--em-spacing-1) var(--em-spacing-3);
+  margin-right: var(--em-spacing-2);
+  background-color: var(--em-bg-secondary);
+  border-radius: 999px;
+}
+
+.em-conversation-tabs__tab-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-primary);
+}
+
+/* 选中态：字重 500 + 主色字 + 浅主色底（vue 版 --uikit-bg-active） */
+.em-conversation-tabs--tab-active {
+  background-color: var(--em-bg-active);
+}
+
+.em-conversation-tabs--tab-text-active {
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-primary-color);
+}

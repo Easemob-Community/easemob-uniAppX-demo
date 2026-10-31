@@ -22,12 +22,57 @@
 			}
 		},
 		{
+			"path": "pages/conversation/conversation",
+			"style": {
+				"navigationBarTitleText": "会话列表",
+				"navigationStyle": "custom",
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
 			"path": "pages/index/index",
 			"style": {
 				"navigationBarTitleText": "uni-app x"
 			}
 		}
 	],
+	"subPackages": [
+		{
+			"root": "sub-im",
+			"name": "sub-im",
+			"independent": false,
+			"pages": [
+				{
+					"path": "pages/chat/chat",
+					"style": {
+						"navigationBarTitleText": "聊天",
+						"navigationStyle": "custom",
+						"app-plus": {
+							"titleNView": false
+						}
+					}
+				},
+				{
+					"path": "pages/chat-info/chat-info",
+					"style": {
+						"navigationBarTitleText": "聊天信息",
+						"navigationStyle": "custom",
+						"app-plus": {
+							"titleNView": false
+						}
+					}
+				}
+			]
+		}
+	],
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^em-([a-z-]+)-page$": "@/uni_modules/easemob-uikit-uni/components/pages/em-$1-page/em-$1-page.vue"
+		}
+	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app x",

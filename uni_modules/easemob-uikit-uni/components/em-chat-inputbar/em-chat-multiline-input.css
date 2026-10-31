@@ -1,0 +1,27 @@
+@import '../../libs/style/variables.css';
+
+.em-chat-multiline-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--em-spacing-2) var(--em-spacing-3);
+  background-color: var(--em-control-bg);
+  border-radius: var(--em-component-radius);
+  overflow: hidden;
+}
+
+.em-chat-multiline-input__input {
+  width: 100%;
+  padding: 0;
+  font-size: var(--em-font-size-14);
+  line-height: 19px;
+  color: var(--em-text-primary);
+  background-color: transparent;
+}
+
+.em-chat-multiline-input--disabled {
+  opacity: 0.6;
+}

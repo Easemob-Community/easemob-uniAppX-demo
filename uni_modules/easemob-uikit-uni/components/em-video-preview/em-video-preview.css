@@ -1,0 +1,100 @@
+@import '../../libs/style/variables.css';
+
+.em-video-preview {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--em-video-viewer-bg);
+  z-index: 3000;
+}
+
+/* 工具条只占内容高度：关闭键与原生 video 分区，避免原生组件层级盖住按钮 */
+.em-video-preview__bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+  padding-left: var(--em-spacing-3);
+  padding-right: var(--em-spacing-3);
+  padding-bottom: var(--em-spacing-2);
+}
+
+.em-video-preview__close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background-color: var(--em-mask-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 视频区吃满剩余高度（flex:1 + height:0 是本工程蒸汽端惯用的确定高度写法） */
+.em-video-preview__stage {
+  position: relative;
+  flex: 1;
+  height: 0;
+}
+
+.em-video-preview__video {
+  width: 100%;
+  height: 100%;
+}
+
+/* App 端下载/转本地期间：盖住视频区，spinner 由 useSpinRotation 逐帧旋转 */
+.em-video-preview__loading {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--em-video-viewer-bg);
+}
+
+.em-video-preview__loading-poster {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.em-video-preview__loading-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.em-video-preview__loading-text {
+  margin-top: var(--em-spacing-2);
+  font-size: var(--em-font-size-14);
+  color: var(--em-text-inverse);
+}
+
+.em-video-preview__error {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--em-video-viewer-bg);
+}
+
+.em-video-preview__error-text {
+  font-size: var(--em-font-size-14);
+  color: var(--em-text-inverse);
+}

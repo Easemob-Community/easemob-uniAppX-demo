@@ -1,0 +1,51 @@
+@import '../../libs/style/variables.css';
+
+/* 弹层基座：显隐只靠 v-if 挂载/卸载，**默认态即最终态**。
+   蒸汽端（uni-app x App）新建 v-if 分支时，动态 class 写入偶发整条丢失并回落到上一次的旧值
+   （真机实测约 2/10 概率；与点击位置、tabBar 隐藏无关，延迟补写 class 也救不回来）。
+   因此这里禁止把「可见」写在 --show 类上：遮罩默认不透明、面板默认在最终位置，
+   任何 class 组合（含只剩基础类）都必须可见，否则会出现「弹层挂载了但看不见、遮罩仍吃点击」的 P0。 */
+
+.em-popup {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.em-popup--center {
+  justify-content: center;
+  align-items: center;
+}
+
+.em-popup__overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--em-mask-color);
+}
+
+.em-popup__panel {
+  position: relative;
+  width: 100%;
+  background-color: var(--em-bg-elevated);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.em-popup__panel--center {
+  width: auto;
+  border-radius: 12px;
+}
+
+/* 全屏形态：面板贴屏顶，去顶部圆角（内容方配 100% 高） */
+.em-popup__panel--full {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

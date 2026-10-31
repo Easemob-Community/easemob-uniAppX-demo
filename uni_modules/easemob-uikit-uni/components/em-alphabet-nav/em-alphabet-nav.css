@@ -1,0 +1,50 @@
+@import '../../libs/style/variables.css';
+
+/* 撑满列表区高度（对齐 vue 版 contact-alphabet-nav）：字母格 flex:1 等比分配行高，
+   单项封顶 20px（max-height 在蒸汽编译端不生效时退化为等比撑满，无裁剪风险：
+   容器不定高，随列表区伸缩） */
+.em-alphabet-nav {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 4px;
+  width: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4px 0;
+  z-index: 10;
+}
+
+/* 字母格 24px 宽（视觉=热区）；active 高亮块覆盖整格（圆角收口），
+   不走 content-box/background-clip——蒸汽端不支持时内容盒只剩 8px 会裁掉 9px 字母 */
+.em-alphabet-nav__cell {
+  flex: 1;
+  min-height: 0;
+  max-height: 20px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--em-radius);
+}
+
+.em-alphabet-nav__cell--active {
+  background-color: var(--em-primary-color);
+}
+
+.em-alphabet-nav__cell--dim {
+  opacity: 0.45;
+}
+
+.em-alphabet-nav__text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-9);
+  font-weight: var(--em-font-weight-medium);
+  line-height: 12px;
+  color: var(--em-text-tertiary);
+}
+
+.em-alphabet-nav__text--active {
+  color: var(--em-text-inverse);
+}

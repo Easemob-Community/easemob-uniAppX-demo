@@ -2,7 +2,7 @@
 	<web-view class="webview" :src="url"></web-view>
 </template>
 
-<script setup lang="uts">
+<script setup lang="ts">
 	const url = ref('')
 
 	function optionText(options: Record<string, any>, key: string, fallback: string): string {

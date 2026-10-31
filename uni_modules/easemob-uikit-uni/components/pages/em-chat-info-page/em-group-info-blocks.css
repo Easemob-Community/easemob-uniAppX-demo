@@ -1,0 +1,169 @@
+@import '../../../libs/style/variables.css';
+
+/* chat-info 群分支区块（对齐 vue chat-info-drawer 群形态：成员区 + 字段行） */
+.em-group-info-blocks {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--em-bg-base);
+}
+
+/* 成员区：label 行 + 宫格，底部发丝线（与下方字段行同组） */
+.em-group-info-blocks__section {
+  display: flex;
+  flex-direction: column;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+}
+
+.em-group-info-blocks__section-label-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-2) var(--em-spacing-3) 0;
+}
+
+.em-group-info-blocks__section-label {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-text-primary);
+}
+
+/* 假搜索框（对齐 vue fake-search：36px 高、圆角 999、#F5F5F5 底 = --em-bg-hover、13px 三级灰） */
+.em-group-info-blocks__fake-search {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 36px;
+  margin: var(--em-spacing-2) var(--em-spacing-3) 0;
+  padding: 0 var(--em-spacing-3);
+  border-radius: var(--em-input-radius);
+  background-color: var(--em-bg-hover);
+}
+
+.em-group-info-blocks__fake-search-icon {
+  color: var(--em-text-tertiary);
+  flex-shrink: 0;
+}
+
+.em-group-info-blocks__fake-search-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  color: var(--em-text-tertiary);
+  margin-left: 6px;
+}
+
+/* 宫格：flex wrap 五列（ucss 无 grid），格宽 20%（单行 nowrap 文本，避开多行 text 百分比坑） */
+.em-group-info-blocks__grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: var(--em-spacing-2) var(--em-spacing-3) var(--em-spacing-3);
+}
+
+.em-group-info-blocks__grid-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20%;
+  padding: 6px 0;
+  box-sizing: border-box;
+}
+
+.em-group-info-blocks__grid-name-host {
+  width: 100%;
+  min-width: 0;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+.em-group-info-blocks__grid-name {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  color: var(--em-text-primary);
+  text-align: center;
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* 添加/移除操作格：48px 实线圆 + 图标（对齐 vue grid-action-circle） */
+.em-group-info-blocks__grid-action-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--em-input-border-color);
+  border-radius: 50%;
+}
+
+.em-group-info-blocks__grid-action-icon {
+  color: var(--em-text-tertiary);
+}
+
+/* 查看全部：通栏文字 + 下箭头（对齐 vue view-all：margin-top 12px、11px、二级文字色） */
+.em-group-info-blocks__view-all {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--em-spacing-3);
+  padding: 4px var(--em-spacing-2) var(--em-spacing-3);
+}
+
+.em-group-info-blocks__view-all-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  color: var(--em-text-secondary);
+}
+
+.em-group-info-blocks__view-all-icon {
+  color: var(--em-text-secondary);
+  margin-left: 4px;
+}
+
+/* 字段行（群名称/群公告）：label 小灰 + 值行 + 右侧操作图标，底部发丝线 */
+.em-group-info-blocks__field {
+  display: flex;
+  flex-direction: column;
+  padding: var(--em-spacing-2) var(--em-spacing-3);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+}
+
+.em-group-info-blocks__field-label {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  color: var(--em-text-secondary);
+}
+
+.em-group-info-blocks__field-main {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  margin-top: 2px;
+}
+
+.em-group-info-blocks__field-value-host {
+  flex: 1;
+  min-width: 0;
+}
+
+.em-group-info-blocks__field-value {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-text-primary);
+}
+
+.em-group-info-blocks__field-action-icon {
+  color: var(--em-input-border-color);
+  margin-left: var(--em-spacing-2);
+}

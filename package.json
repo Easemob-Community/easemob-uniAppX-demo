@@ -1,0 +1,9 @@
+{
+	"name": "easemob-uniappx-demo",
+	"version": "1.0.0",
+	"private": true,
+	"description": "环信 IM uni-app x demo（easemob-uikit-uni 宿主接入示例）",
+	"dependencies": {
+		"easemob-websdk": "5.1.3"
+	}
+}

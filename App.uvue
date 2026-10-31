@@ -1,9 +1,13 @@
-<script setup lang="uts">
+<script setup lang="ts">
+	import { initTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
 	// #endif
 
 	onLaunch(() => {
+		// 主题引擎先于首屏：默认跟随系统，读取持久化偏好并订阅系统深浅色变化
+		initTheme()
 		console.log('App Launch')
 	})
 

@@ -1,0 +1,87 @@
+@import '../../libs/style/variables.css';
+
+.em-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 尺寸（对齐 vue 版：large 为 42px 通栏胶囊档） */
+.em-button--large {
+  height: 42px;
+  padding: 0 var(--em-spacing-4);
+}
+
+.em-button--medium {
+  height: 32px;
+  padding: 0 var(--em-spacing-3);
+}
+
+.em-button--pill {
+  border-radius: 999px;
+}
+
+.em-button--block {
+  width: 100%;
+}
+
+.em-button--default {
+  background-color: var(--em-control-bg);
+}
+
+.em-button--primary {
+  background-color: var(--em-primary-color);
+}
+
+.em-button--danger {
+  background-color: var(--em-control-bg);
+}
+
+.em-button--outline {
+  background-color: transparent;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--em-border-color);
+}
+
+.em-button.is-disabled {
+  opacity: 0.4;
+}
+
+.em-button.is-loading {
+  opacity: 0.7;
+}
+
+.em-button__spinner {
+  margin-right: var(--em-spacing-2);
+}
+
+.em-button__text {
+  font-family: var(--em-font-family);
+  font-weight: var(--em-font-weight-medium);
+}
+
+.em-button__text--large {
+  font-size: var(--em-font-size-15);
+}
+
+.em-button__text--medium {
+  font-size: var(--em-font-size-14);
+}
+
+.em-button__text--default {
+  color: var(--em-text-primary);
+}
+
+.em-button__text--primary {
+  color: var(--em-text-inverse);
+}
+
+.em-button__text--danger {
+  color: var(--em-danger-color);
+}
+
+.em-button__text--outline {
+  color: var(--em-text-primary);
+}

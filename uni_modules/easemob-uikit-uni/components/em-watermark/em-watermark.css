@@ -1,0 +1,34 @@
+@import '../../libs/style/variables.css';
+
+/* 组件级水印内容层（M2.27）：铺满父容器并裁切旋转溢出。
+   父容器（页面 __watermark 壳）负责 absolute + 四边 0 + z-index + pointer-events:none，
+   这里只做定位上下文与裁切，避免两层都做定位导致旋转溢出跑到输入栏上 */
+.em-watermark {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 平铺层：百分比尺寸 + 负偏移（内联）+ 整层旋转，旋转后恒大于容器；
+   行按 flex:1 均分高度，每行 space-between 均分宽度——不依赖任何尺寸 API 也能铺满 */
+.em-watermark__layer {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+}
+
+.em-watermark__row {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 单行不换行：小程序 wxss 不认 uvue 的 lines，nowrap 是单行档的硬要求；不参与压缩，避免文字被挤断 */
+.em-watermark__text {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--em-font-family);
+}

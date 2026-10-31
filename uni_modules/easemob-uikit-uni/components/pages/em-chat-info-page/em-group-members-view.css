@@ -1,0 +1,111 @@
+@import '../../../libs/style/variables.css';
+
+/* 成员管理视图全屏覆盖层：页内视图切换（不碰路由）；z-index 低于弹层基准 2000（em-popup 族恒在其上） */
+.em-group-members-view {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--em-bg-base);
+}
+
+.em-group-members-view__scroll {
+  flex: 1;
+  height: 0;
+}
+
+/* 成员行（对齐 vue 抽屉成员页：40 头像 + 名单行省略 + 角色角标 + 右侧更多） */
+.em-group-members-view__item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px var(--em-spacing-4);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+}
+
+.em-group-members-view__item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-left: var(--em-spacing-3);
+}
+
+.em-group-members-view__name-host {
+  flex: 1;
+  min-width: 0;
+}
+
+.em-group-members-view__name {
+  font-size: var(--em-font-size-14);
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-text-primary);
+}
+
+/* 角色角标：实底白字（owner 主色蓝 / admin warning 橙，对齐 vue member-list-item 设计稿档） */
+.em-group-members-view__role {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-9);
+  font-weight: var(--em-font-weight-semibold);
+  color: var(--em-text-inverse);
+  padding: 2px 4px;
+  border-radius: 4px;
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-group-members-view--role-owner {
+  background-color: var(--em-primary-color);
+}
+
+.em-group-members-view--role-admin {
+  background-color: var(--em-warning-color);
+}
+
+.em-group-members-view__more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+/* 首屏成员骨架：行几何对齐真实 __item（padding/底部分隔线/40 圆头像），名单行逐行变宽，角色角标偶现行 */
+.em-group-members-view__skeleton-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px var(--em-spacing-4);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+}
+
+.em-group-members-view__skeleton-main {
+  flex: 1;
+  margin-left: var(--em-spacing-3);
+  margin-right: var(--em-spacing-2);
+}
+
+/* 角色角标占位（对齐真实 __role 尺寸档） */
+.em-group-members-view__skeleton-role {
+  width: 28px;
+  height: 14px;
+  border-radius: 4px;
+  background-color: var(--em-bg-hover);
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-group-members-view__more-icon {
+  color: var(--em-text-tertiary);
+}

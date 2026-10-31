@@ -1,0 +1,111 @@
+@import '../../libs/style/variables.css';
+
+/* 置顶消息条（M2.20）：公告条与消息列表之间的固定横条，不随消息滚动；
+   折叠态单行 + 展开态 max-height 240 滚动列表（对齐 vue 版 pinned-bar） */
+
+.em-pinned-bar {
+  display: flex;
+  flex-direction: column;
+  margin: 0 var(--em-spacing-3);
+  background-color: var(--em-message-chip-bg);
+  border-radius: var(--em-radius);
+}
+
+/* 折叠态 */
+.em-pinned-bar__bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px var(--em-spacing-2);
+}
+
+.em-pinned-bar__bar-icon {
+  color: var(--em-text-tertiary);
+  flex-shrink: 0;
+}
+
+.em-pinned-bar__bar-text {
+  flex: 1;
+  margin-left: 6px;
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-primary);
+  /* 单行省略（ucss 子集：lines 截断） */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.em-pinned-bar__bar-count {
+  margin-left: 8px;
+  font-size: var(--em-font-size-12);
+  line-height: 18px;
+  color: var(--em-primary-color);
+  flex-shrink: 0;
+}
+
+.em-pinned-bar__bar-close {
+  margin-left: 8px;
+  color: var(--em-text-tertiary);
+  flex-shrink: 0;
+}
+
+/* 展开态 */
+.em-pinned-bar__panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.em-pinned-bar__panel-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px var(--em-spacing-2);
+}
+
+.em-pinned-bar__head-icon {
+  color: var(--em-text-tertiary);
+  flex-shrink: 0;
+}
+
+.em-pinned-bar__head-text {
+  flex: 1;
+  margin-left: 6px;
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-primary);
+}
+
+.em-pinned-bar__head-toggle {
+  color: var(--em-text-tertiary);
+  flex-shrink: 0;
+}
+
+.em-pinned-bar__panel-scroll {
+  /* 对齐 vue 版展开面板 max-height 240px */
+  max-height: 240px;
+}
+
+.em-pinned-bar__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px var(--em-spacing-2);
+  border-top: 1px solid var(--em-border-color);
+}
+
+.em-pinned-bar__row-text {
+  flex: 1;
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.em-pinned-bar__row-close {
+  margin-left: 8px;
+  color: var(--em-text-tertiary);
+  flex-shrink: 0;
+}

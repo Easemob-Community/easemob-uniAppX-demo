@@ -1,0 +1,49 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-chat-page
+			v-if="conversationId !== ''"
+			:conversation-id="conversationId"
+			:chat-type="chatType"
+			@open-info="onOpenInfo"
+		/>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { ref } from 'vue'
+	import { onLoad } from '@dcloudio/uni-app'
+	import { CONVERSATION_TYPE, EmKit, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { ConversationTypeValue } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { themeClass } = useTheme()
+	const conversationId = ref('')
+	const chatType = ref<ConversationTypeValue>(CONVERSATION_TYPE.SINGLE_CHAT)
+
+	onLoad((query) => {
+		if (EmKit.state.userId === '') {
+			uni.reLaunch({ url: '/pages/login/login' })
+			return
+		}
+		// 单聊 conversationId = 对端 userId；群聊 = groupId；chatType 必传
+		conversationId.value = (query?.['conversationId'] ?? '') as string
+		chatType.value = query?.['chatType'] === CONVERSATION_TYPE.GROUP_CHAT
+			? CONVERSATION_TYPE.GROUP_CHAT
+			: CONVERSATION_TYPE.SINGLE_CHAT
+	})
+
+	function onOpenInfo(id: string): void {
+		uni.navigateTo({ url: `/sub-im/pages/chat-info/chat-info?conversationId=${id}&chatType=${chatType.value}` })
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-chat-bg);
+	}
+</style>

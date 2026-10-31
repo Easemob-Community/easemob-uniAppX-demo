@@ -1,0 +1,44 @@
+@import '../../libs/style/variables.css';
+
+/* 视觉契约对齐 vue 版 .uikit-empty：column 居中、gap 12px、padding 40px 16px */
+.em-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px;
+}
+
+.em-empty--small {
+  padding: 24px 16px;
+}
+
+.em-empty__icon {
+  margin-bottom: 12px;
+  color: var(--em-empty-icon-color);
+}
+
+.em-empty--small .em-empty__icon {
+  margin-bottom: 8px;
+}
+
+.em-empty__title {
+  margin-bottom: 12px;
+  font-size: var(--em-font-size-15);
+  color: var(--em-empty-text-color);
+}
+
+.em-empty--small .em-empty__title {
+  margin-bottom: 8px;
+  font-size: var(--em-font-size-12);
+}
+
+.em-empty__description {
+  margin-bottom: 12px;
+  font-size: var(--em-font-size-12);
+  color: var(--em-empty-text-color);
+}
+
+.em-empty--small .em-empty__description {
+  margin-bottom: 8px;
+  font-size: var(--em-font-size-11);
+}

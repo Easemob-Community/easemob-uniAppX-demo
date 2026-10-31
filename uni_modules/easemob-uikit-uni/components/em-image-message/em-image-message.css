@@ -1,0 +1,36 @@
+@import '../../libs/style/variables.css';
+@import '../../libs/style/bubble.css';
+
+/* 壳收口 .em-bubble；图片气泡 padding 为 0、内容自撑（图片即气泡） */
+.em-image-message {
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.em-image-message__image {
+  border-radius: var(--em-bubble-radius);
+}
+
+/* 发送中蒙层：压暗图片 + 居中 loading（对齐 vue image-message__sending） */
+.em-image-message__sending {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.35);
+  border-radius: var(--em-bubble-radius);
+}
+
+/* 上传进度文案：蒙层内 loading 下方（白字，压暗底色上可读） */
+.em-image-message__sending-percent {
+  margin-top: 4px;
+  font-size: var(--em-font-size-12);
+  line-height: 16px;
+  color: #ffffff;
+}

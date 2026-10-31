@@ -1,0 +1,206 @@
+@import '../../../libs/style/variables.css';
+
+.em-contact-list-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: var(--em-conversation-list-bg);
+}
+
+/* 列表区：relative 容器供字母索引条 absolute 覆盖 */
+.em-contact-list-page__body {
+  flex: 1;
+  height: 0;
+  position: relative;
+}
+
+.em-contact-list-page__scroll {
+  flex: 1;
+  height: 100%;
+  padding: var(--em-spacing-1);
+}
+
+/* 好友同步骨架：分组头 + 单行名字条目（几何对齐真实 __group-header/__item），逐行变宽 */
+.em-contact-list-page__skeleton {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+}
+
+.em-contact-list-page__skeleton-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-2) var(--em-spacing-3);
+  background-color: var(--em-bg-base);
+  border-radius: var(--em-radius);
+  margin-bottom: var(--em-spacing-1);
+}
+
+/* 分组头行：通栏底色对齐真实 __group-header（28px 高、无圆角卡片） */
+.em-contact-list-page--skeleton-row-header {
+  height: 28px;
+  padding: 0 var(--em-spacing-3);
+  background-color: var(--em-conversation-list-bg);
+  border-radius: 0;
+}
+
+/* 分组头内的字母占位条（12px 高小条，位置对齐真实分组文字左缘） */
+.em-contact-list-page__skeleton-header-bar {
+  width: 16px;
+  height: 12px;
+  border-radius: var(--em-skeleton-line-radius);
+  background-color: var(--em-bg-hover);
+}
+
+.em-contact-list-page__skeleton-lines {
+  flex: 1;
+  margin-left: var(--em-spacing-3);
+}
+
+/* 分组头：28px 高、11px/500 tertiary（对齐 vue 版 __group-header，内容左缘与条目对齐 = 容器 4 + 12）；
+   sticky 吸顶在蒸汽 App 端若不生效则降级为随列表滚动（一期可接受降级，索引条定位不受影响） */
+.em-contact-list-page__group-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--em-spacing-3);
+  background-color: var(--em-conversation-list-bg);
+  position: sticky;
+  top: 0;
+}
+
+.em-contact-list-page__group-header-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  font-weight: var(--em-font-weight-medium);
+  line-height: 16px;
+  color: var(--em-text-tertiary);
+}
+
+/* 联系人条目：64px 卡片行（48px 头像 + 8px×2、圆角 8px、项间距 4px，对齐 vue 版 cell 卡片口径，无分隔线） */
+.em-contact-list-page__item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-2) var(--em-spacing-3);
+  background-color: var(--em-bg-base);
+  border-radius: var(--em-radius);
+  margin-bottom: var(--em-spacing-1);
+}
+
+.em-contact-list-page__item-body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--em-spacing-3);
+}
+
+/* 名称折叠由 em-text 收口；宿主节点补 min-width:0 保持 flex 约束链（小程序宿主参与 flex 布局） */
+.em-contact-list-page__name-host {
+  flex: 1;
+  min-width: 0;
+}
+
+.em-contact-list-page__name {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}
+
+/* 品牌色内联变量作用域层：接替根的 flex 容器角色（flex:1 + height:0 保持滚动约束链） */
+.em-contact-list-page__brand-scope {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+}
+
+/* 水印 stage（M2.27）：nav → 列表的定位上下文；只补 position，不加 overflow（会裁掉组件探出元素） */
+.em-contact-list-page__stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+  position: relative;
+}
+
+/* 水印覆盖层：铺满 stage、穿透事件、裁切旋转溢出；z-index 低于库内弹层基准 2000 */
+.em-contact-list-page__watermark {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 好友备注编辑弹层（M2.20）：居中卡，口径同 em-group-field-dialog（300px 宽、12px 圆角、elevated 底） */
+.em-contact-list-page__dialog {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  padding: var(--em-spacing-4);
+  background-color: var(--em-bg-elevated);
+  border-radius: 12px;
+}
+
+.em-contact-list-page__dialog-title {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  color: var(--em-text-primary);
+  text-align: center;
+  margin-bottom: var(--em-spacing-3);
+}
+
+.em-contact-list-page__dialog-input {
+  height: 40px;
+  padding: 0 var(--em-spacing-3);
+  background-color: var(--em-control-bg);
+  border-radius: 8px;
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  color: var(--em-text-primary);
+}
+
+/* 弹层按钮行：顶发丝线，两等分按钮 */
+.em-contact-list-page__dialog-actions {
+  display: flex;
+  flex-direction: row;
+  margin-top: var(--em-spacing-3);
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--em-divider-color);
+}
+
+.em-contact-list-page__dialog-btn {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+}
+
+.em-contact-list-page--dialog-btn-divider {
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: var(--em-divider-color);
+}
+
+.em-contact-list-page__dialog-btn-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  color: var(--em-text-primary);
+}
+
+.em-contact-list-page--dialog-btn-text-primary {
+  color: var(--em-primary-color);
+}

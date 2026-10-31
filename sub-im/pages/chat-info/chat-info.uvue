@@ -1,0 +1,63 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-chat-info-page
+			v-if="conversationId !== ''"
+			:conversation-id="conversationId"
+			:chat-type="chatType"
+			@back="onBack"
+			@deleted="onExit"
+			@leaved="onExit"
+			@contact-deleted="onExit"
+			@chat-member="onChatMember"
+		/>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { ref } from 'vue'
+	import { onLoad } from '@dcloudio/uni-app'
+	import { CONVERSATION_TYPE, EmKit, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { ConversationTypeValue } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { themeClass } = useTheme()
+	const conversationId = ref('')
+	const chatType = ref<ConversationTypeValue>(CONVERSATION_TYPE.SINGLE_CHAT)
+
+	onLoad((query) => {
+		if (EmKit.state.userId === '') {
+			uni.reLaunch({ url: '/pages/login/login' })
+			return
+		}
+		conversationId.value = (query?.['conversationId'] ?? '') as string
+		chatType.value = query?.['chatType'] === CONVERSATION_TYPE.GROUP_CHAT
+			? CONVERSATION_TYPE.GROUP_CHAT
+			: CONVERSATION_TYPE.SINGLE_CHAT
+	})
+
+	// 删除会话/退群/解散/删除好友：聊天详情 ← 聊天页 ← 会话列表，退两层
+	function onExit(): void {
+		uni.navigateBack({ delta: 2 })
+	}
+
+	function onBack(): void {
+		uni.navigateBack({ delta: 1 })
+	}
+
+	// 群成员宫格点私聊：建会话后跳聊天页
+	function onChatMember(userId: string): void {
+		EmKit.addConversation(userId, CONVERSATION_TYPE.SINGLE_CHAT)
+		uni.navigateTo({ url: `/sub-im/pages/chat/chat?conversationId=${userId}&chatType=${CONVERSATION_TYPE.SINGLE_CHAT}` })
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-chat-bg);
+	}
+</style>

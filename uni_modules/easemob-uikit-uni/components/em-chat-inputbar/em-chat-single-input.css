@@ -1,0 +1,16 @@
+@import '../../libs/style/variables.css';
+
+.em-chat-single-input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 var(--em-spacing-3);
+  font-size: var(--em-font-size-14);
+  color: var(--em-text-primary);
+  background-color: var(--em-control-bg);
+  border-radius: var(--em-input-radius);
+}
+
+.em-chat-single-input--disabled {
+  opacity: 0.6;
+}

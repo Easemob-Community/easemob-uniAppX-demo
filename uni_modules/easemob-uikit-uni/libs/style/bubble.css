@@ -1,0 +1,14 @@
+/* 气泡共有壳基类（五种气泡组件 + 聊天页占位气泡共用）：
+ * 底色/圆角统一在此定义，己方覆写走 --self 修饰类；padding/尺寸等个性由各气泡自有类保留。
+ * 用法：根节点 class 数组叠 'em-bubble'，己方再叠 'em-bubble--self'。
+ * 须在 variables.css 之后 import（消费 --em-bubble-* token）。 */
+@import './variables.css';
+
+.em-bubble {
+  background-color: var(--em-bubble-bg-other);
+  border-radius: var(--em-bubble-radius);
+}
+
+.em-bubble--self {
+  background-color: var(--em-bubble-bg-self);
+}

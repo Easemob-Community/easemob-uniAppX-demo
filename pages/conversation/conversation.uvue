@@ -1,0 +1,49 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-conversation-page @select="onSelect" @menu="onMenu" />
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { onShow } from '@dcloudio/uni-app'
+	import { CONVERSATION_MENU_KEY, EmKit, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { ConversationTypeValue } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { themeClass } = useTheme()
+
+	onShow(() => {
+		// 未登录只看 userId：断网重连时 status 会短暂离开 online，不能用作守卫
+		if (EmKit.state.userId === '') {
+			uni.reLaunch({ url: '/pages/login/login' })
+			return
+		}
+		// 组件默认 autoSync=true，首次挂载自拉；从聊天页返回的补同步由页面 onShow 负责
+		EmKit.syncConversations().catch(() => {})
+	})
+
+	// 预热：跳转动画期间数据已在路上，聊天页打开即有缓存可渲染
+	function onSelect(conversationId: string, chatType: ConversationTypeValue): void {
+		EmKit.enterConversation(conversationId, chatType).catch(() => {})
+		EmKit.loadHistory(conversationId, chatType).catch(() => {})
+		uni.navigateTo({ url: `/sub-im/pages/chat/chat?conversationId=${conversationId}&chatType=${chatType}` })
+	}
+
+	// new-chat / pin / mute / delete 由页面组件内置；create-group 需宿主跳群列表页（暂未接入）
+	function onMenu(key: string): void {
+		if (key === CONVERSATION_MENU_KEY.CREATE_GROUP) {
+			uni.showToast({ title: '群功能暂未接入', icon: 'none' })
+		}
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-conversation-list-bg);
+	}
+</style>

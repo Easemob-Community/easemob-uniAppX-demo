@@ -177,7 +177,10 @@
 								<button class="login__checkbox" :class="{ 'login__checkbox--checked': agreed }" @click="toggleAgreement">
 									<text v-if="agreed" class="login__checkbox-mark">✓</text>
 								</button>
-								<text class="login__terms-text">我已阅读并同意环信<text class="login__terms-link" @click="openTerms">服务条款</text>和<text class="login__terms-link" @click="openPrivacy">隐私政策</text></text>
+								<text class="login__terms-text">我已阅读并同意环信</text>
+								<text class="login__terms-link" @click="openTerms">服务条款</text>
+								<text class="login__terms-text login__terms-text--plain">和</text>
+								<text class="login__terms-link" @click="openPrivacy">隐私政策</text>
 							</view>
 						</view>
 					</view>
@@ -193,9 +196,10 @@
 	</view>
 </template>
 
-<script setup lang="uts">
+<script setup lang="ts">
 	import { loginByPhone, mapPhoneLoginError } from '@/common/auth-api'
 	import { DevConfig, getDevConfig, getEffectiveAppKey, getPersistEnabled, setDevConfig, setPersistEnabled } from '@/common/dev-config'
+	import { EmKit } from '@/uni_modules/easemob-uikit-uni/libs'
 
 	const DEV_ICON = '</>'
 	const windowInfo = uni.getWindowInfo()
@@ -406,6 +410,18 @@
 		}
 	}
 
+	async function loginIm(id: string, credential: string): Promise<void> {
+		const appkey = getEffectiveAppKey()
+		if (appkey === '') {
+			throw new Error('请先在开发者配置中填写 AppKey')
+		}
+		// 每个应用进程只生效一次；appkey 来自开发者配置，故 init 放在登录时而非 App.uvue
+		// sdkLogLevel 取 WARN：鸿蒙上 SDK 的 DEBUG 日志会命中 ArkTS 限制打断会话同步
+		EmKit.init({ appkey, enableReadReceipt: true, sdkLogLevel: 'WARN' })
+		await EmKit.login({ userId: id, token: credential })
+		uni.reLaunch({ url: '/pages/conversation/conversation' })
+	}
+
 	async function onLogin() {
 		if (loginLoading.value) return
 		errorText.value = ''
@@ -417,8 +433,14 @@
 			}
 			const config = getDevConfig()
 			setDevConfig(new DevConfig(config.appKey, config.imServer, config.restServer, config.usePrivateServer, userId.value.trim(), token.value.trim()))
-			// TODO: 后续通过 UIKit skills 在这里接入初始化和登录（appKey 使用 getEffectiveAppKey()）。
-			noticeText.value = '登录参数已就绪，待接入 UIKit 登录'
+			loginLoading.value = true
+			try {
+				await loginIm(userId.value.trim(), token.value.trim())
+			} catch (error: any) {
+				errorText.value = errorMessage(error)
+			} finally {
+				loginLoading.value = false
+			}
 			return
 		}
 		if (!agreed.value) {
@@ -438,8 +460,7 @@
 			const result = await loginByPhone(phone.value, smsCode.value)
 			userId.value = result.chatUserName
 			token.value = result.token
-			// TODO: 后续通过 UIKit skills 在这里接入初始化和登录。
-			noticeText.value = '账号凭证已获取，待接入 UIKit 登录'
+			await loginIm(result.chatUserName, result.token)
 		} catch (error: any) {
 			errorText.value = mapPhoneLoginError(errorMessage(error), phone.value)
 		} finally {
@@ -968,11 +989,14 @@
 	}
 
 	.login__terms-text {
-		flex: 1;
 		font-size: 11px;
 		line-height: 20px;
 		white-space: nowrap;
 		color: rgba(255, 255, 255, 0.35);
+	}
+
+	.login__terms-text--plain {
+		margin-left: 0;
 	}
 
 	.login__terms-link {

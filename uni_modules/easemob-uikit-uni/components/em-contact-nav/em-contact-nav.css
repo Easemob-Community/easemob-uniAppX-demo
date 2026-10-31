@@ -1,0 +1,43 @@
+@import '../../libs/style/variables.css';
+
+.em-contact-nav {
+  display: flex;
+  flex-direction: column;
+  padding: var(--em-spacing-1);
+}
+
+/* 入口卡片行：64px（--em-cell-height）、白底圆角 8px、项间距 4px（vue 版 ContactNav 卡片口径，无分隔线） */
+.em-contact-nav__item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--em-cell-height);
+  padding: 0 var(--em-spacing-3);
+  background-color: var(--em-bg-base);
+  border-radius: var(--em-radius);
+  margin-bottom: var(--em-spacing-1);
+}
+
+/* 可选左图标（20px）的间距包裹；图标色走 em-icon 默认 --em-icon-muted */
+.em-contact-nav__icon {
+  margin-right: var(--em-spacing-3);
+  flex-shrink: 0;
+}
+
+.em-contact-nav__label {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-medium);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}
+
+/* hot 红点的间距包裹（vue 版 title gap 8px）；圆点本体样式收口在 em-badge */
+.em-contact-nav__dot {
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-contact-nav__spacer {
+  flex: 1;
+}

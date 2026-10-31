@@ -1,0 +1,167 @@
+@import '../../../libs/style/variables.css';
+
+.em-group-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: var(--em-conversation-list-bg);
+}
+
+.em-group-page__scroll {
+  flex: 1;
+  height: 0;
+  padding: var(--em-spacing-1);
+}
+
+/* 群同步骨架：条目形态对齐真实 __item（64px 卡片行 + 方形头像 + 群名 + 右侧人数），逐行变宽 */
+.em-group-page__skeleton {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px;
+}
+
+.em-group-page__skeleton-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--em-cell-height);
+  padding: 0 var(--em-spacing-3);
+  background-color: var(--em-bg-base);
+  border-radius: var(--em-radius);
+  margin-bottom: var(--em-spacing-1);
+}
+
+.em-group-page__skeleton-lines {
+  flex: 1;
+  margin-left: var(--em-spacing-3);
+  margin-right: var(--em-spacing-2);
+}
+
+.em-group-page__skeleton-count {
+  flex-shrink: 0;
+}
+
+/* 群条目：64px 卡片行（对齐 vue 版 group-list cell 口径：白底圆角 8px、项间距 4px、内容左右 12px） */
+.em-group-page__item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--em-cell-height);
+  padding: 0 var(--em-spacing-3);
+  background-color: var(--em-bg-base);
+  border-radius: var(--em-radius);
+  margin-bottom: var(--em-spacing-1);
+}
+
+.em-group-page__name-host {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--em-spacing-3);
+}
+
+.em-group-page__name {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}
+
+/* 人数 meta（vue 版 group-item-default meta = String(memberCount) → Cell meta 11px/secondary） */
+.em-group-page__count {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  color: var(--em-text-secondary);
+  margin-left: var(--em-spacing-3);
+  flex-shrink: 0;
+}
+
+/* 建群表单（em-select-contact #panel-top 注入区）：群名输入 + 开关组，底部 1px 分隔（对齐 vue create-group-modal__form） */
+.em-group-page__form {
+  display: flex;
+  flex-direction: column;
+  padding: var(--em-spacing-3) var(--em-spacing-4);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+  flex-shrink: 0;
+}
+
+.em-group-page__name-input {
+  height: 40px;
+  background-color: var(--em-control-bg);
+  border-radius: var(--em-radius);
+  padding: 0 var(--em-spacing-3);
+  font-size: var(--em-font-size-15);
+  color: var(--em-text-primary);
+}
+
+.em-group-page__switch-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 44px;
+}
+
+.em-group-page__switch-label {
+  flex: 1;
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  color: var(--em-text-primary);
+}
+
+/* 自绘开关（ucss 无 switch 内置组件样式定制能力）：48x28 轨道 + 24 白圆钮，
+   flex 两端对齐切换位置（关=flex-start / 开=flex-end 由 --on 修饰类收口） */
+.em-group-page__switch {
+  width: 48px;
+  height: 28px;
+  border-radius: 14px;
+  background-color: var(--em-border-color);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.em-group-page__switch--on {
+  background-color: var(--em-primary-color);
+  justify-content: flex-end;
+}
+
+.em-group-page__switch-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: var(--em-bg-elevated);
+}
+
+/* 品牌色内联变量作用域层：接替根的 flex 容器角色（flex:1 + height:0 保持滚动约束链） */
+.em-group-page__brand-scope {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+}
+
+/* 水印 stage（M2.27）：nav → 列表的定位上下文；只补 position，不加 overflow（会裁掉组件探出元素） */
+.em-group-page__stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+  position: relative;
+}
+
+/* 水印覆盖层：铺满 stage、穿透事件、裁切旋转溢出；z-index 低于库内弹层基准 2000 */
+.em-group-page__watermark {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}

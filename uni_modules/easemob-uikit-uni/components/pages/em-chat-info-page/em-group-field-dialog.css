@@ -1,0 +1,108 @@
+@import '../../../libs/style/variables.css';
+
+/* 群字段编辑弹层（群名称/群公告）：居中卡，对齐 chat-page 公告弹层口径（300px 宽、12px 圆角、elevated 底） */
+.em-group-field-dialog__dialog {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  max-height: 420px;
+  padding: var(--em-spacing-4);
+  background-color: var(--em-bg-elevated);
+  border-radius: 12px;
+}
+
+.em-group-field-dialog__dialog-title {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  color: var(--em-text-primary);
+  text-align: center;
+  margin-bottom: var(--em-spacing-3);
+}
+
+.em-group-field-dialog__dialog-input {
+  height: 40px;
+  padding: 0 var(--em-spacing-3);
+  background-color: var(--em-control-bg);
+  border-radius: 8px;
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  color: var(--em-text-primary);
+}
+
+.em-group-field-dialog__dialog-scroll {
+  flex: 1;
+  height: 0;
+  min-height: 60px;
+}
+
+.em-group-field-dialog__dialog-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}
+
+.em-group-field-dialog--dialog-text-placeholder {
+  color: var(--em-text-tertiary);
+}
+
+.em-group-field-dialog__dialog-textarea {
+  width: 100%;
+  height: 96px;
+  box-sizing: border-box;
+  padding: var(--em-spacing-2) var(--em-spacing-3);
+  background-color: var(--em-control-bg);
+  border-radius: 8px;
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}
+
+.em-group-field-dialog__dialog-count-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.em-group-field-dialog__dialog-count {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  color: var(--em-text-tertiary);
+}
+
+/* 弹层按钮行：顶发丝线，两等分按钮（单按钮时独占通栏） */
+.em-group-field-dialog__dialog-actions {
+  display: flex;
+  flex-direction: row;
+  margin-top: var(--em-spacing-3);
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--em-divider-color);
+}
+
+.em-group-field-dialog__dialog-btn {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+}
+
+.em-group-field-dialog--dialog-btn-divider {
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: var(--em-divider-color);
+}
+
+.em-group-field-dialog__dialog-btn-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  color: var(--em-text-primary);
+}
+
+.em-group-field-dialog--dialog-btn-text-primary {
+  color: var(--em-primary-color);
+}

@@ -1,0 +1,33 @@
+@import '../../libs/style/variables.css';
+
+.em-load-more {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: var(--em-spacing-3) var(--em-spacing-4);
+}
+
+.em-load-more__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.em-load-more__spinner {
+  color: var(--em-icon-muted);
+  margin-right: var(--em-spacing-2);
+}
+
+.em-load-more__text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  color: var(--em-text-secondary);
+}
+
+.em-load-more__text--button {
+  color: var(--em-primary-color);
+  font-size: var(--em-font-size-13);
+  font-weight: var(--em-font-weight-medium);
+}

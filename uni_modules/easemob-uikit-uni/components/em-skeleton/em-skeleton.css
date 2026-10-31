@@ -1,0 +1,50 @@
+@import '../../libs/style/variables.css';
+
+/* 基块：底色/圆角走 token（vue 版 --uikit-bg-hover / --uikit-components-radius 口径） */
+.em-skeleton {
+  background-color: var(--em-bg-hover);
+}
+
+/* avatar：40×40 默认，circle 50% / rounded 组件圆角 / square 直角 */
+.em-skeleton--avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.em-skeleton--avatar-circle {
+  border-radius: 50%;
+}
+
+.em-skeleton--avatar-rounded {
+  border-radius: var(--em-radius);
+}
+
+.em-skeleton--avatar-square {
+  border-radius: 0;
+}
+
+/* text：高 1em，行圆角 4px（vue 版口径） */
+.em-skeleton--text {
+  width: 100%;
+  height: 1em;
+  border-radius: var(--em-skeleton-line-radius);
+}
+
+/* paragraph：column 间距 8px，子行继承 text 规格，末行 60% */
+.em-skeleton--paragraph {
+  display: flex;
+  flex-direction: column;
+}
+
+.em-skeleton__line {
+  width: 100%;
+  height: 1em;
+  border-radius: var(--em-skeleton-line-radius);
+  background-color: var(--em-bg-hover);
+  margin-bottom: 8px;
+}
+
+.em-skeleton__line--last {
+  width: 60%;
+  margin-bottom: 0;
+}

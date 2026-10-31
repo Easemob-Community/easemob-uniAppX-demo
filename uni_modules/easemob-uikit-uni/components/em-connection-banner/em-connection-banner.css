@@ -1,0 +1,39 @@
+@import '../../libs/style/variables.css';
+
+/* 轻量状态条：不用大面积色块，靠图标/文字着色区分 warning/error，暗色模式随 token 走 */
+.em-connection-banner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 6px 12px;
+  background-color: var(--em-bg-secondary);
+}
+
+.em-connection-banner__icon {
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.em-connection-banner--warning .em-connection-banner__icon {
+  color: var(--em-warning-color);
+}
+
+.em-connection-banner--error .em-connection-banner__icon {
+  color: var(--em-danger-color);
+}
+
+.em-connection-banner__text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--em-font-size-12);
+  line-height: 16px;
+  color: var(--em-text-secondary);
+}
+
+.em-connection-banner--warning .em-connection-banner__text {
+  color: var(--em-warning-color);
+}
+
+.em-connection-banner--error .em-connection-banner__text {
+  color: var(--em-danger-color);
+}

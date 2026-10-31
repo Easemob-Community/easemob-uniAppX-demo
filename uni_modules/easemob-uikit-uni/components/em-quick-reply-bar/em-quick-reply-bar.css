@@ -1,0 +1,32 @@
+@import '../../libs/style/variables.css';
+
+/* 快捷回复条：与输入栏同底色（紧贴输入栏顶部，避免出现拼缝），胶囊样式对齐 em-conversation-tabs */
+.em-quick-reply-bar {
+  display: flex;
+  flex-direction: row;
+  padding: var(--em-spacing-2) var(--em-spacing-3);
+  background-color: var(--em-input-bg);
+  white-space: nowrap;
+}
+
+.em-quick-reply-bar__track {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+/* 胶囊：4px 12px、圆角 999、灰底；间距 8px 用 margin（ucss 禁 gap） */
+.em-quick-reply-bar__item {
+  padding: var(--em-spacing-1) var(--em-spacing-3);
+  margin-right: var(--em-spacing-2);
+  background-color: var(--em-bg-secondary);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.em-quick-reply-bar__text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-primary);
+}

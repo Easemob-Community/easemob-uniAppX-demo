@@ -1,0 +1,97 @@
+{
+  "id": "easemob-uikit-uni",
+  "displayName": "环信 IM UIKit（uni-app x）",
+  "version": "1.0.0-rc.2",
+  "description": "环信 IM 的 uni-app x 版 UIKit：会话列表、聊天页、群聊、联系人、5 种消息气泡，支持 Android/iOS/鸿蒙/H5/微信小程序。",
+  "keywords": ["环信", "easemob", "IM", "聊天", "uni-app-x"],
+  "repository": "https://github.com/Easemob-Community/easemob-uikit-uniapp",
+  "license": "MIT",
+  "engines": {
+    "HBuilderX": "^5.21.0",
+    "uni-app-x": "^4.71.0"
+  },
+  "dcloudext": {
+    "category": ["前端组件", "通用组件"],
+    "sale": {
+      "regular": { "price": 0 },
+      "sourcecode": { "price": 0 }
+    },
+    "contact": {},
+    "darkmode": "√",
+    "i18n": "√",
+    "widescreen": "x",
+    "declaration": {
+      "ads": "无广告",
+      "data": "插件本身不采集数据；消息、联系人与群资料经宿主集成的环信 IM SDK 传输至宿主配置的环信服务端，不由本插件上传第三方",
+      "permissions": "相机、相册、麦克风（仅在用户主动发送图片/视频/语音时调用；拒绝后对应功能不可用，不影响文本收发）"
+    },
+    "npmurl": "",
+    "type": "component-vue"
+  },
+  "uni_modules": {
+    "dependencies": [],
+    "encrypt": [],
+    "platforms": {
+      "cloud": {
+        "tcb": "x",
+        "aliyun": "x",
+        "alipay": "x"
+      },
+      "client": {
+        "uni-app": {
+          "vue": {
+            "vue2": "x",
+            "vue3": "x"
+          },
+          "web": {
+            "safari": "x",
+            "chrome": "x"
+          },
+          "app": {
+            "vue": "x",
+            "nvue": "x",
+            "android": "x",
+            "ios": "x",
+            "harmony": "x"
+          },
+          "mp": {
+            "weixin": "x",
+            "alipay": "x",
+            "toutiao": "x",
+            "baidu": "x",
+            "kuaishou": "x",
+            "jd": "x",
+            "harmony": "x",
+            "qq": "x",
+            "lark": "x"
+          },
+          "quickapp": {
+            "huawei": "x",
+            "union": "x"
+          }
+        },
+        "uni-app-x": {
+          "web": {
+            "safari": "√",
+            "chrome": "√"
+          },
+          "app": {
+            "android": {
+              "minVersion": "6.0"
+            },
+            "ios": {
+              "minVersion": "15.0"
+            },
+            "harmony": "√"
+          },
+          "mp": {
+            "weixin": "√"
+          }
+        }
+      }
+    }
+  },
+  "peerDependencies": {
+    "easemob-websdk": "5.1.3"
+  }
+}

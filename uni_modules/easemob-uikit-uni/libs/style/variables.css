@@ -1,0 +1,217 @@
+/* 环信 UIKit uni 版设计 token（一期最小集）
+ * 数值平移自 easemob-uikit-vue/packages/uikit-core/src/theme/index.css（--uikit-* → --em-*）
+ * 平移/裁剪/降级明细见 docs/DESIGN-TOKENS.md
+ * 用法：页面级组件根节点挂 .em-theme-light / .em-theme-dark（useTheme().themeClass，默认 auto 跟随系统），
+ * 并在样式中 import 本文件。ucss 纪律：无继承、无伪元素，组件内用 var(--em-*) 消费。
+ *
+ * 注意：主题靠根节点 class 切换（App 端无 :root），CSS 自定义属性未定义时 var() 无回退
+ * 会整属性失效（unset）。因此：
+ * 1. 主题无关 token（间距/字号/圆角/尺寸）挂在 .em-theme-light, .em-theme-dark 共享块；
+ * 2. 颜色 token 在明暗两个块中各自给全量定义，禁止「dark 只写覆盖项」。
+ */
+
+/* ========== 主题无关 token（共享） ========== */
+.em-theme-light,
+.em-theme-dark {
+  /* 间距阶梯 4/8/12/16/24/32/48 */
+  --em-spacing-1: 4px;
+  --em-spacing-2: 8px;
+  --em-spacing-3: 12px;
+  --em-spacing-4: 16px;
+  --em-spacing-5: 24px;
+  --em-spacing-6: 32px;
+  --em-spacing-7: 48px;
+
+  /* 字体栈（平移 vue 版 --uikit-font-family；ucss 无继承，需落在具体 text class 上消费） */
+  --em-font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Source Han Sans SC', sans-serif;
+
+  /* 字号阶梯（静态值；vue 版的 calc(Npx × font-scale) 适老缩放一期不做） */
+  --em-font-size-9: 9px;
+  --em-font-size-10: 10px;  --em-font-size-11: 11px;
+  --em-font-size-12: 12px;
+  --em-font-size-13: 13px;
+  --em-font-size-14: 14px;
+  --em-font-size-15: 15px;
+  --em-font-size-16: 16px;
+  --em-font-size-18: 18px;
+  --em-font-size-20: 20px;
+  --em-font-size-28: 28px;
+
+  /* 字重与行高 */
+  --em-font-weight-regular: 400;
+  --em-font-weight-medium: 500;
+  --em-font-weight-semibold: 600;
+  --em-font-weight-bold: 700;
+  --em-lineheight-tight: 1.25;
+  --em-lineheight-normal: 1.5;
+  --em-lineheight-relaxed: 1.75;
+
+  /* 圆角 */
+  --em-radius: 8px;
+  --em-bubble-radius: 16px;
+  --em-bubble-radius-square: 8px;
+  --em-file-card-radius: 12px;
+  --em-input-radius: 999px;
+  /* 组件小圆角（对齐 vue --uikit-components-radius 6px）：多行输入区等非胶囊容器 */
+  --em-component-radius: 6px;
+
+  /* 列表/消息区尺寸（对齐 vue 版 normal 密度档） */
+  --em-cell-height: 64px;
+  --em-bubble-gap: 8px;
+  --em-message-gap: 16px;
+  --em-message-padding: 12px;
+
+  /* 气泡内边距与文件卡尺寸（几何类 token，明暗同值；文本气泡为基准气泡壳） */
+  --em-bubble-padding-x: 14px;
+  --em-bubble-padding-y: 12px;
+  --em-audio-bubble-padding-x: 14px;
+  --em-audio-bubble-padding-y: 10px;
+  --em-file-card-padding-x: 12px;
+  --em-file-card-padding-y: 10px;
+  --em-file-card-min-width: 166px;
+  --em-file-card-max-width: 240px;
+
+  /* 输入栏「+」emoji/媒体面板高度（与常见键盘高度接近，对齐 vue 版 h5-input panel） */
+  --em-chat-panel-height: 240px;
+
+  /* 文件消息类型图标底色（图标本体固定白色） */
+  --em-file-icon-pdf: #DA3034;
+  --em-file-icon-xls: #1D7044;
+  --em-file-icon-doc: #2B5797;
+  --em-file-icon-ppt: #D24625;
+  --em-file-icon-md: #424242;
+  --em-file-icon-img: #00897B;
+  --em-file-icon-video: #E91E63;
+  --em-file-icon-audio: #7B1FA2;
+  --em-file-icon-file: #4CAF50;
+}
+
+/* ========== 亮色（全量颜色 token） ========== */
+.em-theme-light {
+  /* 主色与功能色 */
+  --em-primary-color: #33B1FF; /* hsl(203,100%,60%) */
+  --em-primary-hover: #00A1FF; /* hsl(203,100%,50%) */
+  --em-success-color: #16A34A; /* hsl(142,76%,36%) */
+  --em-warning-color: #FFAA19; /* hsl(38,100%,60%) */
+  --em-danger-color: #FF3355;  /* hsl(350,100%,60%) */
+  --em-info-color: #33B1FF;
+  /* @提及高亮色（对齐 vue 版 text-message mention 的 --uikit-primary-color） */
+  --em-mention-color: #33B1FF;
+
+  /* 文字阶梯（强调色/彩色背景上的文字恒白） */
+  --em-text-primary: #171A1C;
+  --em-text-secondary: #5E686E;
+  --em-text-tertiary: #919BA1;
+  --em-text-inverse: #FFFFFF;
+
+  /* 弱化图标/占位图标色 */
+  --em-icon-muted: #949A9E;
+
+  /* 背景阶梯 */
+  --em-bg-base: #FFFFFF;
+  --em-bg-secondary: #F3F4F6;
+  --em-bg-tertiary: #F0F0F0;
+  --em-bg-elevated: #FFFFFF;
+  --em-bg-hover: #F5F5F5;
+  --em-bg-active: rgba(51, 177, 255, 0.12);
+  /* 控件底（默认按钮、暗色对方气泡、引用块等凸起填充） */
+  --em-control-bg: #F3F4F6;
+
+  /* 边框与分割线 */
+  --em-border-color: #E5E7EB;
+  --em-border-light: #F3F4F6;
+  --em-divider-color: rgba(0, 0, 0, 0.06);
+
+  /* 气泡（己方品牌蓝 #009EFF 不跟随主色） */
+  --em-bubble-bg-other: #E4E6E7;
+  --em-bubble-bg-self: #009EFF;
+  --em-bubble-text-other: #171A1C;
+  --em-bubble-text-self: #FFFFFF;
+  --em-bubble-text-self-secondary: #EFEFEF;
+  /* 消息辅助信息胶囊底（时间分割线/撤回提示等） */
+  --em-message-chip-bg: #E4E6E7;
+  /* 引用/回复竖线 */
+  --em-quote-line-color: #C9CDCF;
+
+  /* 页面语义背景 */
+  --em-chat-bg: #FFFFFF;
+  --em-input-bg: #FFFFFF;
+  --em-conversation-list-bg: #FFFFFF;
+  --em-input-border-color: #C9CDCF;
+
+  /* 空状态占位 */
+  --em-empty-icon-color: #C9CDCF;
+  --em-empty-text-color: #919BA1;
+
+  /* 骨架屏（行底色复用 --em-bg-hover；己方气泡浅蓝由品牌气泡蓝派生、不跟随主色） */
+  --em-skeleton-line-radius: 4px;
+  --em-skeleton-bubble-self: rgba(0, 158, 255, 0.16);
+
+  /* 徽标（未读数/红点，独立于 danger 色） */
+  --em-badge-bg: #FF7070;
+  --em-badge-text: #FFFFFF;
+
+  /* 遮罩（弹层 overlay / 视频播放钮与时长胶囊底） */
+  --em-mask-color: rgba(0, 0, 0, 0.4);
+
+  /* 全屏媒体预览底（视频播放器黑底，明暗同值） */
+  --em-video-viewer-bg: #000000;
+}
+
+/* ========== 暗色（全量颜色 token，缺一项 var() 即失效，勿只写覆盖项） ========== */
+.em-theme-dark {
+  --em-primary-color: #33B1FF;
+  --em-primary-hover: #007ECC;
+  --em-success-color: #09C26F;
+  --em-warning-color: #FFAB00;
+  --em-danger-color: #FF3333;
+  --em-info-color: #33B1FF;
+  --em-mention-color: #33B1FF;
+
+  --em-text-primary: #E8EAED;
+  --em-text-secondary: #9AA0A6;
+  --em-text-tertiary: #737B82;
+  --em-text-inverse: #FFFFFF;
+
+  --em-icon-muted: #9AA0A6;
+
+  --em-bg-base: #1E2123;
+  --em-bg-secondary: #2A2A30;
+  --em-bg-tertiary: #333537;
+  --em-bg-elevated: #1E2123;
+  --em-bg-hover: #2A2A30;
+  /* 设计稿暗色选中底为固定藏青，无法由主色派生 */
+  --em-bg-active: #0D2840;
+  --em-control-bg: #333537;
+
+  --em-border-color: #3C3F42;
+  --em-border-light: #333537;
+  --em-divider-color: #333537;
+
+  --em-bubble-bg-other: #333537;
+  --em-bubble-bg-self: #33B1FF;
+  --em-bubble-text-other: #E8EAED;
+  --em-bubble-text-self: #1E2123;
+  --em-bubble-text-self-secondary: rgba(30, 33, 35, 0.72);
+  --em-message-chip-bg: #333537;
+  --em-quote-line-color: #3C3F42;
+
+  --em-chat-bg: #1E1E23;
+  --em-input-bg: #1E2123;
+  --em-conversation-list-bg: #1E2123;
+  --em-input-border-color: #3C3F42;
+
+  --em-empty-icon-color: #464E53;
+  --em-empty-text-color: #737B82;
+
+  --em-skeleton-line-radius: 4px;
+  --em-skeleton-bubble-self: rgba(51, 177, 255, 0.2);
+
+  --em-badge-bg: #FF7070;
+  --em-badge-text: #1E1E23;
+
+  /* 暗色遮罩更深一档，压住亮色内容对比 */
+  --em-mask-color: rgba(0, 0, 0, 0.6);
+
+  --em-video-viewer-bg: #000000;
+}

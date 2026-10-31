@@ -1,0 +1,630 @@
+@import '../../../libs/style/variables.css';
+@import '../../../libs/style/bubble.css';
+
+.em-chat-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: var(--em-chat-bg);
+}
+
+.em-chat-page__scroll {
+  flex: 1;
+  height: 0;
+  padding: var(--em-message-padding) var(--em-spacing-4);
+  /* 聊天列表隐藏滚动条（对齐微信/vue 版形态）：小程序端由 show-scrollbar 属性控制，
+     H5 走 scrollbar-width，不支持的端静默忽略 */
+  scrollbar-width: none;
+}
+
+.em-chat-page__history {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--em-spacing-2) 0;
+}
+
+.em-chat-page__history-text {
+  font-size: var(--em-font-size-12);
+  color: var(--em-text-tertiary);
+}
+
+/* 首屏历史骨架：气泡对话形态（左右交替 + 时间 chip + 图片块），对齐真实消息行布局；
+   只在首次请求未回包且无缓存时出现。气泡壳规格与真实气泡同源（radius/padding token），
+   内行用页面底色镂空出「文字」形态 */
+.em-chat-page__skeleton {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.em-chat-page__skeleton-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: var(--em-message-gap);
+}
+
+/* 己方行：头像与气泡整体靠右（与 __msg-self 同语义，row-reverse 后头像落在右侧） */
+.em-chat-page--skeleton-row-self {
+  flex-direction: row-reverse;
+}
+
+/* 时间 chip 行：居中，无头像无气泡 */
+.em-chat-page--skeleton-row-chip {
+  justify-content: center;
+}
+
+.em-chat-page__skeleton-avatar {
+  flex-shrink: 0;
+  margin: 0 8px;
+}
+
+.em-chat-page__skeleton-bubble {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background-color: var(--em-bubble-bg-other);
+  border-radius: var(--em-bubble-radius);
+  padding: var(--em-bubble-padding-y) var(--em-bubble-padding-x);
+}
+
+/* 己方气泡：品牌蓝浅 tint（token 派生），与真实蓝色气泡建立方向感但不抢视觉 */
+.em-chat-page--skeleton-bubble-self {
+  background-color: var(--em-skeleton-bubble-self);
+}
+
+/* 图片消息块：近方形、无内行 */
+.em-chat-page--skeleton-bubble-image {
+  width: 200rpx;
+  height: 200rpx;
+  padding: 0;
+}
+
+.em-chat-page__skeleton-text {
+  width: 100%;
+}
+
+.em-chat-page__skeleton-text-gap {
+  margin-bottom: 6px;
+}
+
+/* 时间分隔 chip：居中弱占位（对齐 __divider 形态） */
+.em-chat-page__skeleton-chip {
+  width: 72px;
+  height: 18px;
+  border-radius: 999px;
+  background-color: var(--em-message-chip-bg);
+}
+
+.em-chat-page__history-error {
+  padding: var(--em-spacing-4) 0;
+}
+
+.em-chat-page__history-retry {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: var(--em-spacing-3);
+}
+
+/* 滚底锚点：占位的 1px 空 view，scroll-into-view 定位目标（见组件注释） */
+.em-chat-page__bottom-anchor {
+  height: 1px;
+}
+
+.em-chat-page__msg {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: var(--em-message-gap);
+}
+
+/* 时间分隔条：居中弱文案（对齐 vue 版 message-list divider） */
+.em-chat-page__divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--em-message-gap);
+}
+
+.em-chat-page__divider-text {
+  font-size: var(--em-font-size-12);
+  color: var(--em-text-tertiary);
+}
+
+.em-chat-page--msg-self {
+  flex-direction: row-reverse;
+}
+
+.em-chat-page--msg-recalled {
+  justify-content: center;
+}
+
+/* 引用定位高亮：整行中性灰横带满铺（对齐 vue 版 message-row-flash），
+   padding+负 margin 抵消避免布局抖动；脉冲时序由脚本定时器驱动（复刻 vue 版
+   2.8s 双脉冲：on 0→500ms、off 500→840ms、on 840→1960ms、off 至清除）——
+   蒸汽端不跑 CSS @keyframes，动画必须 JS 驱动；与脚本侧 3000ms 清除计时器对齐 */
+.em-chat-page--msg-highlight {
+  padding: 4px 8px;
+  /* 负 margin 抵消 padding 防布局抖动；注意不能用 margin 简写——会覆盖基类的
+     margin-bottom: var(--em-message-gap)，行间距塌掉产生跳动（实测踩过） */
+  margin-top: -4px;
+  /* margin-bottom 用 calc 对齐 --em-message-gap（16px）-4px = 12px 原值：
+     高亮行的负 margin 补偿需与常规行间距同源，避免 token 调整时间距漂移 */
+  margin-bottom: calc(var(--em-message-gap) - 4px);
+  margin-left: -8px;
+  margin-right: -8px;
+  border-radius: var(--em-radius);
+  background-color: var(--em-bg-hover);
+}
+
+.em-chat-page__recalled {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 2px var(--em-spacing-2);
+  background-color: var(--em-message-chip-bg);
+  border-radius: 999px;
+}
+
+.em-chat-page__recalled-text {
+  font-size: var(--em-font-size-12);
+  color: var(--em-text-tertiary);
+}
+
+/* 群系统通知灰条：与撤回提示条同 chip 形态（居中灰底胶囊，12px 三级文字）；
+   名字等内容用 em-text 单行省略，宿主 max-width 用 rpx 定宽（蒸汽端 % max-width 多行文本链有裁切坑） */
+.em-chat-page__notice {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 2px var(--em-spacing-2);
+  background-color: var(--em-message-chip-bg);
+  border-radius: 999px;
+  max-width: 560rpx;
+}
+
+.em-chat-page__notice-text-host {
+  min-width: 0;
+}
+
+.em-chat-page__notice-text {
+  font-size: var(--em-font-size-12);
+  color: var(--em-text-tertiary);
+}
+
+/* 引用卡（对齐 vue 版 quote-card）：气泡外下方，无背景无边框，2px 竖杠 + 「发送人：摘要」，最多两行折叠 */
+.em-chat-page__quote {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  margin-top: 4px;
+  max-width: 100%;
+}
+
+.em-chat-page--quote-self {
+  flex-direction: row-reverse;
+}
+
+.em-chat-page__quote-line {
+  width: 2px;
+  border-radius: 2px;
+  background-color: var(--em-quote-line-color);
+  margin-right: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-chat-page--quote-line-self {
+  margin-right: 0;
+  margin-left: var(--em-spacing-2);
+}
+
+.em-chat-page__quote-icon {
+  margin-right: var(--em-spacing-1);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.em-chat-page--quote-icon-self {
+  margin-right: 0;
+  margin-left: var(--em-spacing-1);
+}
+
+/* 引用卡的折叠由 em-text 收口；宿主节点补 flex 约束链（小程序宿主参与 flex 布局，缺了会横向溢出） */
+.em-chat-page__quote-host {
+  flex: 1;
+  min-width: 0;
+}
+
+.em-chat-page__quote-text {
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-secondary);
+}
+
+.em-chat-page--quote-text-self {
+  text-align: right;
+}
+
+.em-chat-page__quote-sender {
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-secondary);
+  font-weight: var(--em-font-weight-medium);
+}
+
+.em-chat-page__quote-preview {
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-secondary);
+}
+
+.em-chat-page__content {
+  display: flex;
+  flex-direction: column;
+  /* 必须是 rpx 定宽：Android 蒸汽端对 max-width:70% 百分比链中的 text 布局/绘制双重解析
+     不一致，每行行尾约丢 1 个汉字（探针 W2/S 组实测：百分比缺字、rpx 定宽完整；
+     W1 负 margin / W3 去 margin / W4 去 word-break / W7 overflow:visible 均无效）。
+     480rpx ≈ 手机屏幕宽 70% 减头像与页边距，与旧 70% 语义基本一致（平板略窄，可接受） */
+  max-width: 480rpx;
+  min-width: 0;
+  /* 状态图标绝对定位在气泡左外侧（right:100%）：蒸汽端 view 默认 overflow:hidden，
+     不放行会把发送中/失败状态整块裁掉（表现为「气泡上屏但没有任何状态」） */
+  overflow: visible;
+  margin-left: var(--em-spacing-2);
+  margin-right: var(--em-spacing-2);
+}
+
+.em-chat-page--content-self {
+  align-items: flex-end;
+}
+
+/* 不支持消息的占位气泡：壳（底色/圆角/padding）叠用 .em-bubble 基类 */
+.em-chat-page__text {
+  font-size: var(--em-font-size-15);
+  /* px 行高同 em-text-message（Android 蒸汽端倍数行高不可靠）；行尾缺字修复在 __content 的 rpx 定宽 */
+  line-height: 23px;
+  color: var(--em-bubble-text-other);
+}
+
+/* 气泡行：气泡与状态图标的水平容器，底边对齐——状态图标永远贴着气泡末尾，
+   不被引用卡撑高（vue 版用 ResizeObserver 对齐气泡本体，ucss 下用 flex-end 等价实现）。
+   注意：状态图标用绝对定位移出布局流——小程序里组件宿主节点参与 flex 布局且约束链解析不可靠，
+   在流内占位会把气泡顶超宽（实测超出正好一个图标位被头像裁切） */
+.em-chat-page__bubble-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  max-width: 100%;
+  position: relative;
+  /* 状态图标是气泡行的绝对定位子节点，必须在行容器同样放行溢出 */
+  overflow: visible;
+}
+
+/* 自定义消息出口壳：只承接 longpress（宿主卡片内容的事件冒泡）与宽度约束，不改变卡片自身布局 */
+.em-chat-page__custom {
+  display: flex;
+  flex-direction: row;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* 状态图标（仅己方消息）：绝对定位在气泡左外侧、与气泡底边对齐；不占布局宽度 */
+.em-chat-page__state {
+  position: absolute;
+  right: 100%;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--em-spacing-1);
+}
+
+/* 失败红叹号：circle/bang 14px，点击触发重发（对齐 vue message-bubble-wrapper 状态图） */
+.em-chat-page__state-icon-failed {
+  color: var(--em-danger-color);
+}
+
+/* sending 转圈：蒸汽端若不支持 @keyframes 则退化为静态图标，不影响语义 */
+.em-chat-page__state-icon-sending {
+  animation: em-chat-page-spin 1s linear infinite;
+}
+
+/* 已读 circle/checked：弱化灰；未读 circle/empty-1：主题色（对齐 vue 版 status-icon--unread 口径） */
+.em-chat-page--state-icon-read {
+  color: var(--em-text-tertiary);
+}
+
+.em-chat-page--state-icon-unread {
+  color: var(--em-primary-color);
+}
+
+/* 状态列镜像到气泡右侧（config.messageStatus.position = 'right'）：不占布局宽度，贴气泡右外侧 */
+.em-chat-page--bubble-row-status-end .em-chat-page__state {
+  right: auto;
+  left: 100%;
+  margin-right: 0;
+  margin-left: var(--em-spacing-1);
+}
+
+/* 配置了状态文案（texts）时状态列宽度自适应：图标 + 短文案横排，不再受 20px 定宽挤压 */
+.em-chat-page--state-with-text {
+  width: auto;
+  min-width: 20px;
+  padding: 0 2px;
+}
+
+.em-chat-page__state-text {
+  margin-left: 2px;
+  font-size: var(--em-font-size-11);
+  line-height: 14px;
+  color: var(--em-text-tertiary);
+  white-space: nowrap;
+}
+
+/* 群已读人数（己方消息气泡下方）：弱化灰小字，右对齐与气泡同侧；无人数时不渲染 */
+.em-chat-page__group-read {
+  display: flex;
+  flex-direction: row;
+  margin-top: 4px;
+}
+
+.em-chat-page--group-read-self {
+  flex-direction: row-reverse;
+}
+
+.em-chat-page__group-read-text {
+  font-size: var(--em-font-size-11);
+  line-height: 14px;
+  color: var(--em-text-tertiary);
+}
+
+@keyframes em-chat-page-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 群聊发送者昵称行（对齐 vue 版 message-bubble-wrapper__nickname：12px/medium/主文字色，气泡上方） */
+.em-chat-page__sender-name-host {
+  max-width: 100%;
+  min-width: 0;
+  margin-bottom: 2px;
+}
+
+.em-chat-page__sender-name {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-12);
+  line-height: 18px;
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-text-primary);
+}
+
+/* 群公告条（对齐 vue 版 group-announcement-banner：次底背景 + 底部发丝线 + 警示色图标） */
+.em-chat-page__announcement {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 10px var(--em-spacing-4);
+  background-color: var(--em-bg-secondary);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+  flex-shrink: 0;
+}
+
+.em-chat-page__announcement-icon {
+  flex-shrink: 0;
+  color: var(--em-warning-color);
+  margin-top: 2px;
+  margin-right: var(--em-spacing-2);
+}
+
+.em-chat-page__announcement-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.em-chat-page__announcement-title {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-text-secondary);
+}
+
+.em-chat-page__announcement-host {
+  flex: 1;
+  min-width: 0;
+}
+
+.em-chat-page__announcement-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-12);
+  line-height: 18px;
+  color: var(--em-text-primary);
+}
+
+.em-chat-page__announcement-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: var(--em-spacing-2);
+}
+
+.em-chat-page__announcement-toggle-icon {
+  color: var(--em-text-secondary);
+}
+
+/* 群公告全文弹层（em-popup center 位内容卡：标题 + 限高滚动正文 + 关闭按钮） */
+.em-chat-page__announcement-dialog {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  max-height: 420px;
+  padding: var(--em-spacing-4);
+  background-color: var(--em-bg-elevated);
+  border-radius: 12px;
+}
+
+.em-chat-page__announcement-dialog-title {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  color: var(--em-text-primary);
+  text-align: center;
+  margin-bottom: var(--em-spacing-3);
+}
+
+.em-chat-page__announcement-dialog-scroll {
+  flex: 1;
+  height: 0;
+  min-height: 60px;
+}
+
+.em-chat-page__announcement-dialog-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}
+
+.em-chat-page__announcement-dialog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  margin-top: var(--em-spacing-3);
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--em-divider-color);
+}
+
+.em-chat-page__announcement-dialog-close-text {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  color: var(--em-primary-color);
+}
+
+/* 品牌色内联变量作用域层：接替根的 flex 容器角色（flex:1 + height:0 保持滚动约束链） */
+.em-chat-page__brand-scope {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+}
+
+/* 水印 stage（M2.27）：nav → 消息列表的定位上下文；底边即输入栏上沿，
+   水印因此天然不含输入栏/面板/弹层（对齐 vue 版 chat__content 口径）；不加 overflow 以免裁掉气泡角标 */
+.em-chat-page__stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+  position: relative;
+}
+
+/* 水印覆盖层：铺满 stage、穿透事件、裁切旋转溢出；z-index 低于库内弹层基准 2000 */
+.em-chat-page__watermark {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+
+/* 撤回条「重新编辑」按钮（M2.20）：竖线分隔 + 主色文字（对齐 vue 版 reedit-btn 形态） */
+.em-chat-page__recalled-reedit {
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--em-border-color);
+}
+
+.em-chat-page__recalled-reedit-text {
+  font-size: var(--em-font-size-12);
+  color: var(--em-primary-color);
+}
+
+/* 置顶角标（M2.20）：气泡上方小图钉（对齐 vue 版 message-bubble-wrapper 的 pin 角标）；
+   __content 需要定位上下文（独立规则补充，不影响既有盒模型） */
+.em-chat-page__content {
+  position: relative;
+}
+
+.em-chat-page__pin-badge {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  z-index: 1;
+  color: var(--em-text-tertiary);
+  transform: rotate(45deg);
+}
+
+/* 己方气泡右对齐：角标镜像到右上角 */
+.em-chat-page--pin-badge-self {
+  left: auto;
+  right: -6px;
+}
+
+/* 审核替换标识：气泡下方弱提示，与「已编辑」同属元信息层，不改变气泡内容 */
+.em-chat-page__moderated {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.em-chat-page--moderated-self {
+  flex-direction: row-reverse;
+}
+
+.em-chat-page__moderated-icon {
+  color: var(--em-warning-color);
+}
+
+.em-chat-page__moderated-text {
+  margin-left: 4px;
+  font-size: var(--em-font-size-11);
+  line-height: 14px;
+  color: var(--em-warning-color);
+}
+
+/* 断连/重连提示：贴输入栏上方的一条轻量状态，不抢消息区视觉 */
+.em-chat-page__network-hint {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  background-color: var(--em-bg-secondary);
+}
+
+.em-chat-page__network-hint-icon {
+  flex-shrink: 0;
+  margin-right: 4px;
+  color: var(--em-warning-color);
+}
+
+.em-chat-page__network-hint-text {
+  font-size: var(--em-font-size-11);
+  line-height: 14px;
+  color: var(--em-warning-color);
+}
+
+.em-chat-page--network-hint-offline .em-chat-page__network-hint-icon,
+.em-chat-page--network-hint-offline .em-chat-page__network-hint-text {
+  color: var(--em-danger-color);
+}

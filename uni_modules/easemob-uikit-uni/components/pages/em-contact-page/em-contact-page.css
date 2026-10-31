@@ -1,0 +1,42 @@
+@import '../../../libs/style/variables.css';
+
+.em-contact-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: var(--em-conversation-list-bg);
+}
+
+.em-contact-page__scroll {
+  flex: 1;
+  height: 0;
+}
+
+/* 品牌色内联变量作用域层：接替根的 flex 容器角色（flex:1 + height:0 保持滚动约束链） */
+.em-contact-page__brand-scope {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+}
+
+/* 水印 stage（M2.27）：nav → 列表的定位上下文；只补 position，不加 overflow（会裁掉组件探出元素） */
+.em-contact-page__stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+  position: relative;
+}
+
+/* 水印覆盖层：铺满 stage、穿透事件、裁切旋转溢出；z-index 低于库内弹层基准 2000 */
+.em-contact-page__watermark {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}

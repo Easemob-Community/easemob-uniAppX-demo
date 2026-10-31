@@ -1,0 +1,259 @@
+@import '../../libs/style/variables.css';
+
+.em-chat-inputbar {
+  display: flex;
+  flex-direction: column;
+  /* 输入栏是页面 flex 列里的固定底部区：默认 flex-shrink:1 会被消息区挤扁，
+     生长输入撑高后整栏被压到比内容矮、内容溢出屏底（Android 真机实测） */
+  flex-shrink: 0;
+  background-color: var(--em-input-bg);
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--em-divider-color);
+}
+
+.em-chat-inputbar__quotebar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-2) var(--em-spacing-4);
+}
+
+.em-chat-inputbar__quotebar-line {
+  width: 2px;
+  align-self: stretch;
+  border-radius: 2px;
+  background-color: var(--em-quote-line-color);
+  margin-right: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-chat-inputbar__quotebar-icon {
+  margin-right: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+/* 宿主节点补 flex 约束链（小程序宿主参与 flex 布局，flex:1/min-width:0 必须落在宿主上） */
+.em-chat-inputbar__quotebar-host {
+  flex: 1;
+  min-width: 0;
+}
+
+.em-chat-inputbar__quotebar-text {
+  font-size: var(--em-font-size-13);
+  color: var(--em-text-secondary);
+}
+
+.em-chat-inputbar__quotebar-sender {
+  font-size: var(--em-font-size-13);
+  color: var(--em-text-secondary);
+  font-weight: var(--em-font-weight-medium);
+}
+
+.em-chat-inputbar__quotebar-preview {
+  font-size: var(--em-font-size-13);
+  color: var(--em-text-secondary);
+}
+
+.em-chat-inputbar__quotebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-chat-inputbar__record-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--em-spacing-1) 0;
+}
+
+.em-chat-inputbar__record-hint-text {
+  font-size: var(--em-font-size-12);
+  color: var(--em-text-tertiary);
+}
+
+.em-chat-inputbar--record-hint-text-cancel {
+  color: var(--em-danger-color);
+}
+
+.em-chat-inputbar__bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-2) var(--em-spacing-4);
+}
+
+.em-chat-inputbar__tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-chat-inputbar--tool-first {
+  margin-left: 0;
+}
+
+/* 面板打开时入口按钮高亮（对齐 vue 版 icon-btn--active） */
+.em-chat-inputbar--tool-active {
+  background-color: var(--em-bg-active);
+  border-radius: 999px;
+}
+
+.em-chat-inputbar__record {
+  flex: 1;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--em-spacing-2);
+  border-radius: var(--em-input-radius);
+  background-color: var(--em-control-bg);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--em-input-border-color);
+}
+
+.em-chat-inputbar--record-active {
+  background-color: var(--em-bg-active);
+  border-color: var(--em-primary-color);
+}
+
+.em-chat-inputbar--record-cancel {
+  background-color: var(--em-bg-active);
+  border-color: var(--em-danger-color);
+}
+
+.em-chat-inputbar__record-text {
+  font-size: var(--em-font-size-14);
+  color: var(--em-text-primary);
+}
+
+/* 底部面板：emoji / 媒体同高（与常见键盘高度接近；不插虚拟键盘占位），高度收口 token */
+.em-chat-inputbar__panel {
+  height: var(--em-chat-panel-height);
+  display: flex;
+  flex-direction: column;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: var(--em-divider-color);
+}
+
+.em-chat-inputbar__emoji-scroll {
+  flex: 1;
+  height: 0;
+  padding: 0 var(--em-spacing-2);
+}
+
+.em-chat-inputbar__emoji-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.em-chat-inputbar__emoji-cell {
+  width: 12.5%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.em-chat-inputbar__emoji-char {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* 媒体格子（对齐 vue 版 more-grid：4 列、56×56 圆角瓷贴 + 11px 小字） */
+.em-chat-inputbar__media-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: var(--em-spacing-5) var(--em-spacing-4);
+}
+
+.em-chat-inputbar__media-item {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.em-chat-inputbar__media-tile {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--em-radius);
+  background-color: var(--em-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.em-chat-inputbar__media-tile-icon {
+  color: var(--em-text-primary);
+}
+
+.em-chat-inputbar__media-label {
+  margin-top: 6px;
+  font-size: var(--em-font-size-11);
+  color: var(--em-text-secondary);
+}
+
+/* 编辑条（M2.20）：对齐 vue 版 editing-bar——12px 字、主色 1px 边框、6px 圆角、min-height 32px */
+.em-chat-inputbar__editbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: var(--em-spacing-2) var(--em-spacing-4) 0;
+  padding: 6px var(--em-spacing-2);
+  min-height: 32px;
+  border: 1px solid var(--em-primary-color);
+  border-radius: var(--em-component-radius);
+}
+
+.em-chat-inputbar__editbar-icon {
+  color: var(--em-primary-color);
+  flex-shrink: 0;
+}
+
+.em-chat-inputbar__editbar-main {
+  flex: 1;
+  min-width: 0;
+  margin-left: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.em-chat-inputbar__editbar-title {
+  font-size: var(--em-font-size-12);
+  line-height: 16px;
+  color: var(--em-primary-color);
+}
+
+.em-chat-inputbar__editbar-preview {
+  font-size: var(--em-font-size-12);
+  line-height: 16px;
+  color: var(--em-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.em-chat-inputbar__editbar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: var(--em-spacing-2);
+  color: var(--em-text-tertiary);
+  flex-shrink: 0;
+}

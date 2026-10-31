@@ -1,0 +1,117 @@
+@import '../../../libs/style/variables.css';
+
+.em-contact-requests-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: var(--em-conversation-list-bg);
+}
+
+.em-contact-requests-page__scroll {
+  flex: 1;
+  height: 0;
+}
+
+/* 申请条目：有待处理操作的条目 min-height 96px（对齐 vue 版 actionable 行高） */
+.em-contact-requests-page__item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 96px;
+  padding: var(--em-spacing-2) var(--em-spacing-4);
+  background-color: var(--em-bg-base);
+}
+
+/* 对方拒绝通知的头像位：dspntd 自带白色圆底（vue 固定白底，不随主题变色），48×48 与头像同尺寸 */
+.em-contact-requests-page__decline-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.em-contact-requests-page__decline-avatar .em-contact-requests-page__decline-avatar-icon {
+  /* 白底固定不随主题：图标必须用固定深灰，否则暗色 text-primary 会在白圆上消失 */
+  color: #5E686E;
+}
+
+.em-contact-requests-page__item-body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  margin-left: var(--em-spacing-3);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+}
+
+.em-contact-requests-page__item-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 名称/附言折叠由 em-text 收口；宿主节点补 min-width:0 保持 flex 约束链 */
+.em-contact-requests-page__name-host {
+  min-width: 0;
+}
+
+.em-contact-requests-page__name {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}
+
+.em-contact-requests-page__subtitle-host {
+  min-width: 0;
+  margin-top: var(--em-spacing-1);
+}
+
+.em-contact-requests-page__subtitle {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-secondary);
+}
+
+.em-contact-requests-page__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-contact-requests-page__action-gap {
+  width: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-contact-requests-page__status {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-tertiary);
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+/* 品牌色内联变量作用域层：接替根的 flex 容器角色（flex:1 + height:0 保持滚动约束链） */
+.em-contact-requests-page__brand-scope {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+}

@@ -1,0 +1,90 @@
+@import '../../../libs/style/variables.css';
+
+.em-conversation-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: var(--em-conversation-list-bg);
+}
+
+.em-conversation-page__scroll {
+  flex: 1;
+  height: 0;
+  padding: var(--em-spacing-1);
+}
+
+/* 首次同步骨架：条目形态对齐真实 em-conversation-item（卡片行 + 圆头像 + 名字/时间行 + 摘要/未读行） */
+.em-conversation-page__skeleton {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+}
+
+.em-conversation-page__skeleton-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-2) var(--em-spacing-3);
+  background-color: var(--em-bg-base);
+  border-radius: var(--em-radius);
+  margin-bottom: var(--em-spacing-1);
+}
+
+.em-conversation-page__skeleton-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--em-spacing-3);
+}
+
+/* 名字/摘要行的右侧时间/未读位（space-between 两端对齐，对齐真实 __top/__bottom） */
+.em-conversation-page__skeleton-top,
+.em-conversation-page__skeleton-bottom {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.em-conversation-page__skeleton-bottom {
+  margin-top: var(--em-spacing-1);
+}
+
+.em-conversation-page__skeleton-time {
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-conversation-page__skeleton-badge {
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+/* 品牌色内联变量作用域层：接替根的 flex 容器角色（flex:1 + height:0 保持滚动约束链） */
+.em-conversation-page__brand-scope {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+}
+
+/* 水印 stage（M2.27）：nav → 列表的定位上下文；只补 position，不加 overflow（会裁掉组件探出元素） */
+.em-conversation-page__stage {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 0;
+  position: relative;
+}
+
+/* 水印覆盖层：铺满 stage、穿透事件、裁切旋转溢出；z-index 低于库内弹层基准 2000 */
+.em-conversation-page__watermark {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}

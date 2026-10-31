@@ -1,0 +1,144 @@
+@import '../../libs/style/variables.css';
+
+.em-conversation-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--em-spacing-2) var(--em-spacing-3);
+  background-color: var(--em-bg-base);
+  border-radius: var(--em-radius);
+  margin-bottom: var(--em-spacing-1);
+}
+
+/* 置顶整项底色（对齐 vue 版 --uikit-bg-hover + 圆角 8px） */
+.em-conversation-item--pinned {
+  background-color: var(--em-bg-hover);
+}
+
+.em-conversation-item__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  margin-left: var(--em-spacing-3);
+  align-self: stretch;
+}
+
+.em-conversation-item__top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  height: 20px;
+}
+
+.em-conversation-item__name-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+}
+
+/* 名称/摘要的折叠由 em-text 收口；宿主节点补 flex 约束链（小程序宿主参与 flex 布局） */
+.em-conversation-item__name-host {
+  flex: 1;
+  min-width: 0;
+}
+
+/* @我图标：14px 主色，紧贴名字左侧（对齐 vue conversation-item__at-me-icon）。
+   双类选择器压过 em-icon.css 的 `.em-icon` 默认色 */
+.em-conversation-item__name-wrap .em-conversation-item__at-me-icon {
+  color: var(--em-primary-color);
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
+/* 草稿铅笔：14px 警示色（对齐 vue conversation-item__draft-icon） */
+.em-conversation-item__message .em-conversation-item__draft-icon {
+  color: var(--em-danger-color);
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
+.em-conversation-item__name {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  font-weight: var(--em-font-weight-semibold);
+  line-height: 20px;
+  color: var(--em-text-primary);
+}
+
+/* 置顶/免打扰图标徽标的间距包裹（图标色走 em-icon 默认 --em-icon-muted，对齐 vue 版 pin-badge/mute-badge） */
+.em-conversation-item__flag {
+  margin-left: var(--em-spacing-1);
+  flex-shrink: 0;
+}
+
+.em-conversation-item__time {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-11);
+  line-height: 16px;
+  color: var(--em-text-tertiary);
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}
+
+.em-conversation-item__bottom {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  height: 18px;
+  margin-top: var(--em-spacing-1);
+}
+
+.em-conversation-item__message {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+  overflow: hidden;
+}
+
+.em-conversation-item__draft {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-danger-color);
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
+/* 「有人@我」前缀：主色 + 中粗（对齐 vue 版 conversation-item__at-me-prefix 的 --uikit-primary + medium） */
+.em-conversation-item__at-me {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  font-weight: var(--em-font-weight-medium);
+  color: var(--em-primary-color);
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
+/* hasAtMe 名字主色高亮（对齐 vue 版 conversation-item__name.is-at-me；text-style 侧见组件内联档） */
+.em-conversation-item--name-at-me {
+  color: var(--em-primary-color);
+}
+
+.em-conversation-item__summary-host {
+  flex: 1;
+  min-width: 0;
+}
+
+.em-conversation-item__summary {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-13);
+  line-height: 18px;
+  color: var(--em-text-secondary);
+}
+
+/* 行尾未读徽标宿主类：外边距/收缩约束；药丸本体样式收口在 em-badge */
+.em-conversation-item__unread {
+  margin-left: var(--em-spacing-2);
+  flex-shrink: 0;
+}

@@ -1,0 +1,34 @@
+@import '../../libs/style/variables.css';
+
+.em-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* uni-app x 的 view 默认 overflow:hidden，会裁掉负偏移探出盒子的徽标（实测坑）；
+     图片裁圆不依赖根节点（img 自带 shape 修饰符的 border-radius），此处显式放行 */
+  overflow: visible;
+}
+
+.em-avatar--circle {
+  border-radius: 999px;
+}
+
+.em-avatar--square {
+  border-radius: var(--em-radius);
+}
+
+.em-avatar__img {
+  width: 100%;
+  height: 100%;
+}
+
+.em-avatar__name {
+  color: #ffffff;
+  font-weight: var(--em-font-weight-medium);
+}
+
+.em-avatar__badge {
+  position: absolute;
+}
