@@ -1,5 +1,6 @@
 import type { ChatClient } from 'easemob-websdk'
 import { EmClient } from './client'
+import { normalizeLoginOptions } from './client/login'
 import { EmChat } from './chat'
 import { EmContact } from './chat/contact'
 import { EmGroupDomain } from './chat/group'
@@ -128,8 +129,9 @@ class EmKitImpl {
   }
 
   async login(options: EmLoginOptions): Promise<void> {
+    const loginOptions = normalizeLoginOptions(options, (message) => kitLogger.warn(message))
     const client = await this.client.whenReady()
-    await this.client.login(options)
+    await this.client.login(loginOptions)
     this.chat.bind(client, () => this.client.waitOnline(), this.kitConfig ?? undefined)
     this.contact.bind(client, () => this.client.waitOnline())
     this.group.bind(client, () => this.client.waitOnline(), {
@@ -138,7 +140,7 @@ class EmKitImpl {
       insertGroupNotice: (groupId, text) => this.chat.insertGroupNotice(groupId, text)
     })
     // 登录成功即拉取自己的昵称/头像（会话页、聊天页己方气泡、demo mine 页回显）
-    ensureUserInfos([options.userId])
+    ensureUserInfos([loginOptions.userId])
     // 好友快照读内存（SDK 后台同步），失败不阻塞登录链路
     this.contact.syncContacts().catch(() => {})
     // 群快照读内存（SDK 后台同步），失败不阻塞登录链路
