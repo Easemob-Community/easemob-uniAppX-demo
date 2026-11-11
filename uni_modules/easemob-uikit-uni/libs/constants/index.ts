@@ -343,7 +343,9 @@ export const ERROR_CODE = {
   /** 下载附件时宿主/系统未授予相册权限（App/小程序保存图片/视频） */
   DOWNLOAD_AUTH_DENIED: 'EM_DOWNLOAD_AUTH_DENIED',
   /** 当前消息类型没有可下载的附件（非图片/视频/文件，或 URL 为空） */
-  DOWNLOAD_UNSUPPORTED: 'EM_DOWNLOAD_UNSUPPORTED'
+  DOWNLOAD_UNSUPPORTED: 'EM_DOWNLOAD_UNSUPPORTED',
+  /** 录音在停止结算前被取消（正常取消，不作为设备或权限失败提示） */
+  RECORD_CANCELLED: 'EM_RECORD_CANCELLED'
 } as const
 
 export type ErrorCodeValue = (typeof ERROR_CODE)[keyof typeof ERROR_CODE]

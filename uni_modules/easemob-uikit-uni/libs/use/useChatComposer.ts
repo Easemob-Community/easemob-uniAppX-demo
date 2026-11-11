@@ -1,7 +1,8 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
-import { PANEL_MIN_HEIGHT } from '../constants'
+import { ERROR_CODE, PANEL_MIN_HEIGHT } from '../constants'
 import { cancelRecord, isRecording, startRecord, stopRecord } from '../platform'
+import { errorCodeOf } from '../utils/error'
 import type { EmChatComposerPanel, EmChatComposerPanelKind, EmChatComposerTouchEvent } from '../types'
 import { getSafeAreaBottom } from './useSafeArea'
 import { useKeyboardHeight } from './useKeyboardHeight'
@@ -184,6 +185,7 @@ export function useChatComposer(options: UseChatComposerOptions): UseChatCompose
   const willCancel = ref(false)
   const CANCEL_THRESHOLD = 60
   let recordStartY = 0
+  let recordErrorNotified = false
 
   function toggleVoiceMode(): void {
     if (guardDisabled()) return
@@ -218,12 +220,23 @@ export function useChatComposer(options: UseChatComposerOptions): UseChatCompose
     recording.value = false
     willCancel.value = false
     voiceMode.value = false
+    if (recordErrorNotified) return
+    recordErrorNotified = true
     uni.showToast({ title: t('chat.voice.recordFailed'), icon: 'none' })
+  }
+
+  function onRecordStopError(err: unknown): void {
+    if (errorCodeOf(err) === ERROR_CODE.RECORD_CANCELLED) return
+    onRecordError()
   }
 
   function onRecordTouchStart(e: EmChatComposerTouchEvent): void {
     if (guardDisabled()) return
-    if (recording.value) return
+    if (recording.value || isRecording()) return
+    recordStartY = e.touches[0].clientY
+    willCancel.value = false
+    recordErrorNotified = false
+    recording.value = true
     try {
       startRecord({
         onError: onRecordError,
@@ -236,11 +249,7 @@ export function useChatComposer(options: UseChatComposerOptions): UseChatCompose
       })
     } catch (err) {
       onRecordError()
-      return
     }
-    recordStartY = e.touches[0].clientY
-    willCancel.value = false
-    recording.value = true
   }
 
   function onRecordTouchMove(e: EmChatComposerTouchEvent): void {
@@ -256,7 +265,7 @@ export function useChatComposer(options: UseChatComposerOptions): UseChatCompose
       cancelRecord()
       return
     }
-    stopRecord().then(onRecordResult).catch(onRecordError)
+    stopRecord().then(onRecordResult).catch(onRecordStopError)
   }
 
   function onRecordTouchCancel(): void {

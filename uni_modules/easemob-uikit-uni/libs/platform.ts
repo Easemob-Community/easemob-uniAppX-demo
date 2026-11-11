@@ -445,48 +445,86 @@ export interface EmRecordOptions {
   onAutoStop?: (res: EmRecordResult) => void
 }
 
+// 覆盖 start 请求到原生终止的整个轮次；授权等待与开始后错误排水期间都禁止跨轮 start。
 let recording = false
+let nativeStarted = false
 let recordStartAt = 0
+let recordStopPromise: Promise<EmRecordResult> | null = null
 let recordStopResolve: ((res: EmRecordResult) => void) | null = null
+let recordStopReject: ((err: unknown) => void) | null = null
 let recordDiscarding = false
+let recordStopRequested = false
 let recordOptions: EmRecordOptions = {}
+
+function resetRecordStopSettlement(): void {
+  recordStopPromise = null
+  recordStopResolve = null
+  recordStopReject = null
+}
+
+function resolveRecordStop(res: EmRecordResult): void {
+  const resolve = recordStopResolve
+  resetRecordStopSettlement()
+  if (resolve != null) resolve(res)
+}
+
+function rejectRecordStop(err: unknown): void {
+  const reject = recordStopReject
+  resetRecordStopSettlement()
+  if (reject != null) reject(err)
+}
+
+function clearRecordSession(): void {
+  recording = false
+  nativeStarted = false
+  recordDiscarding = false
+  recordStopRequested = false
+  recordOptions = {}
+  resetRecordStopSettlement()
+}
 
 // #ifndef WEB
 let recorder: ReturnType<typeof uni.getRecorderManager> | null = null
 
-// 单例注册 onStop/onError：每次 start 都 addEventHandler 会累积监听（真机反复录音后回调翻倍）
+// 单例注册 onStart/onStop/onError：每次 start 都 addEventHandler 会累积监听（真机反复录音后回调翻倍）
 function ensureRecorder(): ReturnType<typeof uni.getRecorderManager> {
   if (recorder == null) {
     const manager = uni.getRecorderManager()
     recorder = manager
+    manager.onStart(() => {
+      nativeStarted = true
+      recordStartAt = Date.now()
+      // iOS 授权等待期间 audioRecorder 尚未创建，此前的 stop 是空操作；迟到开始后必须补停。
+      if (recordStopRequested) manager.stop()
+    })
     manager.onStop((res) => {
-      recording = false
       const ms = res.duration > 0 ? res.duration : Date.now() - recordStartAt
       const result: EmRecordResult = { path: res.tempFilePath, duration: Math.round(ms / 1000) }
       if (recordDiscarding) {
-        // 取消语义：丢弃本次录音，不回调发送
-        recordDiscarding = false
-        recordStopResolve = null
-        recordOptions = {}
+        clearRecordSession()
         return
       }
-      const resolve = recordStopResolve
-      recordStopResolve = null
-      if (resolve != null) {
-        recordOptions = {}
-        resolve(result)
+      if (recordStopPromise != null) {
+        resolveRecordStop(result)
+        clearRecordSession()
         return
       }
-      // 未主动 stop：只可能是 60s 上限自动停止，交给输入栏按正常语音发送
       const onAutoStop = recordOptions.onAutoStop
-      recordOptions = {}
+      clearRecordSession()
       if (onAutoStop != null) onAutoStop(result)
     })
     manager.onError((err) => {
-      recording = false
-      recordStopResolve = null
       const onError = recordOptions.onError
-      recordOptions = {}
+      rejectRecordStop(err)
+      if (nativeStarted) {
+        // iOS 编码错误不会清空原生 recorder；丢弃并等旧 onStop，不能让它落进下一轮。
+        recordDiscarding = true
+        recordStopRequested = true
+        recordOptions = {}
+        manager.stop()
+      } else {
+        clearRecordSession()
+      }
       if (onError != null) {
         onError(err)
       } else {
@@ -505,16 +543,18 @@ export function startRecord(options: EmRecordOptions = {}): void {
   throw new Error('record not supported on web')
   // #endif
   // #ifndef WEB
+  if (recording) return
   recordOptions = options
+  nativeStarted = false
   recordStartAt = Date.now()
   recordDiscarding = false
-  recordStopResolve = null
+  recordStopRequested = false
+  resetRecordStopSettlement()
   recording = true
   try {
     ensureRecorder().start({ duration: 60000, format: 'aac' })
   } catch (e) {
-    recording = false
-    recordOptions = {}
+    clearRecordSession()
     throw e
   }
   // #endif
@@ -524,26 +564,36 @@ export function startRecord(options: EmRecordOptions = {}): void {
 export function cancelRecord(): void {
   if (!recording) return
   recordDiscarding = true
+  recordStopRequested = true
   recordOptions = {}
+  rejectRecordStop(errorWithCode(ERROR_CODE.RECORD_CANCELLED, 'record cancelled'))
   // #ifndef WEB
   ensureRecorder().stop()
   // #endif
 }
 
 export function stopRecord(): Promise<EmRecordResult> {
-  return new Promise((resolve, reject) => {
-    // #ifdef WEB
-    reject(new Error('record not supported on web'))
-    // #endif
-    // #ifndef WEB
-    if (!recording) {
-      reject(new Error('not recording'))
-      return
-    }
+  // #ifdef WEB
+  return Promise.reject(new Error('record not supported on web'))
+  // #endif
+  // #ifndef WEB
+  if (!recording) return Promise.reject(new Error('not recording'))
+  if (recordStopPromise != null) return recordStopPromise
+  const promise = new Promise<EmRecordResult>((resolve, reject) => {
     recordStopResolve = resolve
-    ensureRecorder().stop()
-    // #endif
+    recordStopReject = reject
   })
+  recordStopPromise = promise
+  recordStopRequested = true
+  try {
+    ensureRecorder().stop()
+  } catch (e) {
+    recordDiscarding = true
+    rejectRecordStop(e)
+    if (!nativeStarted) clearRecordSession()
+  }
+  return promise
+  // #endif
 }
 
 export function isRecording(): boolean {
