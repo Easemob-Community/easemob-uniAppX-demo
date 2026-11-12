@@ -3,7 +3,7 @@
 	"appid": "__UNI__B1A0E44",
 	"description": "",
 	"versionName": "1.0.0",
-	"versionCode": "112",
+	"versionCode": "121",
 	"uni-app-x": {
 		"vapor": true,
 		"styleIsolationVersion": "2",
@@ -98,7 +98,10 @@
 	},
 	"app-harmony": {
 		"distribute": {
-			"bundleName": "com.uniappx.demo"
+			"bundleName": "com.uniappx.demo",
+			"modules": {
+				"uni-video": {}
+			}
 		}
 	}
 }
