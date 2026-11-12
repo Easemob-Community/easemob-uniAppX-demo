@@ -5,6 +5,7 @@
 			"style": {
 				"navigationBarTitleText": "登录",
 				"navigationStyle": "custom",
+				"disableScroll": true,
 				"navigationBarTextStyle": "white",
 				"backgroundColor": "#100c35",
 				"backgroundColorContent": "#100c35",
@@ -18,7 +19,8 @@
 			"style": {
 				"navigationBarTitleText": "环信",
 				"navigationBarTextStyle": "white",
-				"navigationBarBackgroundColor": "#100c35"
+				"navigationBarBackgroundColor": "#100c35",
+				"disableScroll": true
 			}
 		},
 		{
@@ -26,15 +28,120 @@
 			"style": {
 				"navigationBarTitleText": "会话列表",
 				"navigationStyle": "custom",
+				"disableScroll": true,
 				"app-plus": {
 					"titleNView": false
 				}
 			}
 		},
 		{
-			"path": "pages/index/index",
+			"path": "pages/contact/contact",
 			"style": {
-				"navigationBarTitleText": "uni-app x"
+				"navigationBarTitleText": "通讯录",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/settings",
+			"style": {
+				"navigationBarTitleText": "设置",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/account",
+			"style": {
+				"navigationBarTitleText": "账户信息",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/general",
+			"style": {
+				"navigationBarTitleText": "通用",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/about",
+			"style": {
+				"navigationBarTitleText": "关于我们",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/features",
+			"style": {
+				"navigationBarTitleText": "UIKit 特性开关",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/feature-group",
+			"style": {
+				"navigationBarTitleText": "特性开关",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/sdk-check",
+			"style": {
+				"navigationBarTitleText": "SDK 连通性自检",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/uikit-components",
+			"style": {
+				"navigationBarTitleText": "原子组件演示",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		},
+		{
+			"path": "pages/settings/uikit-states",
+			"style": {
+				"navigationBarTitleText": "组件状态演示",
+				"navigationStyle": "custom",
+				"disableScroll": true,
+				"app-plus": {
+					"titleNView": false
+				}
 			}
 		}
 	],
@@ -49,6 +156,7 @@
 					"style": {
 						"navigationBarTitleText": "聊天",
 						"navigationStyle": "custom",
+						"disableScroll": true,
 						"app-plus": {
 							"titleNView": false
 						}
@@ -59,18 +167,83 @@
 					"style": {
 						"navigationBarTitleText": "聊天信息",
 						"navigationStyle": "custom",
+						"disableScroll": true,
+						"app-plus": {
+							"titleNView": false
+						}
+					}
+				},
+				{
+					"path": "pages/contact-requests/contact-requests",
+					"style": {
+						"navigationBarTitleText": "新通知",
+						"navigationStyle": "custom",
+						"disableScroll": true,
+						"app-plus": {
+							"titleNView": false
+						}
+					}
+				},
+				{
+					"path": "pages/contact-list/contact-list",
+					"style": {
+						"navigationBarTitleText": "好友列表",
+						"navigationStyle": "custom",
+						"disableScroll": true,
+						"app-plus": {
+							"titleNView": false
+						}
+					}
+				},
+				{
+					"path": "pages/group/group",
+					"style": {
+						"navigationBarTitleText": "群组",
+						"navigationStyle": "custom",
+						"disableScroll": true,
+						"app-plus": {
+							"titleNView": false
+						}
+					}
+				},
+				{
+					"path": "pages/blocklist/blocklist",
+					"style": {
+						"navigationBarTitleText": "黑名单",
+						"navigationStyle": "custom",
+						"disableScroll": true,
 						"app-plus": {
 							"titleNView": false
 						}
 					}
 				}
 			]
+		},
+		{
+			"root": "sub-sdk",
+			"name": "sub-sdk",
+			"independent": false,
+			"pages": [
+				{
+					"path": "pages/placeholder/placeholder",
+					"style": {
+						"navigationBarTitleText": "SDK Loader"
+					}
+				}
+			]
 		}
 	],
+	"preloadRule": {
+		"pages/login/login": {
+			"network": "all",
+			"packages": ["sub-sdk"]
+		}
+	},
 	"easycom": {
 		"autoscan": true,
 		"custom": {
-			"^em-([a-z-]+)-page$": "@/uni_modules/easemob-uikit-uni/components/pages/em-$1-page/em-$1-page.vue"
+			"^em-([a-z-]+)-page$": "@/uni_modules/easemob-uikit-uni/components/pages/em-$1-page/em-$1-page.vue",
+			"^demo-([a-z-]+)$": "@/sub-im/components/demo-$1/demo-$1.uvue"
 		}
 	},
 	"globalStyle": {
@@ -78,6 +251,32 @@
 		"navigationBarTitleText": "uni-app x",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"color": "#919BA1",
+		"selectedColor": "#009EFF",
+		"backgroundColor": "#FFFFFF",
+		"borderStyle": "white",
+		"list": [
+			{
+				"pagePath": "pages/conversation/conversation",
+				"text": "会话",
+				"iconPath": "static/tabbar/chat.png",
+				"selectedIconPath": "static/tabbar/chat-active.png"
+			},
+			{
+				"pagePath": "pages/contact/contact",
+				"text": "通讯录",
+				"iconPath": "static/tabbar/contacts.png",
+				"selectedIconPath": "static/tabbar/contacts-active.png"
+			},
+			{
+				"pagePath": "pages/settings/settings",
+				"text": "设置",
+				"iconPath": "static/tabbar/settings.png",
+				"selectedIconPath": "static/tabbar/settings-active.png"
+			}
+		]
 	},
 	"uniIdRouter": {}
 }

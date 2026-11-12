@@ -1,0 +1,30 @@
+<template>
+  <view class="placeholder" :class="themeClass">
+    <text class="placeholder__text">SDK Loader（占位页，承载 IM SDK 普通分包，无需访问）</text>
+  </view>
+</template>
+
+<script setup lang="ts">
+// 本页只占位、不访问；直连 useTheme 而非 useDemoTheme，避免把整个 libs 门面带进 SDK 分包
+import { useTheme } from '@/uni_modules/easemob-uikit-uni/libs/use/useTheme'
+
+const { themeClass } = useTheme()
+</script>
+
+<style>
+@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  background-color: var(--em-bg-secondary);
+}
+
+.placeholder__text {
+  font-size: 13px;
+  color: var(--em-text-tertiary);
+}
+</style>

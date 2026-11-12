@@ -1,69 +1,104 @@
 {
-    "name" : "easemob-uniAppX-demo",
-    "appid" : "__UNI__B1A0E44",
-    "description" : "",
-    "versionName" : "1.0.0",
-    "versionCode" : "100",
-    "uni-app-x" : {
-        "vapor" : true,
-        "styleIsolationVersion" : "2",
-        "vapor-render-target" : "bytecode",
-        "vapor-default-script-lang" : "ts"
-    },
-    /* 快应用特有相关 */
-    "quickapp" : {},
-    /* 小程序特有相关 */
-    "mp-weixin" : {
-        "appid" : "",
-        "setting" : {
-            "urlCheck" : false
-        },
-        "usingComponents" : true
-    },
-    "mp-alipay" : {
-        "usingComponents" : true
-    },
-    "mp-baidu" : {
-        "usingComponents" : true
-    },
-    "mp-toutiao" : {
-        "usingComponents" : true
-    },
-    "uniStatistics" : {
-        "enable" : false
-    },
-    "vueVersion" : "3",
-    "app" : {
-        "distribute" : {
-            "icons" : {
-                "android" : {
-                    "hdpi" : "",
-                    "xhdpi" : "",
-                    "xxhdpi" : "",
-                    "xxxhdpi" : ""
-                }
-            }
-        }
-    },
-    "app-android" : {
-        "distribute" : {
-            "modules" : {},
-            "icons" : {
-                "hdpi" : "",
-                "xhdpi" : "",
-                "xxhdpi" : "",
-                "xxxhdpi" : ""
-            },
-            "splashScreens" : {
-                "default" : {}
-            }
-        }
-    },
-    "app-ios" : {
-        "distribute" : {
-            "modules" : {},
-            "icons" : {},
-            "splashScreens" : {}
-        }
-    }
+	"name": "环信",
+	"appid": "__UNI__B1A0E44",
+	"description": "",
+	"versionName": "1.0.0",
+	"versionCode": "112",
+	"uni-app-x": {
+		"vapor": true,
+		"styleIsolationVersion": "2",
+		"vapor-render-target": "bytecode",
+		"vapor-default-script-lang": "ts"
+	},
+	/* 快应用特有相关 */
+	"quickapp": {},
+	/* 小程序特有相关 */
+	"mp-weixin": {
+		"appid": "",
+		"setting": {
+			"urlCheck": false
+		},
+		"usingComponents": true,
+		"darkmode": true
+	},
+	"mp-alipay": {
+		"usingComponents": true
+	},
+	"mp-baidu": {
+		"usingComponents": true
+	},
+	"mp-toutiao": {
+		"usingComponents": true
+	},
+	"uniStatistics": {
+		"enable": true,
+		"type": "public",
+		"debug": false
+	},
+	"vueVersion": "3",
+	"app": {
+		"distribute": {
+			"icons": {
+				"android": {
+					"hdpi": "app-icons/android/hdpi.png",
+					"xhdpi": "app-icons/android/xhdpi.png",
+					"xxhdpi": "app-icons/android/xxhdpi.png",
+					"xxxhdpi": "app-icons/android/xxxhdpi.png"
+				},
+				"ios": {
+					"appstore": "app-icons/ios/appstore.png"
+				}
+			}
+		}
+	},
+	"app-android": {
+		"defaultAppTheme": "auto",
+		"distribute": {
+			"minSdkVersion": 24,
+			"targetSdkVersion": 35,
+			"abiFilters": [
+				"arm64-v8a"
+			],
+			"modules": {
+				"uni-websocket": {}
+			},
+			"icons": {
+				"hdpi": "app-icons/android/hdpi.png",
+				"xhdpi": "app-icons/android/xhdpi.png",
+				"xxhdpi": "app-icons/android/xxhdpi.png",
+				"xxxhdpi": "app-icons/android/xxxhdpi.png"
+			},
+			"splashScreens": {
+				"default": {}
+			}
+		}
+	},
+	"app-ios": {
+		"defaultAppTheme": "auto",
+		"distribute": {
+			"modules": {
+				"uni-websocket": {}
+			},
+			"icons": {
+				"appstore": "app-icons/ios/appstore.png"
+			},
+			"splashScreens": {},
+			"privacyDescription": {
+				"NSPhotoLibraryUsageDescription": "App需要您的相册权限，用于选择图片或视频并发送",
+				"NSPhotoLibraryAddUsageDescription": "App需要您的相册写入权限，用于保存图片或视频",
+				"NSCameraUsageDescription": "App需要您的相机权限，用于拍摄图片或视频并发送",
+				"NSMicrophoneUsageDescription": "App需要您的麦克风权限，用于录制语音消息"
+			}
+		}
+	},
+	"web": {
+		"router": {
+			"mode": "hash"
+		}
+	},
+	"app-harmony": {
+		"distribute": {
+			"bundleName": "com.uniappx.demo"
+		}
+	}
 }

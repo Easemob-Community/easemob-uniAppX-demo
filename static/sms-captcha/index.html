@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+		<title>安全验证</title>
+		<style>
+			* { box-sizing: border-box; }
+			body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1f2937; background: #ffffff; }
+			.captcha { display: flex; flex-direction: column; align-items: center; padding: 40px 16px; }
+			.captcha__title { margin: 0 0 12px; font-size: 20px; }
+			.captcha__hint { margin: 0 0 28px; color: #6b7280; font-size: 14px; text-align: center; }
+			#captcha-element { width: 100%; max-width: 360px; min-height: 80px; }
+			#captcha-button { display: none; }
+			.captcha__error { margin: 20px 0 0; color: #dc2626; font-size: 14px; text-align: center; }
+			#aliyunCaptcha-sliding-slider { background: #009eff !important; }
+		</style>
+		<script src="./uni.webview.1.5.5.js"></script>
+		<script>
+			var captchaQuery = new URLSearchParams(window.location.search);
+			window.AliyunCaptchaConfig = { region: 'cn', prefix: captchaQuery.get('prefix') ?? '' };
+			var captchaCompleted = false;
+			function postCaptchaMessage(data) {
+				var hasUniAppXChannel = window.__uniapp_x_postMessage || window.__uniapp_x_;
+				if (hasUniAppXChannel && window.uni && window.uni.webView && typeof window.uni.webView.postMessage === 'function') {
+					window.uni.webView.postMessage({ data: data });
+					return true;
+				}
+				return false;
+			}
+			function onCaptchaScriptError() {
+				var lang = new URLSearchParams(window.location.search).get('lang');
+				var message = lang === 'en' ? 'Failed to load security verification. Check your network and try again.' : '安全验证加载失败，请检查网络后重试';
+				document.getElementById('captcha-error').textContent = message;
+				postCaptchaMessage({ error: 'captcha-script-load-failed' });
+			}
+		</script>
+		<script src="https://o.alicdn.com/captcha-frontend/aliyunCaptcha/AliyunCaptcha.js" onerror="onCaptchaScriptError()"></script>
+	</head>
+	<body>
+		<main class="captcha">
+			<h1 id="captcha-title" class="captcha__title"></h1>
+			<p id="captcha-hint" class="captcha__hint"></p>
+			<div id="captcha-element"></div>
+			<button id="captcha-button" type="button" aria-hidden="true"></button>
+			<p id="captcha-error" class="captcha__error" role="alert"></p>
+		</main>
+		<script>
+			var params = captchaQuery;
+			var isEnglish = params.get('lang') === 'en';
+			var CAPTCHA_SECRET = params.get('secret') ?? '';
+			var text = isEnglish ? {
+				title: 'Security verification',
+				hint: 'The SMS code will be sent automatically after verification.',
+				empty: 'Verification did not return a valid result. Please try again.',
+				bridge: 'Unable to communicate with the app. Please try again.',
+				sdk: 'Security verification failed. Please try again.',
+				encryption: 'Failed to secure the verification result. Please try again.'
+			} : {
+				title: '安全验证',
+				hint: '验证通过后自动发送短信验证码',
+				empty: '未获取到有效验证结果，请重试',
+				bridge: '无法与应用通信，请重试',
+				sdk: '安全验证失败，请重试',
+				encryption: '验证结果加密失败，请重试'
+			};
+			document.getElementById('captcha-title').textContent = text.title;
+			document.getElementById('captcha-hint').textContent = text.hint;
+
+			function showCaptchaError(message) {
+				document.getElementById('captcha-error').textContent = message;
+			}
+
+			async function encryptCaptchaParam(plaintext) {
+				if (!window.crypto || !window.crypto.subtle) throw new Error('WebCrypto unavailable');
+				var data = new TextEncoder().encode(plaintext);
+				var secretBinary = window.atob(CAPTCHA_SECRET);
+				var keyData = new Uint8Array(secretBinary.length);
+				for (var i = 0; i < secretBinary.length; i++) keyData[i] = secretBinary.charCodeAt(i);
+				var key = await window.crypto.subtle.importKey('raw', keyData, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+				var iv = window.crypto.getRandomValues(new Uint8Array(12));
+				var encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, data);
+				var combined = new Uint8Array(iv.length + encrypted.byteLength);
+				combined.set(iv, 0);
+				combined.set(new Uint8Array(encrypted), iv.length);
+				var binary = '';
+				for (var j = 0; j < combined.length; j++) binary += String.fromCharCode(combined[j]);
+				return window.btoa(binary);
+			}
+
+			async function captchaVerifyCallback(captchaVerifyParam, callback) {
+				if (captchaCompleted) {
+					var completedResult = { captchaResult: true, bizResult: true };
+					if (callback) callback(completedResult);
+					return completedResult;
+				}
+				if (!captchaVerifyParam) {
+					showCaptchaError(text.empty);
+					if (callback) callback({ captchaResult: false, bizResult: false });
+					return { captchaResult: false, bizResult: false };
+				}
+				try {
+					var encryptedCaptchaVerifyParam = await encryptCaptchaParam(captchaVerifyParam);
+					if (!postCaptchaMessage({ captchaVerifyParam: encryptedCaptchaVerifyParam })) {
+						showCaptchaError(text.bridge);
+						if (callback) callback({ captchaResult: false, bizResult: false });
+						return { captchaResult: false, bizResult: false };
+					}
+					captchaCompleted = true;
+					var result = { captchaResult: true, bizResult: true };
+					if (callback) callback(result);
+					return result;
+				} catch (error) {
+					showCaptchaError(text.encryption);
+					postCaptchaMessage({ error: 'captcha-encryption-failed' });
+					if (callback) callback({ captchaResult: false, bizResult: false });
+					return { captchaResult: false, bizResult: false };
+				}
+			}
+
+			if (typeof window.initAliyunCaptcha !== 'function') {
+				onCaptchaScriptError();
+			} else {
+				window.initAliyunCaptcha({
+					SceneId: params.get('sceneId') ?? '',
+					mode: 'embed',
+					element: '#captcha-element',
+					button: '#captcha-button',
+					captchaVerifyCallback: captchaVerifyCallback,
+					onBizResultCallback: function () {},
+					onError: function () {
+						showCaptchaError(text.sdk);
+						postCaptchaMessage({ error: 'captcha-sdk-error' });
+					},
+					slideStyle: { width: 320, height: 48 },
+					language: isEnglish ? 'en' : 'cn',
+					immediate: true
+				});
+			}
+		</script>
+	</body>
+</html>

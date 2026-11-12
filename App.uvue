@@ -1,30 +1,59 @@
 <script setup lang="ts">
-	import { initTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { initTheme, syncTabBarBadges, useLocale, createLogger } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { EmKit } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { syncTabBarLocale } from '@/common/locale/index'
+	import { applyDemoThemeColors } from '@/common/theme-style'
+	import { applyUIKitFeatures, uikitFeatures } from '@/common/uikit-feature-state'
+	// #ifdef APP
+	import { createAttachmentProvider } from '@/common/attachment-provider'
+	// #endif
+
+	const { t } = useLocale()
+	const appLogger = createLogger('app')
 
 	// #ifdef APP-ANDROID || APP-HARMONY
 	let firstBackTime = 0
 	// #endif
 
 	onLaunch(() => {
-		// 主题引擎先于首屏：默认跟随系统，读取持久化偏好并订阅系统深浅色变化
-		initTheme()
-		console.log('App Launch')
+		// 主题引擎先于首屏：默认跟随系统，读取持久化偏好并订阅系统深浅色变化；
+		// 传入 tabBar 页面路由，命中 tab 页时同步原生 tabBar 深浅色样式
+		initTheme({
+			tabBarPages: [
+				'pages/conversation/conversation',
+				'pages/contact/contact',
+				'pages/settings/settings',
+			],
+		})
+		applyDemoThemeColors()
+		applyUIKitFeatures()
+		// 原生 tabBar 文案跟随持久化语言（pages.json 中为静态中文占位）
+		syncTabBarLocale()
+		// #ifdef APP
+		// 注册 App 端附件能力后，聊天输入栏「文件」格自动出现（H5/小程序走 UIKit 内置选择器）
+		EmKit.setAttachmentProvider(createAttachmentProvider(uikitFeatures.value.attachmentProvider))
+		// #endif
+		appLogger.info('App Launch')
 	})
 
 	onAppShow(() => {
-		console.log('App Show')
+		// App 回前台补一次角标快照（tab 页内的响应式 watch 覆盖运行期更新）
+		if (EmKit.state.userId !== '') {
+			syncTabBarBadges()
+		}
+		appLogger.info('App Show')
 	})
 
 	onAppHide(() => {
-		console.log('App Hide')
+		appLogger.info('App Hide')
 	})
 
 	// #ifdef APP-ANDROID || APP-HARMONY
 	onLastPageBackPress(() => {
-		console.log('App LastPageBackPress')
+		appLogger.info('App LastPageBackPress')
 		if (firstBackTime == 0) {
 			uni.showToast({
-				title: '再按一次退出应用',
+				title: t('demo.common.exitAgain'),
 				position: 'bottom',
 			})
 			firstBackTime = Date.now()
@@ -38,7 +67,7 @@
 	})
 
 	onExit(() => {
-		console.log('App Exit')
+		appLogger.info('App Exit')
 	})
 	// #endif
 </script>

@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "$string:app_name"
+    },
+    {
+      "name": "permission_microphone_reason",
+      "value": "Used to record and send voice messages"
+    },
+    {
+      "name": "permission_camera_reason",
+      "value": "Used to take and send photos and videos"
+    }
+  ]
+}
