@@ -2,8 +2,9 @@ import { REQUEST_TIMEOUT } from './config'
 
 export interface RequestOptions {
 	url: string
-	method: 'GET' | 'POST'
+	method: 'GET' | 'POST' | 'DELETE'
 	data?: Record<string, any>
+	header?: Record<string, string>
 	timeout?: number
 }
 
@@ -18,7 +19,7 @@ export function requestJson(options: RequestOptions): Promise<Record<string, any
 			url: options.url,
 			method: options.method,
 			data: options.data ?? {},
-			header: { 'Content-Type': 'application/json' },
+			header: options.header ?? { 'Content-Type': 'application/json' },
 			timeout: options.timeout ?? REQUEST_TIMEOUT,
 			success: (res) => {
 				const raw = res.data

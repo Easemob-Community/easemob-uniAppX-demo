@@ -1,3 +1,5 @@
+import { DEFAULT_APP_KEY } from './config'
+
 const DEV_CONFIG_KEY = 'easemob-demo-dev-config'
 const DEV_PERSIST_KEY = 'easemob-demo-dev-persist'
 
@@ -127,5 +129,5 @@ export function setDevConfig(config: DevConfig) {
 }
 
 export function getEffectiveAppKey(): string {
-	return getDevConfig().appKey
+	return getDevConfig().appKey || DEFAULT_APP_KEY
 }
