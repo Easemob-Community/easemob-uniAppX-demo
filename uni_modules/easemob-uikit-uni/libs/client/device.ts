@@ -1,6 +1,6 @@
-// SDK 设备信息解析：ChatClient.init 注入固定 deviceId（App 端机型信息齐备时为六段式
-// Platform_uikitVersion_brand_model_system_uuid，否则三段式 Platform_uikitVersion_uuid），
-// 让服务端多端登录查询/互踢能按设备、平台、机型与 UIKit 版本维度区分。
+// SDK 设备信息解析：ChatClient.init 注入固定 deviceId（三段式 Platform_uikitVersion_uuid），
+// 让服务端多端登录查询/互踢能按设备、平台与 UIKit 版本维度区分。
+// 为降低合规风险，自动注入不读取或上报品牌、型号和系统版本，登录扩展名仅使用平台名。
 //
 // 三个前置事实（websdk 5.1.3 实测）：
 // 1) ChatClient 是单例，重复 init 会按配置逐字段比对，deviceId 参与比对——
@@ -16,6 +16,7 @@ import { getStorage, setStorage } from '../platform'
 import { createLogger } from '../utils/logger'
 import { UIKIT_VERSION } from '../constants'
 import type { EmKitConfig } from '../types'
+import { resolveLoginExtensionInfo } from './login-extension'
 
 const logger = createLogger('client')
 
@@ -26,6 +27,7 @@ const DEVICE_ID_STORAGE_KEY = 'emkit.device.id'
 export interface SdkDeviceInfo {
   deviceId?: string
   customOSPlatform?: number
+  loginExtensionInfo?: string
   // 注入 deviceId 时恒为 false（见 resolveDeviceInfo 注释）；不注入时不出现，保持 SDK 默认
   useFixedDeviceId?: boolean
 }
@@ -51,7 +53,7 @@ function readDeviceInfo(): Record<string, unknown> {
   if (cachedDeviceInfo != null) return cachedDeviceInfo
   let info: Record<string, unknown> = {}
   try {
-    const raw: unknown = uni.getDeviceInfo()
+    const raw: unknown = uni.getDeviceInfo({ filter: ['deviceId', 'platform', 'osName'] })
     if (raw != null && typeof raw === 'object') {
       info = raw as Record<string, unknown>
     }
@@ -79,34 +81,11 @@ function resolvePlatformName(): string {
   // #endif
 }
 
-// deviceId 段内禁止空白（resource 由 SDK 再拼包装段后出现空格会破坏可读性与解析），
-// trim 后剔除所有空白字符；空串即视为该字段缺失
-function sanitizeSegment(value: unknown): string {
-  return asNonEmptyString(value).replace(/\s+/g, '')
-}
-
-// App 端机型/系统段：${deviceBrand}_${deviceModel}_${system}，三段齐备才返回，任一缺失返回空串。
-// 仅 App 端（android/ios/harmonyos）调用——H5/小程序没有可靠机型信息（UA 不可信），恒不拼机型段。
-function resolveModelSegments(): string {
-  const info = readDeviceInfo()
-  const brand = sanitizeSegment(info.deviceBrand)
-  const model = sanitizeSegment(info.deviceModel)
-  const system = sanitizeSegment(info.system)
-  if (brand === '' || model === '' || system === '') return ''
-  return `${brand}_${model}_${system}`
-}
-
 // deviceId 解析（与文档口径一致）：
 // 1. config.deviceId（宿主显式指定）：原样使用，不加任何段
-// 2. 持久化值：此前会话写入的最终值，格式校验通过（平台段 + 版本段匹配当前环境）才读回——
-//    旧格式或异版本值直接重新派生覆盖（无迁移逻辑；UIKit 升级后版本段变化，
-//    服务端会视为新设备，见公开文档「设备信息」节）。
-//    机型/系统段不参与校验：同一台机器这两个值不变，读回旧值无副作用；
-//    用户系统升级后沿用旧系统段也可接受（代价仅是控制台展示的旧版本串），不强求重派生。
+// 2. 持久化值：仅读回当前三段式 Platform_uikitVersion_<id>，旧机型格式重新派生，避免继续上报历史设备型号
 // 3. uni.getDeviceInfo().deviceId（框架生成并持久化的设备标识）：拼前缀后写入 key
 // 4. 自生成 UUID 兜底：同样拼前缀后写入 key
-// App 端机型信息齐备时为六段式 Platform_uikitVersion_brand_model_system_<id>，否则三段式
-// Platform_uikitVersion_<id>；自动派生统一持久化「拼好前缀的最终值」，读回即用，实现简洁且会话内稳定。
 function resolveDeviceId(config: EmKitConfig): string {
   const explicit = asNonEmptyString(config.deviceId)
   if (explicit !== '') return explicit
@@ -114,18 +93,14 @@ function resolveDeviceId(config: EmKitConfig): string {
   const stored = getStorage(DEVICE_ID_STORAGE_KEY)
   if (stored !== '') {
     const segments = stored.split('_')
-    if (segments[0] === platform && segments[1] === UIKIT_VERSION) return stored
+    if (segments.length === 3 && segments[0] === platform && segments[1] === UIKIT_VERSION) return stored
   }
   const frameworkId = asNonEmptyString(readDeviceInfo().deviceId)
   const id = frameworkId !== '' ? frameworkId : generateUuid()
   if (frameworkId === '') {
     logger.info('deviceId: uni.getDeviceInfo() unavailable, generated uuid as fallback')
   }
-  const isAppPlatform = platform === 'android' || platform === 'ios' || platform === 'harmonyos'
-  const modelSegments = isAppPlatform ? resolveModelSegments() : ''
-  const finalId = modelSegments !== ''
-    ? `${platform}_${UIKIT_VERSION}_${modelSegments}_${id}`
-    : `${platform}_${UIKIT_VERSION}_${id}`
+  const finalId = `${platform}_${UIKIT_VERSION}_${id}`
   setStorage(DEVICE_ID_STORAGE_KEY, finalId)
   return finalId
 }
@@ -143,14 +118,15 @@ function resolvePlatformCode(config: EmKitConfig): number | null {
 /**
  * 解析 ChatClient.init 注入的设备信息。
  * enableDeviceInfo === false 时返回空对象（完全不注入，SDK 默认行为）；
- * 否则 deviceId 恒有值（显式值原样 / 自动派生为 App 六段式 Platform_uikitVersion_brand_model_system_<id>
- * 或三段式 Platform_uikitVersion_<id>，持久化保证跨启动稳定；UIKit 升级后版本段变化，
- * 服务端会视为新设备），并同步带 useFixedDeviceId: false；
- * customOSPlatform 仅在宿主传入合法编号时出现。
+ * 否则 deviceId 恒有值（显式值原样 / 自动派生为 Platform_uikitVersion_<id>，持久化保证跨启动稳定；
+ * UIKit 升级后版本段变化，服务端会视为新设备），并同步带 useFixedDeviceId: false；
+ * customOSPlatform 仅在宿主传入合法编号时出现；loginExtensionInfo 默认仅携带归一平台名。
  */
 export function resolveDeviceInfo(config: EmKitConfig): SdkDeviceInfo {
   if (config.enableDeviceInfo === false) return {}
-  const result: SdkDeviceInfo = {}
+  const result: SdkDeviceInfo = {
+    loginExtensionInfo: resolveLoginExtensionInfo({ platform: resolvePlatformName() })
+  }
   const deviceId = resolveDeviceId(config)
   if (deviceId !== '') {
     result.deviceId = deviceId

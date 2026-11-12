@@ -26,6 +26,8 @@
 
 ### 新增
 
+- **WebSDK 初始化配置统一透传**：`EmKitConfig` 新增 `sdkInitOptions`（公开类型 `EmSdkInitOptions`），支持 WebSDK 全部非身份类原生初始化选项，普通字段优先于 UIKit 默认值；必需 Manager 保留并与自定义值去重合并，同步类型支持显式替换，平台适配器与 UIKit 兼容修复组合。默认新增仅含平台名的 `loginExtensionInfo` 设备名 JSON（例如 `{"deviceName":"android"}`），不读取或上报品牌、型号和系统版本；自动 `deviceId` 固定为 `Platform_uikitVersion_uuid` 三段式，旧六段式持久化值自动重新派生。宿主可通过 `sdkInitOptions.loginExtensionInfo` 覆盖并加入业务自定义字段。
+
 - **复合消息接收展示**：`easemob-websdk` 升级为 5.2.0；新增 `MESSAGE_TYPE.MULTI_BODY`、`EmMessageItem.segments` 与 `em-multi-body-message`，在单个气泡内按顺序展示文本、图片、语音、视频、文件、位置和自定义分段。支持会话首段摘要、全部文本分段复制、父消息引用/置顶/撤回/删除，以及分段图片预览、视频播放、语音播放和文件下载。当前不提供复合消息创建或发送能力。
 
 - **通用开关组件**：新增原子组件 `em-switch`，支持 `v-model`、medium/small 两档尺寸、禁用与加载态，以及 `custom-class` / `custom-style`。聊天详情的免打扰/置顶和建群面板的公开群/允许邀请开关统一使用该组件。
@@ -55,7 +57,7 @@
 
 - **样式定制指南**：文档门户新增「样式定制」一页，汇总 `primaryColor` 配置、`--em-*` 变量、`custom-class` / `custom-style`、具名插槽四条定制通道的选型与平台边界；示例工程「样式实验室」页面新增 custom-style / custom-class / 变量覆盖三组对照演示，以及「拖动色相条实时换全页主题色」演示（根节点内联变量 + `setConfig` 双通道）。
 
-- **SDK 初始化注入固定设备标识**：`EmKit.init()` 默认向 SDK 注入稳定的 `deviceId`，服务端的多端登录查询与互踢可以按设备、平台、机型与 UIKit 版本维度区分。自动派生的 `deviceId`：App 端机型信息齐备时为六段式 `Platform_uikitVersion_brand_model_system_uuid`（机型/系统段剔除空白字符），其余端或机型信息缺失时为三段式 `Platform_uikitVersion_uuid`（Platform 取归一平台名 `android` / `ios` / `harmonyos` / `web` / `mp-weixin`，uikitVersion 为 UIKit 版本段）：优先复用此前持久化的设备标识，其次取 `uni.getDeviceInfo()` 框架设备标识，最后自生成 UUID；一经得出即写入本地存储，跨启动保持稳定。UIKit 升级后版本段变化，服务端会视为新设备。宿主显式传入的 `deviceId` 原样使用、不加段；注入时 UIKit 同步关闭 SDK 的 `useFixedDeviceId`（SDK 本地历史设备值优先，不关闭会导致老用户注入不生效）。新增 `EmKitConfig` 配置项：`enableDeviceInfo`（总开关，默认开启，关闭后完全不注入）、`deviceId`（显式覆盖自动派生值）、`devicePlatform`（自定义平台编号，透传 SDK `customOSPlatform`，需为向环信申请注册的 1–100 整数，不传则不注入）。显式传入的值在重复初始化时必须与首次一致（SDK 单例配置比对）。
+- **SDK 初始化注入固定设备标识**：`EmKit.init()` 默认向 SDK 注入稳定的 `deviceId`，服务端的多端登录查询与互踢可以按设备、平台与 UIKit 版本维度区分。自动派生的 `deviceId` 固定为三段式 `Platform_uikitVersion_uuid`（Platform 取归一平台名 `android` / `ios` / `harmonyos` / `web` / `mp-weixin`，uikitVersion 为 UIKit 版本段）：优先复用当前格式的持久化设备标识，其次取 `uni.getDeviceInfo()` 框架设备标识，最后自生成 UUID；一经得出即写入本地存储，跨启动保持稳定。为避免合规风险，不读取或加入品牌、型号和系统版本，旧六段式持久化值自动重新派生。UIKit 升级后版本段变化，服务端会视为新设备。宿主显式传入的 `deviceId` 原样使用、不加段；注入时 UIKit 同步关闭 SDK 的 `useFixedDeviceId`（SDK 本地历史设备值优先，不关闭会导致老用户注入不生效）。新增 `EmKitConfig` 配置项：`enableDeviceInfo`（总开关，默认开启，关闭后停止自动注入）、`deviceId`（显式覆盖自动派生值）、`devicePlatform`（自定义平台编号，透传 SDK `customOSPlatform`，需为向环信申请注册的 1–100 整数，不传则不注入）。显式传入的值在重复初始化时必须与首次一致（SDK 单例配置比对）。
 
 - **网络状态预检测与断网警示提示**：UIKit 在 `EmKit.init()` 时订阅系统网络状态写入 `EmKit.state.networkOnline`（`true` 在线 / `false` 离线 / `null` 未知，基座未提供网络探测能力时为 `null`、不预判）。系统报告离线时，会话页/聊天页顶部的连接提示条立即显示红色「网络异常，请检查网络情况」，不再停留在黄色「连接中/重连中」，也不等 SDK 走完重连循环。发送消息前做预检测：确定性离线时不再触达 SDK，消息按失败落库保留红叹号重发，并提示「网络异常，请稍后重试」（其余失败仍提示「发送失败」）；重发同样生效。新增业务错误码常量 `ERROR_CODE`（`NETWORK_OFFLINE` / `NETWORK_TIMEOUT`，挂在 `Error.code` 上）供发送失败归因；登录失败日志带系统离线标记，便于排查「是断网还是 SDK 问题」。
 
