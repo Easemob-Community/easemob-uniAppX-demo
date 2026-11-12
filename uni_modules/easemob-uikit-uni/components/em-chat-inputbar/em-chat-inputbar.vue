@@ -35,18 +35,13 @@
       </view>
     </view>
 
-    <!-- 录音提示（按住说话时显示，上滑越过阈值切换为取消文案） -->
-    <view v-if="recording" :class="ns.e('record-hint')">
-      <text :class="[ns.e('record-hint-text'), willCancel && ns.m('record-hint-text-cancel')]">{{ willCancel ? t('chat.voice.releaseToCancel') : t('chat.voice.slideUpCancel') }}</text>
-    </view>
-
     <view :class="ns.e('bar')">
-      <view v-if="showVoice" :class="[ns.e('tool'), ns.m('tool-first'), voiceMode && ns.m('tool-active')]" @click="onToggleVoiceMode">
-        <EmIcon name="mic" :size="24" />
+      <view v-if="showVoice" :class="[ns.e('tool'), ns.m('tool-first')]" @click="onToggleVoiceMode">
+        <EmIcon name="mic" :size="24" :color="voiceMode ? 'var(--em-primary-color)' : 'var(--em-text-primary)'" />
       </view>
       <view
         v-if="voiceMode"
-        :class="[ns.e('record'), recording && ns.m('record-active'), willCancel && ns.m('record-cancel')]"
+        :class="[ns.e('record'), recording && ns.m('record-active')]"
         @touchstart="onRecordTouchStart"
         @touchmove="onRecordTouchMove"
         @touchend="onRecordTouchEnd"
@@ -99,13 +94,22 @@
 
     <!-- 底部面板：emoji / 媒体二选一，同高（对齐 vue 版 h5-input 的 panel 互斥形态，占键盘位顶起输入栏） -->
     <view v-if="panel === 'emoji'" :class="ns.e('panel')" :style="panelStyle">
-      <scroll-view scroll-y :class="ns.e('emoji-scroll')">
-        <view :class="ns.e('emoji-grid')">
-          <view v-for="emoji in emojis" :key="emoji" :class="ns.e('emoji-cell')" @click="onEmoji(emoji)">
-            <text :class="ns.e('emoji-char')">{{ emoji }}</text>
+      <slot
+        name="emoji-panel"
+        :emojis="emojis"
+        :disabled="disabled"
+        :select-emoji="onEmoji"
+        :close-panel="closeEmojiPanel"
+        :notify-disabled-tap="notifyDisabledTap"
+      >
+        <scroll-view scroll-y :class="ns.e('emoji-scroll')">
+          <view :class="ns.e('emoji-grid')">
+            <view v-for="emoji in emojis" :key="emoji" :class="ns.e('emoji-cell')" @click="onEmoji(emoji)">
+              <text :class="ns.e('emoji-char')">{{ emoji }}</text>
+            </view>
           </view>
-        </view>
-      </scroll-view>
+        </scroll-view>
+      </slot>
     </view>
     <view v-else-if="panel === 'media'" :class="ns.e('panel')" :style="panelStyle">
       <view :class="ns.e('media-grid')">
@@ -117,11 +121,23 @@
         </view>
       </view>
     </view>
+
+    <!-- 常驻挂载，避免蒸汽端录音开始时新建浮层偶发丢渲染 -->
+    <view
+      :class="[ns.e('record-overlay'), willCancel && ns.m('record-overlay-cancel')]"
+      :style="recording ? '' : 'top: 200%;'"
+    >
+      <view :class="ns.e('record-overlay-icon')">
+        <EmIcon name="mic" :size="32" :color="willCancel ? 'var(--em-primary-color)' : 'var(--em-text-primary)'" />
+      </view>
+      <text :class="[ns.e('record-duration'), willCancel && ns.m('record-duration-cancel')]">{{ recordDuration }}s</text>
+      <text :class="ns.e('record-overlay-hint')">{{ willCancel ? t('chat.voice.releaseToCancel') : t('chat.voice.slideUpCancel') }}</text>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, toRef, watch } from 'vue'
+import { computed, onUnmounted, ref, toRef, watch } from 'vue'
 import EmIcon from '../em-icon/em-icon.vue'
 import EmQuickReplyBar from '../em-quick-reply-bar/em-quick-reply-bar.vue'
 import EmText from '../em-text/em-text.vue'
@@ -257,6 +273,29 @@ const {
   onVoiceSend: (path, duration) => emit('voice-send', path, duration)
 })
 
+const recordDuration = ref(0)
+const RECORD_TIMER_INTERVAL = 200
+let recordStartedAt = 0
+let recordTimer: ReturnType<typeof setInterval> | null = null
+
+function stopRecordTimer(): void {
+  if (recordTimer == null) return
+  clearInterval(recordTimer)
+  recordTimer = null
+}
+
+watch(recording, (active) => {
+  stopRecordTimer()
+  if (!active) return
+  recordDuration.value = 0
+  recordStartedAt = Date.now()
+  recordTimer = setInterval(() => {
+    recordDuration.value = Math.floor((Date.now() - recordStartedAt) / 1000)
+  }, RECORD_TIMER_INTERVAL)
+})
+
+onUnmounted(stopRecordTimer)
+
 function onToggleEmoji(): void {
   togglePanel('emoji')
 }
@@ -318,6 +357,14 @@ function onSend(): void {
 function onEmoji(emoji: string): void {
   if (guardDisabled()) return
   emit('update:modelValue', props.modelValue + emoji)
+}
+
+function closeEmojiPanel(): void {
+  panel.value = 'none'
+}
+
+function notifyDisabledTap(): void {
+  emit('disabled-tap')
 }
 
 // ========== 「+」媒体面板（格子布局，对齐 vue 版 more-grid；语音不进格子，走左侧 mic 切换） ==========

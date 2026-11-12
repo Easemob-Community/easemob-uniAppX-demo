@@ -191,12 +191,29 @@
                     @long-press="onLongPressMessage"
                     @mention-click="onMentionClick"
                   />
-                  <em-image-message
-                    v-else-if="m.type === MESSAGE_TYPE.IMAGE"
+                  <em-multi-body-message
+                    v-else-if="m.type === MESSAGE_TYPE.MULTI_BODY"
                     :message="m"
-                    @preview="onPreview"
+                    :mention-contacts="mentionContacts"
                     @long-press="onLongPressMessage"
+                    @preview="onPreview"
+                    @video-preview="onVideoPreview"
+                    @file-download="onMultiBodyFileDownload"
+                    @mention-click="onMentionClick"
                   />
+                  <slot
+                    v-else-if="m.type === MESSAGE_TYPE.IMAGE"
+                    name="image-message"
+                    :message="m"
+                    :preview="onPreview"
+                    :long-press="onLongPressMessage"
+                  >
+                    <em-image-message
+                      :message="m"
+                      @preview="onPreview"
+                      @long-press="onLongPressMessage"
+                    />
+                  </slot>
                   <em-audio-message
                     v-else-if="m.type === MESSAGE_TYPE.AUDIO"
                     :message="m"
@@ -341,7 +358,18 @@
         @mention-trigger="onMentionTrigger"
         @quick-reply="onQuickReply"
         @disabled-tap="onMuteAllTap"
-      />
+      >
+        <template v-if="$slots['emoji-panel']" #emoji-panel="scope">
+          <slot
+            name="emoji-panel"
+            :emojis="scope.emojis"
+            :disabled="scope.disabled"
+            :select-emoji="scope.selectEmoji"
+            :close-panel="scope.closePanel"
+            :notify-disabled-tap="scope.notifyDisabledTap"
+          />
+        </template>
+      </em-chat-inputbar>
 
       <!-- @提及成员选择面板（仅群聊 + enableMention 时由 mention-trigger 打开；选人后尾部追加 @{name} 空格） -->
       <em-mention-picker
@@ -414,6 +442,7 @@ import EmConnectionBanner from '../../em-connection-banner/em-connection-banner.
 import EmPopup from '../../em-popup/em-popup.vue'
 import EmMentionPicker from '../../em-mention-picker/em-mention-picker.vue'
 import EmPinnedBar from '../../em-pinned-bar/em-pinned-bar.vue'
+import EmMultiBodyMessage from '../../em-multi-body-message/em-multi-body-message.vue'
 import EmWatermark from '../../em-watermark/em-watermark.vue'
 import type { EmIconName } from '../../em-icon/em-icons'
 import { CONNECTION_STATUS, CONVERSATION_TYPE, ERROR_CODE, FILE_SEND_CONCURRENCY, GROUP_MEMBER_ROLE, MEDIA_PANEL_KEY, MESSAGE_MENU_KEY, MESSAGE_MODIFY_COUNT_LIMIT, MESSAGE_STATUS, MESSAGE_TYPE, PINNED_PREVIEW_MAX_LENGTH } from '../../../libs/constants'
@@ -439,6 +468,7 @@ import { useWatermark } from '../../../libs/use/useWatermark'
 import { useChatComposer } from '../../../libs/use/useChatComposer'
 import { formatDividerTime } from '../../../libs/utils/time'
 import { isRichStream } from '../../../libs/utils/stream'
+import { multiBodyPreviewOf } from '../../../libs/utils/multi-body'
 import { quoteHasIcon, quoteIconNameOf, quoteSenderOf, quoteSuffixOf, quoteTextClassOf, quoteTextStyleOf } from '../../../libs/utils/quote'
 import { createLogger } from '../../../libs/utils/logger'
 
@@ -1684,6 +1714,10 @@ function onFileDownload(m: EmMessageItem): void {
   if (!PLATFORM_CAPABILITIES.fileOpen) return
 }
 
+function onMultiBodyFileDownload(m: EmMessageItem): void {
+  void downloadMessage(m)
+}
+
 // 消息长按菜单（项与顺序经 uiConfig.messageMenuKeys 配置）：复制（仅文本）/ 引用 / 撤回（窗口内）/ 删除（漫游 + 本地）
 const msgSheetVisible = ref(false)
 const activeMessage = ref<EmMessageItem | null>(null)
@@ -1780,6 +1814,8 @@ function pinnedPreviewOf(item: EmPinnedMessageItem): string {
     text = m.fileName !== '' ? m.fileName : t('message.file')
   } else if (m.type === MESSAGE_TYPE.CUSTOM) {
     text = t('message.custom')
+  } else if (m.type === MESSAGE_TYPE.MULTI_BODY) {
+    text = multiBodyPreviewOf(m.segments ?? [], t)
   }
   if (text.length > PINNED_PREVIEW_MAX_LENGTH) {
     text = `${text.slice(0, PINNED_PREVIEW_MAX_LENGTH)}…`
@@ -1843,11 +1879,12 @@ const messageSummary = computed(() => {
   if (m.type === MESSAGE_TYPE.VIDEO) return t('message.video')
   if (m.type === MESSAGE_TYPE.FILE) return m.fileName !== '' ? m.fileName : t('message.file')
   if (m.type === MESSAGE_TYPE.CUSTOM) return t('message.custom')
+  if (m.type === MESSAGE_TYPE.MULTI_BODY) return multiBodyPreviewOf(m.segments ?? [], t)
   return t('message.unsupported')
 })
 
 // 消息长按菜单：按 uiConfig.messageMenuKeys 过滤排序（默认 copy/quote/recall/delete 全量）。
-// 候选集保留各可用性条件：copy 仅文本；recall 己方已发送且在撤回窗口（uiConfig.recallTimeLimit）内。
+// 候选集保留各可用性条件：copy 限文本或含文本的复合消息；recall 己方已发送且在撤回窗口（uiConfig.recallTimeLimit）内。
 // 业务追加动作（extraMessageMenus）排在配置项之后：内置 key 保留不可覆盖，types 可限定消息类型。
 const messageActions = computed<EmActionSheetAction[]>(() => {
   const m = activeMessage.value
@@ -1855,7 +1892,7 @@ const messageActions = computed<EmActionSheetAction[]>(() => {
   // 系统通知灰条：撤回/引用等菜单整体禁用（本地条目，无服务端语义），业务动作同样不出现
   if (m.type === MESSAGE_TYPE.NOTICE) return []
   const candidates: EmActionSheetAction[] = []
-  if (m.type === MESSAGE_TYPE.TEXT) {
+  if (m.type === MESSAGE_TYPE.TEXT || (m.type === MESSAGE_TYPE.MULTI_BODY && m.text !== '')) {
     candidates.push({ key: MESSAGE_MENU_KEY.COPY, text: t('message.action.copy'), icon: 'rects' })
   }
   // 失败消息只有「重发/删除」有服务端语义：引用/编辑/置顶/撤回都依赖 serverId，统一不出现

@@ -7,7 +7,7 @@
     @longpress="onLongPress(item.conversationId)"
   >
     <slot name="avatar" :item="item" :avatar="avatar" :ext="ext">
-      <em-avatar :src="avatar" :name="name" :size="48" />
+      <em-avatar :src="avatar" :name="name" :size="48" :shape="avatarShape" />
     </slot>
     <view :class="ns.e('body')">
       <view :class="ns.e('top')">
@@ -56,7 +56,7 @@ import { useNamespace } from '../../libs/use/useNamespace'
 import { useLocale } from '../../libs/use/useLocale'
 import { useLongPressClickGuard } from '../../libs/use/useLongPressClickGuard'
 import { TEXT_STYLE_NAME, TEXT_STYLE_SUBTITLE } from '../../libs/style/textStyles'
-import type { EmConversationItem } from '../../libs/types'
+import type { EmAvatarShape, EmConversationItem } from '../../libs/types'
 
 // 会话列表条目原子组件：页面已装配好的展示数据（名称/头像回落链、五档时间、草稿态）整体透传，
 // 组件内不连 store（对齐 vue 版 conversation-item 的数据契约：conversation + 展示字段，裁剪 @我/typing/presence 等一期外能力）
@@ -64,6 +64,7 @@ interface Props {
   item: EmConversationItem                          // 会话数据（含置顶/免打扰/未读数/摘要）
   name: string                                      // 展示名（页面侧已走 nickname > conversation.name > id 回落链）
   avatar: string                                    // 头像 URL（已合并 userStore 与 conversation.avatar）
+  avatarShape?: EmAvatarShape                       // 头像形状，默认圆形
   timeText: string                                  // 五档格式化时间（formatConversationTime，草稿时间优先在页面侧已并入）
   draft: { text: string, time: number } | null      // 草稿态；null 展示最后消息摘要
   hasAtMe?: boolean                                 // 群聊「有人@我」未读标记（摘要主色前缀），默认 false
@@ -73,6 +74,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
+  avatarShape: 'circle',
   hasAtMe: false,
   ext: undefined,
   customClass: '',

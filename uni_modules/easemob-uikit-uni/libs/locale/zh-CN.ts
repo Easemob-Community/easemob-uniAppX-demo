@@ -176,6 +176,7 @@ export default {
 
   'contact.entryGroup': '群组列表',
   'contact.entryContact': '好友列表',
+  'contact.entryBlocklist': '黑名单',
 
   'contact.selectMembers': '选择成员',
 
@@ -277,6 +278,8 @@ export default {
   'message.file': '[文件]',
   'message.cmd': '[指令]',
   'message.custom': '[自定义消息]',
+  'message.multiBody': '[复合消息]',
+  'message.location': '[位置]',
   'message.unsupported': '[暂不支持的消息]',
   'message.stream.error': '（内容生成异常）',
   'message.seconds': '{seconds}"',

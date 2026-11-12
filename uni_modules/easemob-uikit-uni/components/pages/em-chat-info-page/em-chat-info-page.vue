@@ -40,11 +40,11 @@
         <view :class="ns.e('group')">
           <view :class="ns.e('cell')">
             <text :class="ns.e('cell-label')">{{ t('chat.info.conversationMute') }}</text>
-            <switch :checked="muted" :disabled="muting" @change="onMuteChange" color="var(--em-primary-color)" />
+            <EmSwitch :model-value="muted" :loading="muting" @change="onMuteChange" />
           </view>
           <view :class="[ns.e('cell'), ns.m('cell-last')]">
             <text :class="ns.e('cell-label')">{{ t('chat.info.conversationPin') }}</text>
-            <switch :checked="pinned" :disabled="pinning" @change="onPinChange" color="var(--em-primary-color)" />
+            <EmSwitch :model-value="pinned" :loading="pinning" @change="onPinChange" />
           </view>
         </view>
 
@@ -134,6 +134,7 @@ import EmGroupInfoBlocks from './em-group-info-blocks.vue'
 import EmGroupFieldDialog from './em-group-field-dialog.vue'
 import EmGroupMembersView from './em-group-members-view.vue'
 import EmSelectContact from '../../em-select-contact/em-select-contact.vue'
+import EmSwitch from '../../em-switch/em-switch.vue'
 import { EmKit } from '../../../libs'
 import { CONVERSATION_TYPE, GROUP_MEMBER_ROLE, SELECT_CONTACT_MODE } from '../../../libs/constants'
 import type { ConversationTypeValue, GroupMemberRoleValue } from '../../../libs/constants'
@@ -369,12 +370,11 @@ onMounted(() => {
   }
 })
 
-async function onMuteChange(e: any): Promise<void> {
+async function onMuteChange(value: boolean): Promise<void> {
   if (muting.value) return
-  const v = e.detail.value as boolean
   muting.value = true
   try {
-    await EmKit.setConversationMuted(props.conversationId, chatType.value, v)
+    await EmKit.setConversationMuted(props.conversationId, chatType.value, value)
   } catch (err) {
     uni.showToast({ title: t('error.unknown'), icon: 'none' })
   } finally {
@@ -382,12 +382,11 @@ async function onMuteChange(e: any): Promise<void> {
   }
 }
 
-async function onPinChange(e: any): Promise<void> {
+async function onPinChange(value: boolean): Promise<void> {
   if (pinning.value) return
-  const v = e.detail.value as boolean
   pinning.value = true
   try {
-    await EmKit.pinConversation(props.conversationId, chatType.value, v)
+    await EmKit.pinConversation(props.conversationId, chatType.value, value)
   } catch (err) {
     uni.showToast({ title: t('error.unknown'), icon: 'none' })
   } finally {

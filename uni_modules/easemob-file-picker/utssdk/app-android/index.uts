@@ -1,0 +1,244 @@
+import { ChooseFileOptions, ChooseFileResult, FileInfo, FileInfoOptions, FilePickerError, FilePickerErrorCode, PrepareFileOptions, RemoveTempFileOptions, RemoveTempFileResult } from '../interface.uts'
+import { FilePickerErrorImpl } from '../unierror'
+// UTS-Android 导入原生类必须用默认导入语法，命名导入会编译成 android.app.Activity.Activity 这种双重路径
+import Intent from 'android.content.Intent'
+import Uri from 'android.net.Uri'
+import OpenableColumns from 'android.provider.OpenableColumns'
+import Cursor from 'android.database.Cursor'
+import Activity from 'android.app.Activity'
+import File from 'java.io.File'
+import FileOutputStream from 'java.io.FileOutputStream'
+import InputStream from 'java.io.InputStream'
+import UUID from 'java.util.UUID'
+import { Long } from 'kotlin'
+
+const REQUEST_CODE = 29174
+let pendingChoose: ChooseFileOptions | null = null
+
+// 复制缓冲区 64KB。这里必须写字面量：UTS 的 number 常量在 Kotlin 侧是 Number，
+// 而 ByteArray(size) 形参是 Int，传常量会报 Argument type mismatch（实测已踩）
+// 选择时缓存的元数据：picker URI 的读权限若未被持久化（部分第三方文件管理器不带
+// FLAG_GRANT_PERSISTABLE_URI_PERMISSION），重启后 resolver.query 会失效，此时用缓存兜底
+// 上限 20 条，代码里用字面量（number 常量与数组 length(Int) 混算会编译失败）
+let pickedCache: FileInfo[] = []
+
+// 统一失败出口：只接收具体回调，不接收整个 options。
+// 早期写法是传联合类型 options 再 `as ChooseFileOptions`，Kotlin 侧会退化成强制类型转换，
+// 而 getFileInfo / prepareFile 的失败分支传入的是别的 Options 类型，转换会抛 ClassCastException。
+const notifyFail = (
+  onFail: ((err: FilePickerError) => void) | null,
+  onComplete: ((res: any) => void) | null,
+  code: FilePickerErrorCode
+) : void => {
+  // 可选参数 message 在 Kotlin 侧不会生成默认值，必须显式传 null
+  const error = new FilePickerErrorImpl(code, null)
+  onFail?.(error)
+  onComplete?.(error)
+}
+
+const extensionOf = (name: string) : string => {
+  const index = name.lastIndexOf('.')
+  // substring 的形参是 Kotlin Int，UTS number 需显式 toInt() 桥接
+  return index > 0 && index < name.length - 1 ? name.substring((index + 1).toInt()).toLowerCase() : ''
+}
+
+const queryFileInfo = (uriText: string) : FileInfo | null => {
+  const context = UTSAndroid.getAppContext()
+  if (context == null || uriText.length == 0) return null
+  const uri = Uri.parse(uriText)
+  const resolver = context!.getContentResolver()
+  let name = ''
+  let size = 0
+  let cursor: Cursor | null = null
+  try {
+    // projection 传 null 表示返回全部列，绕开 UTSArray 无法直接桥接为 Java Array<String> 的问题
+    cursor = resolver.query(uri, null, null, null, null)
+    if (cursor != null && cursor!.moveToFirst()) {
+      const nameIndex = cursor!.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+      const sizeIndex = cursor!.getColumnIndex(OpenableColumns.SIZE)
+      if (nameIndex >= 0) name = cursor!.getString(nameIndex) ?? ''
+      if (sizeIndex >= 0 && !cursor!.isNull(sizeIndex)) size = (cursor!.getLong(sizeIndex) as Long).toDouble()
+    }
+  } catch (e) {
+    name = ''
+  } finally {
+    cursor?.close()
+  }
+  if (name.length == 0) name = uri.getLastPathSegment() ?? 'file'
+  // getType 对失效/无权限的 URI 会抛 SecurityException，必须包 try，否则 getFileInfo 会崩溃而不是走 fail 回调
+  let mime = ''
+  try { mime = resolver.getType(uri) ?? '' } catch (e) { console.log('[easemob-file-picker] getType failed: ' + uriText) }
+  return { uri: uriText, name, size, mimeType: mime, extension: extensionOf(name), path: null, isTemporary: false }
+}
+
+// 缓存选择时的元数据，按 uri 去重并限制条数（不用高阶数组方法，逻辑与 iOS 端一致）
+const rememberPicked = (info: FileInfo) : void => {
+  const kept: FileInfo[] = []
+  for (const f of pickedCache) {
+    if (f.uri != info.uri) kept.push(f)
+  }
+  kept.push(info)
+  if (kept.length <= 20) {
+    pickedCache = kept
+    return
+  }
+  // 超限：丢最旧一条即可（每次调用最多新增 1 条，稳定在 ≤21）。
+  // 不用下标与数值变量：UTS number 在 Kotlin 侧是 Number，`kept[i]` 会因 List.get(Int) 形参
+  // 类型不匹配报 Argument type mismatch（实测已踩）
+  const trimmed: FileInfo[] = []
+  var skipped = false
+  for (const f of kept) {
+    if (!skipped) {
+      skipped = true
+    } else {
+      trimmed.push(f)
+    }
+  }
+  pickedCache = trimmed
+}
+
+const copyToCache = (uriText: string) : FileInfo | null => {
+  const activity = UTSAndroid.getUniActivity()
+  const context = UTSAndroid.getAppContext()
+  if (activity == null || context == null) return null
+  const source = Uri.parse(uriText)
+  let input: InputStream | null = null
+  let output: FileOutputStream | null = null
+  let outputFile: File | null = null
+  try {
+    input = context!.getContentResolver().openInputStream(source)
+    if (input == null) return null
+    const metadata = queryFileInfo(uriText)
+    if (metadata == null) return null
+    const suffix = metadata!.extension.length > 0 ? '.' + metadata!.extension : ''
+    outputFile = File(context!.getCacheDir(), UUID.randomUUID().toString() + suffix)
+    output = FileOutputStream(outputFile!)
+    // ByteArray 是 Kotlin 类型（由 UTS-Android 内置桥接），这里沿用已验证写法，勿改成 Uint8Array：
+    // InputStream.read 的形参就是 Kotlin ByteArray，替换会引入 UTSArray→ByteArray 的转换问题。
+    // 65536 必须写字面量（不能用 number 常量），否则 Kotlin 报 Argument type mismatch
+    const buffer = ByteArray(65536)
+    var count = input!.read(buffer)
+    while (count > 0) { output!.write(buffer, 0, count); count = input!.read(buffer) }
+    output!.flush()
+    const info: FileInfo = { uri: uriText, name: metadata!.name, size: outputFile!.length().toDouble(), mimeType: metadata!.mimeType, extension: metadata!.extension, path: outputFile!.getAbsolutePath(), isTemporary: true }
+    // 注意：不要把带 path 的副本写进 pickedCache。缓存只存「选择时的元数据」，
+    // 否则 getFileInfo 会回一个 path 非空、isTemporary 为 true 的对象，破坏「只有 prepareFile 返回 path」的契约
+    return info
+  } catch (e) {
+    console.log('[easemob-file-picker] copyToCache failed: ' + e.toString())
+    if (outputFile != null) outputFile!.delete()
+    return null
+  } finally {
+    try { input?.close() } catch (e) { console.log('[easemob-file-picker] close input failed') }
+    try { output?.close() } catch (e) { console.log('[easemob-file-picker] close output failed') }
+  }
+}
+
+// 旧版 Kotlin 编译器（HBuilderX 4.75 及以前）两头受限：
+// ① 顶层 val 不允许在自身初始化器中自引用（报 Variable must be initialized）
+// ② 函数声明不能当值传递（报 Function invocation expected，新版才会自动生成 :: 函数引用）
+// 因此注册一个稳定的转发回调 onActivityResult（不自引用、可安全传递），
+// 真实逻辑挂在可按次替换的 resultHandler 上，chooseFile 每次调用前重挂
+let resultHandler: (requestCode: number, resultCode: number, data: Intent | null) => void = (requestCode: number, resultCode: number, data: Intent | null) : void => {}
+
+const onActivityResult: (requestCode: number, resultCode: number, data: Intent | null) => void = (requestCode: number, resultCode: number, data: Intent | null) : void => {
+  resultHandler(requestCode, resultCode, data)
+}
+
+const handleActivityResult = (options: ChooseFileOptions, requestCode: number, resultCode: number, data: Intent | null) : void => {
+  if (requestCode != REQUEST_CODE) return
+  pendingChoose = null
+  UTSAndroid.offAppActivityResult(onActivityResult)
+  if (resultCode != Activity.RESULT_OK || data == null) {
+    const result: ChooseFileResult = { files: [], cancelled: true }
+    options.success?.(result)
+    options.complete?.(result)
+    return
+  }
+  const uris: Uri[] = []
+  const clip = data!.getClipData()
+  if (clip != null) {
+    for (let i = 0; i < clip!.getItemCount(); i++) { const item = clip!.getItemAt(i.toInt()); const itemUri = item?.getUri(); if (itemUri != null) uris.push(itemUri!) }
+  } else {
+    const uri = data!.getData()
+    if (uri != null) uris.push(uri!)
+  }
+  const flags = data!.getFlags()
+  if ((flags & Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0 && (flags & Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION) != 0) {
+    for (const uri of uris) {
+      try {
+        UTSAndroid.getAppContext()!.getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      } catch (e) {
+        // 持久化失败不影响本次使用，但重启后 URI 会失效，留一条日志便于排查
+        console.log('[easemob-file-picker] takePersistableUriPermission failed: ' + uri.toString())
+      }
+    }
+  }
+  const files: FileInfo[] = []
+  for (const uri of uris) {
+    const item = queryFileInfo(uri.toString())
+    if (item != null) {
+      // 缓存选择时的元数据，供 URI 失效后的 getFileInfo 兜底
+      rememberPicked(item!)
+      files.push(item!)
+    }
+  }
+  if (files.length == 0) { notifyFail(options.fail, options.complete, 9010005); return }
+  const result: ChooseFileResult = { files, cancelled: false }
+  options.success?.(result)
+  options.complete?.(result)
+}
+
+export const chooseFile = (options: ChooseFileOptions) : void => {
+  const activity = UTSAndroid.getUniActivity()
+  if (activity == null || pendingChoose != null) { notifyFail(options.fail, options.complete, 9010002); return }
+  const intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
+  intent.addCategory(Intent.CATEGORY_OPENABLE)
+  const types = options.mimeTypes ?? []
+  intent.setType(types.length == 1 ? types[0] : '*/*')
+  if (types.length > 1) intent.putExtra(Intent.EXTRA_MIME_TYPES, types.toTypedArray())
+  intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, options.multiple == true)
+  pendingChoose = options
+  resultHandler = (requestCode: number, resultCode: number, data: Intent | null) : void => { handleActivityResult(options, requestCode, resultCode, data) }
+  UTSAndroid.onAppActivityResult(onActivityResult)
+  try { activity!.startActivityForResult(intent, REQUEST_CODE.toInt()) } catch (e) { pendingChoose = null; UTSAndroid.offAppActivityResult(onActivityResult); notifyFail(options.fail, options.complete, 9010002) }
+}
+
+export const getFileInfo = (options: FileInfoOptions) : void => {
+  // 先查选择时的缓存：URI 的读权限未被持久化时，重启后 query 会失败，但元数据仍然有效
+  for (const picked of pickedCache) {
+    if (picked.uri == options.uri) {
+      // 与 iOS 一致：getFileInfo 只交付元数据，path 恒为 null（缓存条目可能来自带 path 的对象）
+      const info: FileInfo = { uri: picked.uri, name: picked.name, size: picked.size, mimeType: picked.mimeType, extension: picked.extension, path: null, isTemporary: false }
+      options.success?.(info)
+      options.complete?.(info)
+      return
+    }
+  }
+  const info = queryFileInfo(options.uri)
+  if (info == null) { notifyFail(options.fail, options.complete, 9010004); return }
+  options.success?.(info!)
+  options.complete?.(info!)
+}
+
+export const prepareFile = (options: PrepareFileOptions) : void => {
+  const info = copyToCache(options.uri)
+  if (info == null) { notifyFail(options.fail, options.complete, 9010006); return }
+  options.success?.(info!)
+  options.complete?.(info!)
+}
+
+export const removeTempFile = (options: RemoveTempFileOptions) : void => {
+  const context = UTSAndroid.getAppContext()
+  if (context == null) { notifyFail(options.fail, options.complete, 9010006); return }
+  try {
+    const cache = context!.getCacheDir().getCanonicalPath()
+    const target = File(options.path).getCanonicalFile()
+    // 对象字面量必须显式标注类型，否则编译为 UTSJSONObject 无法传给 RemoveTempFileResult 回调
+    if (!target.getPath().startsWith(cache + File.separator) || !target.exists()) { const result: RemoveTempFileResult = { removed: false }; options.success?.(result); options.complete?.(result); return }
+    const removed = target.delete()
+    const result: RemoveTempFileResult = { removed }
+    options.success?.(result)
+    options.complete?.(result)
+  } catch (e) { notifyFail(options.fail, options.complete, 9010006) }
+}

@@ -1,5 +1,5 @@
 <template>
-  <view :class="[ns.b(), 'em-bubble', message.self ? 'em-bubble--self' : '', customClass]" :style="customStyle" @longpress="onLongpress">
+  <view :class="[ns.b(), 'em-bubble', message.self ? 'em-bubble--self' : '', embedded && ns.m('embedded'), customClass]" :style="customStyle" @longpress="onLongpress">
     <!-- 无 @提及（ext.em_at_list 为空/无）走原纯文本渲染；有则按 parseMentions 分片，
          @ 片段套高亮类可点击（对齐 vue 版 text-message 的 msgSegments，链接识别不在一期） -->
     <!-- 流式光标/异常提示必须是「常驻子 text + 内容切换」，不能 v-if 增删：
@@ -35,12 +35,14 @@ interface Props {
   /** @名字 → userId 的解析表（父组件按群成员装配，同 em-mention-picker 的 contacts）；
    *  缺省/未命中时 mention-click 回落为 @ 后的原始名字（与 vue 版 seg.userId=name 行为一致） */
   mentionContacts?: MentionContact[]
+  embedded?: boolean
   customClass?: string   // 宿主自定义类，追加到根节点 class（H5 与小程序页面级样式生效；跨端覆盖优先 customStyle）
   customStyle?: string   // 宿主自定义内联样式，拼接到根节点 style 末尾（五端生效，var() 可用）
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mentionContacts: () => [],
+  embedded: false,
   customClass: '',
   customStyle: ''
 })

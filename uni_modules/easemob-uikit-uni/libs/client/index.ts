@@ -65,6 +65,29 @@ function platformErrorDetail(e: unknown): string {
   }
 }
 
+function redactLoginText(text: string, userId: string, token: string): string {
+  let result = text
+  for (const value of [userId, token]) {
+    if (value !== '') result = result.split(value).join('[redacted]')
+  }
+  return result
+}
+
+function loginErrorDetail(e: unknown, userId: string, token: string): string {
+  if (!(e instanceof Error)) return redactLoginText(String(e), userId, token)
+  const error = e as { name: string; message: string; code?: number; details?: Record<string, unknown> }
+  let text = redactLoginText(`${error.name}: ${error.message}`, userId, token)
+  if (typeof error.code === 'number') text += ` code=${error.code}`
+  if (error.details == null) return text
+  const details: Record<string, string | number | boolean> = {}
+  for (const key of ['stage', 'timeoutMs', 'attemptId', 'retryable', 'causeCode']) {
+    const value = error.details[key]
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') details[key] = value
+  }
+  if (Object.keys(details).length > 0) text += ` details=${JSON.stringify(details)}`
+  return text
+}
+
 // SDK 平台适配层覆盖（App 自定义基座兼容 + 附件上传降级，勿删）：
 //
 // 1) runtime：websdk 5.1.3 默认 runtime 适配器的 onNetworkChange 会顺手用 uni.getNetworkType 探测网络类型，
@@ -116,7 +139,7 @@ const SDK_PLATFORM_OVERRIDES = (defaults: Readonly<PlatformAdapterOverrides>): P
 
 // 客户端生命周期：初始化 / 登录 / 登出 / 连接事件
 // 初始化三阶段（PLAN.md M2.8，对齐分包异步化指南）：SDK 模块加载（ensureSdkModule，
-// 小程序分包场景异步）→ ChatClient.init → login，各阶段 Promise 缓存、失败清缓存可重试。
+// 小程序分包场景异步）→ ChatClient.init → login，各阶段 Promise 缓存；初始化失败或登出清缓存，允许换 AppKey 重试。
 export class EmClient {
   private client: ChatClient | null = null
   private initPromise: Promise<ChatClient> | null = null
@@ -247,7 +270,7 @@ export class EmClient {
       })
       connectionStore.appkey = config.appkey
       this.client = client
-      logger.info('init ok, appkey:', config.appkey)
+      logger.info('init ok, appkey:', config.appkey, 'sdk:', client.getVersion())
       return client
     } catch (e) {
       // 失败清缓存（如分包首次加载失败）：宿主修正后可重新 init 重试
@@ -301,11 +324,11 @@ export class EmClient {
       connectionStore.status = CONNECTION_STATUS.ONLINE
       connectionStore.kicked = false
       connectionStore.kickCode = 0
-      logger.info('login success:', options.userId)
+      logger.info('login success')
     } catch (e) {
       connectionStore.status = CONNECTION_STATUS.CLOSED
       // 系统离线标记：登录失败的排查第一问通常是「是不是没网」，这里直接留痕，不改抛出值
-      logger.error('login failed:', options.userId, connectionStore.networkOnline === false ? '(system offline)' : '', e)
+      logger.error('login failed:', connectionStore.networkOnline === false ? '(system offline)' : '', loginErrorDetail(e, options.userId, options.token))
       throw e
     }
   }
@@ -314,15 +337,22 @@ export class EmClient {
     if (this.client == null) {
       return
     }
-    await this.client.logout()
-    connectionStore.status = CONNECTION_STATUS.CLOSED
-    connectionStore.userId = ''
-    connectionStore.reason = ''
-    connectionStore.errorCode = 0
-    connectionStore.reconnecting = false
-    connectionStore.reconnectAttempt = 0
-    connectionStore.kicked = false
-    connectionStore.kickCode = 0
+    try {
+      await this.client.logout()
+    } finally {
+      connectionStore.status = CONNECTION_STATUS.CLOSED
+      connectionStore.userId = ''
+      connectionStore.reason = ''
+      connectionStore.errorCode = 0
+      connectionStore.reconnecting = false
+      connectionStore.reconnectAttempt = 0
+      connectionStore.kicked = false
+      connectionStore.kickCode = 0
+      connectionStore.appkey = ''
+      this.client = null
+      this.initPromise = null
+      this.config = null
+    }
   }
 
   // login resolve ≠ socket 就绪：发送/拉历史前统一等 onConnected

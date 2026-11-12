@@ -5,21 +5,18 @@ import type {
   ChatClient,
   CmdMessageBody,
   CompatibleFile,
-  CustomMessageBody,
   Message,
-  FileMessageBody,
-  ImageMessageBody,
   SendMessageOptions,
   StreamMessage,
-  TextMessageBody,
-  VideoMessageBody,
-  VoiceMessageBody
+  TextMessageBody
 } from 'easemob-websdk'
+import { applyMessageBody, toMultiBodySegmentItems } from './message-body'
+import { multiBodyPreviewOf, multiBodyTextOf } from '../utils/multi-body'
 import { CMD_ACTION, CONVERSATION_MESSAGE_RETAIN_LIMIT, CONVERSATION_TYPE, ERROR_CODE, GROUP_READ_RECEIPT_BATCH, MESSAGE_EXT_KEY, MESSAGE_STATUS, MESSAGE_TYPE, STREAM_MESSAGE_STATUS } from '../constants'
 import type { ConversationTypeValue, ErrorCodeValue, MessageTypeValue, StreamMessageStatusValue } from '../constants'
 import { connectionStore } from '../store/connection'
 import { uiConfig } from '../store/config'
-import { getMessages, messageStore } from '../store/message'
+import { getMessages, messageStore, registerMessageSource, removeMessageSource, removeMessageSources } from '../store/message'
 import type { EmPickedFile, EmPickedImage, EmPickedVideo } from '../platform'
 import type { EmMessageHandler, EmMessageItem, EmMessageModifiedInfo, EmPinnedMessageItem, EmQuoteInfo, EmStreamInfo } from '../types'
 import { isStreamTerminal } from '../utils/stream'
@@ -251,6 +248,7 @@ export class EmMessageDomain {
   trimConversation(conversationId: string): void {
     const list = messageStore.messagesByConversationId[conversationId]
     if (list == null || list.length <= CONVERSATION_MESSAGE_RETAIN_LIMIT) return
+    removeMessageSources(list.slice(0, list.length - CONVERSATION_MESSAGE_RETAIN_LIMIT))
     messageStore.messagesByConversationId[conversationId] = list.slice(list.length - CONVERSATION_MESSAGE_RETAIN_LIMIT)
     this.trimmedByConversationId[conversationId] = true
   }
@@ -546,6 +544,8 @@ export class EmMessageDomain {
       text = item.fileName !== '' ? `${t('message.file')}${item.fileName}` : t('message.file')
     } else if (item.type === MESSAGE_TYPE.CUSTOM) {
       text = t('message.custom')
+    } else if (item.type === MESSAGE_TYPE.MULTI_BODY) {
+      text = multiBodyPreviewOf(item.segments ?? [], t)
     } else if (item.type !== MESSAGE_TYPE.TEXT) {
       text = t('message.unsupported')
     }
@@ -587,15 +587,24 @@ export class EmMessageDomain {
     return path.indexOf('http://') === 0 || path.indexOf('https://') === 0
   }
 
-  async sendImage(to: string, chatType: ConversationTypeValue, image: EmPickedImage): Promise<EmMessageItem> {
+  async sendImage(to: string, chatType: ConversationTypeValue, image: EmPickedImage, ext?: Record<string, unknown>): Promise<EmMessageItem> {
     const chatManager = await this.readyChatManager()
-    const message = chatManager.createImageMessage({
+    const webFile = image.webFile as { type?: string } | null
+    const isGif = webFile?.type === 'image/gif' || /\.gif(?:$|\?)/i.test(image.name) || /\.gif(?:$|\?)/i.test(image.path)
+    const common = {
       conversationId: to,
       conversationType: chatType,
-      data: this.asCompatibleFile(image.path, image.name, image.size, image.webFile),
-      filename: image.name
-    })
-    return this.deliver(message, to, '', undefined, image.path, undefined, image.webFile)
+      filename: image.name,
+      ...(ext != null ? { ext } : {}),
+      ...(isGif ? { isGif: true } : {})
+    }
+    const message = image.webFile == null && this.isRemoteUrl(image.path)
+      ? chatManager.createImageMessage({ ...common, originalUrl: image.path })
+      : chatManager.createImageMessage({
+        ...common,
+        data: this.asCompatibleFile(image.path, image.name, image.size, image.webFile)
+      })
+    return this.deliver(message, to, '', undefined, image.path, undefined, image.webFile, ext)
   }
 
   async sendAudio(to: string, chatType: ConversationTypeValue, filePath: string, duration: number): Promise<EmMessageItem> {
@@ -636,7 +645,7 @@ export class EmMessageDomain {
       conversationType: chatType,
       data,
       filename: file.name,
-      fileSize: file.size
+      ...(file.size > 0 ? { fileSize: file.size } : {})
     })
     return this.deliver(message, to, '', undefined, file.path, undefined, file.webFile ?? null)
   }
@@ -695,6 +704,7 @@ export class EmMessageDomain {
       if ((sent.sendStatus as string) === 'failed') {
         throw new Error('send failed')
       }
+      registerMessageSource(stored.localId, sent)
       stored.id = sent.msgServerId !== '' ? sent.msgServerId : sent.msgLocalId
       stored.time = sent.timestamp
       stored.status = MESSAGE_STATUS.SENT
@@ -773,6 +783,9 @@ export class EmMessageDomain {
       const full = str('bigImageUrl') !== '' ? str('bigImageUrl') : (str('originalImageUrl') !== '' ? str('originalImageUrl') : str('url'))
       // 本地 blob/临时路径优先保留用于即时预览；只有当前没有可用 URL 时才用服务端地址
       if (stored.url === '' && full !== '') stored.url = full
+      const original = str('originalImageUrl')
+      if (original !== '') stored.originalUrl = original
+      if (body['isGif'] === true) stored.isGif = true
       const thumb = str('thumbnailUrl')
       if (thumb !== '') stored.thumbUrl = thumb
       return
@@ -834,6 +847,7 @@ export class EmMessageDomain {
     let requestPageSize = pageSize
     if (this.trimmedByConversationId[conversationId] === true) {
       delete this.trimmedByConversationId[conversationId]
+      removeMessageSources(messageStore.messagesByConversationId[conversationId] ?? [])
       messageStore.messagesByConversationId[conversationId] = []
       messageStore.cursorByConversationId[conversationId] = ''
       messageStore.hasMoreByConversationId[conversationId] = true
@@ -1085,6 +1099,7 @@ export class EmMessageDomain {
       if (hitId || hitBefore) {
         removed += 1
         delete this.uploadFileByLocalId[m.localId]
+        removeMessageSource(m.localId)
         this.releaseTemporary(m.url)
         return
       }
@@ -1203,6 +1218,7 @@ export class EmMessageDomain {
       return false
     }
     delete this.uploadFileByLocalId[localId]
+    removeMessageSource(localId)
     // 删除失败/本地消息时顺手清掉宿主附件临时副本（发送成功的已在 deliver 清理，重复调用是 no-op）
     this.releaseTemporary(target.url)
     messageStore.messagesByConversationId[conversationId] = list.filter((m) => m.localId !== localId)
@@ -1243,7 +1259,8 @@ export class EmMessageDomain {
       return
     }
     let message: Message
-    const remote = this.isRemoteUrl(item.url)
+    const sourceUrl = item.type === MESSAGE_TYPE.IMAGE && item.originalUrl !== '' ? item.originalUrl : item.url
+    const remote = this.isRemoteUrl(sourceUrl)
     const cachedFile = this.uploadFileByLocalId[localId] ?? null
     // 文本/自定义消息没有本地媒体文件，不走媒体可用性校验
     const isTextLike = item.type === MESSAGE_TYPE.TEXT || item.type === MESSAGE_TYPE.CUSTOM
@@ -1254,15 +1271,18 @@ export class EmMessageDomain {
     }
     const name = item.fileName !== ''
       ? item.fileName
-      : (item.url !== '' ? item.url.slice(item.url.lastIndexOf('/') + 1) : 'file')
+      : (sourceUrl !== '' ? sourceUrl.slice(sourceUrl.lastIndexOf('/') + 1) : 'file')
     if (item.type === MESSAGE_TYPE.IMAGE) {
+      const ext = Object.keys(item.ext).length > 0 ? { ...item.ext } : undefined
       message = remote
-        ? chatManager.createImageMessage({ conversationId, conversationType: chatType, originalUrl: item.url, filename: name })
+        ? chatManager.createImageMessage({ conversationId, conversationType: chatType, originalUrl: sourceUrl, filename: name, ext, isGif: item.isGif })
         : chatManager.createImageMessage({
           conversationId,
           conversationType: chatType,
           data: this.asCompatibleFile(item.url, name, 0, cachedFile ?? await this.webFileOf(item.url, name)),
-          filename: name
+          filename: name,
+          ext,
+          isGif: item.isGif
         })
     } else if (item.type === MESSAGE_TYPE.AUDIO) {
       message = remote
@@ -1293,13 +1313,13 @@ export class EmMessageDomain {
         })
     } else if (item.type === MESSAGE_TYPE.FILE) {
       message = remote
-        ? chatManager.createFileMessage({ conversationId, conversationType: chatType, originalUrl: item.url, filename: item.fileName, fileSize: item.fileSize })
+        ? chatManager.createFileMessage({ conversationId, conversationType: chatType, originalUrl: item.url, filename: item.fileName, ...(item.fileSize > 0 ? { fileSize: item.fileSize } : {}) })
         : chatManager.createFileMessage({
           conversationId,
           conversationType: chatType,
           data: this.asCompatibleFile(item.url, item.fileName, item.fileSize, cachedFile ?? await this.webFileOf(item.url, item.fileName)),
           filename: item.fileName,
-          fileSize: item.fileSize
+          ...(item.fileSize > 0 ? { fileSize: item.fileSize } : {})
         })
     } else if (item.type === MESSAGE_TYPE.CUSTOM) {
       // 自定义消息重发：event/params 从消息体还原，业务 ext 原样带上（引用等内部 key 不适用于 custom）
@@ -1349,6 +1369,7 @@ export class EmMessageDomain {
       if ((sent.sendStatus as string) === 'failed') {
         throw new Error('send failed')
       }
+      registerMessageSource(item.localId, sent)
       item.id = sent.msgServerId !== '' ? sent.msgServerId : sent.msgLocalId
       item.time = sent.timestamp
       item.status = MESSAGE_STATUS.SENT
@@ -1403,6 +1424,8 @@ export class EmMessageDomain {
       text,
       url: '',
       thumbUrl: '',
+      originalUrl: '',
+      isGif: false,
       width: 0,
       height: 0,
       time: Date.now(),
@@ -1436,6 +1459,8 @@ export class EmMessageDomain {
       text: '',
       url: '',
       thumbUrl: '',
+      originalUrl: '',
+      isGif: false,
       width: 0,
       height: 0,
       time: message.timestamp,
@@ -1460,46 +1485,12 @@ export class EmMessageDomain {
     // SDK wire 协议边界：5.x type 为 'image'/'voice'，4.x 遗风为 'img'/'audio'，
     // 此处是唯一的双兼容映射点，wire 字段保留字面量（规范允许的例外），出口全部落到 MESSAGE_TYPE
     const mtype = message.type as string
-    if (mtype === 'text') {
-      item.type = MESSAGE_TYPE.TEXT
-      item.text = (message.body as TextMessageBody).content
-    } else if (mtype === 'img' || mtype === 'image') {
-      item.type = MESSAGE_TYPE.IMAGE
-      const body = message.body as ImageMessageBody
-      item.url = body.localUrl !== '' ? body.localUrl : (body.bigImageUrl ?? body.originalImageUrl ?? body.thumbnailUrl ?? '')
-      item.thumbUrl = body.thumbnailUrl ?? item.url
-      item.width = body.width ?? 0
-      item.height = body.height ?? 0
-    } else if (mtype === 'voice' || mtype === 'audio') {
-      item.type = MESSAGE_TYPE.AUDIO
-      const body = message.body as VoiceMessageBody
-      item.url = body.url ?? ''
-      item.duration = body.duration ?? 0
-    } else if (mtype === 'video') {
-      item.type = MESSAGE_TYPE.VIDEO
-      const body = message.body as VideoMessageBody
-      item.url = body.url ?? ''
-      item.thumbUrl = body.thumbnailUrl ?? ''
-      item.duration = body.duration ?? 0
-      item.width = body.width ?? 0
-      item.height = body.height ?? 0
-    } else if (mtype === 'file') {
-      item.type = MESSAGE_TYPE.FILE
-      const body = message.body as FileMessageBody
-      item.url = body.url ?? ''
-      item.fileName = body.filename ?? ''
-      item.fileSize = body.fileSize ?? body.fileLength ?? 0
-    } else if (mtype === 'custom') {
-      // 自定义消息：event/params 是 SDK 协议字段，业务结构化载荷走 ext；
-      // rawType 仍置 'custom'（旧宿主 rawType 非空判别兼容），新宿主按 customEvent 分发卡片
-      item.type = MESSAGE_TYPE.CUSTOM
-      item.rawType = mtype
-      const body = message.body as CustomMessageBody
-      item.customEvent = body.event ?? ''
-      item.customParams = body.params != null ? { ...body.params } : {}
+    if (mtype === MESSAGE_TYPE.MULTI_BODY) {
+      item.type = MESSAGE_TYPE.MULTI_BODY
+      item.segments = toMultiBodySegmentItems(item, message.body)
+      item.text = multiBodyTextOf(item.segments)
     } else {
-      // 未识别类型：保留 wire type 原文，宿主经 #custom-message 插槽按 rawType 判别渲染
-      item.rawType = mtype
+      applyMessageBody(item, mtype, message.body)
     }
     // 流式元信息（onStreamMessage / 历史中的流式终态消息）：渲染层据此展示光标/异常提示，
     // 宿主经 #stream-message 插槽接管 markdown 等富格式；普通消息保持 undefined
@@ -1519,6 +1510,7 @@ export class EmMessageDomain {
     if (typeof wireReadCount === 'number' && wireReadCount > 0) {
       item.groupReadCount = wireReadCount
     }
+    registerMessageSource(item.localId, message)
     return item
   }
 

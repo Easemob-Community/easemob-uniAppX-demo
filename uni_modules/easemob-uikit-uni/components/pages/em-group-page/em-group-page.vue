@@ -92,14 +92,14 @@
             <block v-if="showSettings">
               <view :class="ns.e('switch-row')" @click="createPublic = !createPublic">
                 <text :class="ns.e('switch-label')">{{ t('group.createPublic') }}</text>
-                <view :class="switchClass(createPublic)">
-                  <view :class="ns.e('switch-thumb')" />
+                <view :class="ns.e('switch-hit')" @click.stop>
+                  <EmSwitch v-model="createPublic" />
                 </view>
               </view>
               <view :class="ns.e('switch-row')" @click="createAllowInvites = !createAllowInvites">
                 <text :class="ns.e('switch-label')">{{ t('group.createAllowInvites') }}</text>
-                <view :class="switchClass(createAllowInvites)">
-                  <view :class="ns.e('switch-thumb')" />
+                <view :class="ns.e('switch-hit')" @click.stop>
+                  <EmSwitch v-model="createAllowInvites" />
                 </view>
               </view>
             </block>
@@ -122,6 +122,7 @@ import EmSelectContact from '../../em-select-contact/em-select-contact.vue'
 import EmWatermark from '../../em-watermark/em-watermark.vue'
 import EmSkeleton from '../../em-skeleton/em-skeleton.vue'
 import EmText from '../../em-text/em-text.vue'
+import EmSwitch from '../../em-switch/em-switch.vue'
 import { EmKit } from '../../../libs'
 import { CONVERSATION_TYPE, GROUP_NAME_MAX_LENGTH, LOAD_MORE_STATE, SELECT_CONTACT_MODE } from '../../../libs/constants'
 import { groupAvatarOf, groupDisplayNameOf, groupStore } from '../../../libs/store/group'
@@ -266,10 +267,6 @@ const contactItems = computed<EmSelectContactItem[]>(() =>
     avatar: c.avatarUrl !== '' ? c.avatarUrl : avatarOf(c.userId)
   }))
 )
-
-function switchClass(on: boolean): string {
-  return [ns.e('switch'), on ? 'em-group-page__switch--on' : ''].join(' ').trim()
-}
 
 function onOpenCreate(): void {
   createName.value = ''

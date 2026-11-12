@@ -190,9 +190,9 @@ class EmKitImpl {
     return this.chat.makeQuote(item)
   }
 
-  async sendImage(to: string, chatType: ConversationTypeValue, image: EmPickedImage): Promise<EmMessageItem> {
+  async sendImage(to: string, chatType: ConversationTypeValue, image: EmPickedImage, ext?: Record<string, unknown>): Promise<EmMessageItem> {
     await this.client.whenReady()
-    return this.chat.sendImage(to, chatType, image)
+    return this.chat.sendImage(to, chatType, image, ext)
   }
 
   async sendAudio(to: string, chatType: ConversationTypeValue, filePath: string, duration: number): Promise<EmMessageItem> {

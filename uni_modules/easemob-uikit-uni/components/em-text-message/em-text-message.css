@@ -79,3 +79,9 @@
   font-size: var(--em-font-size-11);
   margin-left: 4px;
 }
+
+.em-text-message--embedded {
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+}

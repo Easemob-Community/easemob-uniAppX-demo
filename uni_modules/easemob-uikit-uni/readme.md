@@ -2,7 +2,7 @@
 
 环信 IM 的 uni-app x 版 UIKit（蒸汽模式），一套代码覆盖 Android / iOS / 鸿蒙 / H5 / 微信小程序。
 
-> 当前版本：**1.0.0-rc.2**（未发布）。已包含登录接入、会话列表、聊天页（文本/图片/语音/视频/文件 + 引用/撤回/重发/已读回执 + AI 流式消息）、群聊、联系人/好友申请、聊天详情、连接状态条与日志导出；内置中英文并支持扩展语言，语言偏好可持久化。逻辑层在 `libs/`，组件层在 `components/`。
+> 当前版本：**1.0.0-rc.2**（未发布）。已包含登录接入、会话列表、聊天页（文本/图片/语音/视频/文件 + 复合消息接收展示 + 引用/撤回/重发/已读回执 + AI 流式消息）、群聊、联系人/好友申请、聊天详情、连接状态条与日志导出；内置中英文并支持扩展语言，语言偏好可持久化。逻辑层在 `libs/`，组件层在 `components/`。
 >
 > 完整接入步骤、常见问题与平台边界见仓库 `docs/QUICKSTART.md`；本文给出最短可运行路径。
 > 用 AI 接入时，可直接加载仓库 `skills/` 下的宿主接入 Agent Skills（入口 `em-host-integration`）。
@@ -14,7 +14,7 @@
 | HBuilderX | 5.21+（蒸汽模式；推荐 5.26+） |
 | uni-app x | HBuilderX 4.71+ |
 | Vue | Vue 3 组合式 API（不支持 Vue2） |
-| 环信 SDK | `easemob-websdk` **5.1.3**（peer 依赖，需宿主安装） |
+| 环信 SDK | `easemob-websdk` **5.2.0**（peer 依赖，需宿主安装） |
 | App | Android 6+ / iOS 15+ / 鸿蒙 API20+ |
 | 小程序 | 微信小程序（SDK 需按下方「分包」接入） |
 | H5 | 现代浏览器移动端；未做桌面宽屏布局 |
@@ -32,7 +32,7 @@
 ### 1. 安装依赖
 
 ```bash
-npm install easemob-websdk@5.1.3
+npm install easemob-websdk@5.2.0
 ```
 
 把 `uni_modules/easemob-uikit-uni/` 放入宿主工程（插件市场导入或直接拷贝）。

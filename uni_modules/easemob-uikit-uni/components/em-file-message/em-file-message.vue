@@ -1,10 +1,15 @@
 <template>
-  <view :class="[ns.b(), 'em-bubble', message.self ? 'em-bubble--self' : '', customClass]" :style="customStyle" @touchstart="onTouchStart" @click="onClick" @longpress="onLongpress">
+  <view :class="[ns.b(), 'em-bubble', message.self ? 'em-bubble--self' : '', embedded && ns.m('embedded'), customClass]" :style="customStyle" @touchstart="onTouchStart" @click="onClick" @longpress="onLongpress">
     <view :class="[ns.e('icon'), iconTypeClass]">
       <EmIcon :name="iconName" :size="20" :class="ns.e('icon-glyph')" />
     </view>
     <view :class="ns.e('info')">
-      <em-text :text="fileName" :text-class="nameClass" :text-style="nameStyle" />
+      <view :class="ns.e('name-row')">
+        <view :class="ns.e('name-stem')">
+          <em-text :text="fileNameParts.stem" :text-class="nameClass" :text-style="nameStyle" />
+        </view>
+        <text :class="[nameClass, ns.e('name-extension')]" :style="nameStyle">{{ fileNameParts.extension }}</text>
+      </view>
       <text v-if="sizeText !== ''" :class="[ns.e('size'), message.self ? 'em-file-message__size--self' : '']">{{ sizeText }}</text>
       <!-- 附件上传进度（SDK onFileUploadProgress 回填）：发送中且有百分比时显示，完成后随状态清空 -->
       <text v-if="uploadText !== ''" :class="[ns.e('progress'), message.self ? 'em-file-message__progress--self' : '']">{{ uploadText }}</text>
@@ -26,11 +31,13 @@ import { PLATFORM_CAPABILITIES } from '../../libs/platform'
 
 interface Props {
   message: EmMessageItem
+  embedded?: boolean
   customClass?: string   // 宿主自定义类，追加到根节点 class（H5 与小程序页面级样式生效；跨端覆盖优先 customStyle）
   customStyle?: string   // 宿主自定义内联样式，拼接到根节点 style 末尾（五端生效，var() 可用）
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  embedded: false,
   customClass: '',
   customStyle: ''
 })
@@ -49,7 +56,17 @@ const { onTouchStart, shouldSkipClick } = useLongPressClickGuard()
 
 const fileName = computed(() => props.message.fileName !== '' ? props.message.fileName : t('message.file'))
 
-// 文字样式经 textClass 透传（宿主只参与布局；info 列已有 flex:1 + overflow:hidden 约束链）
+const MAX_PRESERVED_EXTENSION_LENGTH = 16
+const fileNameParts = computed(() => {
+  const name = fileName.value
+  const dotIndex = name.lastIndexOf('.')
+  if (dotIndex <= 0 || dotIndex === name.length - 1) return { stem: name, extension: '' }
+  const extension = name.slice(dotIndex)
+  if (extension.length > MAX_PRESERVED_EXTENSION_LENGTH) return { stem: name, extension: '' }
+  return { stem: name.slice(0, dotIndex), extension }
+})
+
+// 文字样式经 textClass 透传；原生 name-stem view 承接 flex 收缩与裁剪，避免 iOS 自定义组件宿主按内容撑宽
 const nameClass = computed(() => props.message.self
   ? 'em-file-message__name em-file-message__name--self'
   : 'em-file-message__name')
@@ -108,10 +125,9 @@ const iconName = computed<EmIconName>(() => {
 })
 
 // 点击行为纯 emit 透传：默认下载/打开逻辑由宿主（em-chat-page 的 download 监听）实现。
-// 一期全端未接文件打开/下载（platform.fileOpen=false）：直接不发事件、不弹「暂不支持」，
-// 文件卡退化为纯展示；后续接入时把 fileOpen 打开并由宿主实现 download 即可。
+// 普通文件卡仍受 fileOpen 开关控制；复合文件段对齐 vue 版，点击进入既有附件下载链路。
 function onClick(): void {
-  if (!PLATFORM_CAPABILITIES.fileOpen) return
+  if (!props.embedded && !PLATFORM_CAPABILITIES.fileOpen) return
   if (shouldSkipClick()) return
   emit('download', props.message)
 }

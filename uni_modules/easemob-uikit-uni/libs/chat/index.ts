@@ -186,8 +186,8 @@ export class EmChat {
     return this.messages.makeQuote(item)
   }
 
-  async sendImage(to: string, chatType: ConversationTypeValue, image: EmPickedImage): Promise<EmMessageItem> {
-    return this.messages.sendImage(to, chatType, image)
+  async sendImage(to: string, chatType: ConversationTypeValue, image: EmPickedImage, ext?: Record<string, unknown>): Promise<EmMessageItem> {
+    return this.messages.sendImage(to, chatType, image, ext)
   }
 
   async sendAudio(to: string, chatType: ConversationTypeValue, filePath: string, duration: number): Promise<EmMessageItem> {

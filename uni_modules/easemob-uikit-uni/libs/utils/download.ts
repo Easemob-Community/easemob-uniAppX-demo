@@ -4,6 +4,7 @@
 
 import { ERROR_CODE, MESSAGE_TYPE } from '../constants'
 import { downloadFileToLocal, openDownloadedFile, saveMediaToAlbum } from '../platform'
+import { getMessageSource } from '../store/message'
 import { errorWithCode } from './error'
 import type {
   EmMessageDownloadKind,
@@ -27,6 +28,39 @@ export function downloadUrlOf(message: EmMessageItem): string {
     return message.thumbUrl
   }
   return ''
+}
+
+function appendQueryParam(url: string, key: string, value: string): string {
+  const [main = '', hashPart] = url.split('#', 2)
+  const [basePath, queryString = ''] = main.split('?', 2)
+  const entries = queryString.split('&').filter(Boolean)
+  entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+  return `${basePath}?${entries.join('&')}${hashPart ? `#${hashPart}` : ''}`
+}
+
+export function downloadRequestUrlOf(message: EmMessageItem, kind: EmMessageDownloadKind): string {
+  let url = kind === 'image' && message.originalUrl !== '' ? message.originalUrl : downloadUrlOf(message)
+  let secret = message.attachmentSecret ?? ''
+  const source = getMessageSource(message.localId)
+  if (source != null && source.body != null && typeof source.body === 'object' && !Array.isArray(source.body)) {
+    const body = source.body as Record<string, unknown>
+    if (kind === 'image') {
+      const original = body['originalImageUrl']
+      const big = body['bigImageUrl']
+      const thumbnail = body['thumbnailUrl']
+      url = typeof original === 'string'
+        ? original
+        : (typeof big === 'string' ? big : (typeof thumbnail === 'string' ? thumbnail : ''))
+    } else {
+      const remote = body['url']
+      url = typeof remote === 'string' ? remote : ''
+    }
+    secret = typeof body['secret'] === 'string' ? body['secret'] : ''
+  }
+  if (url === '') return ''
+  if (!url.includes('em-redirect')) url = appendQueryParam(url, 'em-redirect', 'true')
+  if (secret !== '' && !url.includes('share-secret=')) url = appendQueryParam(url, 'share-secret', secret)
+  return url
 }
 
 /** 文件名去路径分隔符与系统非法字符，限长避免超长文件名写盘失败 */
@@ -85,8 +119,11 @@ export async function downloadAttachment(
   options: EmMessageDownloadOptions = {}
 ): Promise<EmMessageDownloadResult> {
   const kind = downloadKindOf(message)
-  const url = downloadUrlOf(message)
-  if (kind == null || url === '') {
+  if (kind == null) {
+    throw errorWithCode(ERROR_CODE.DOWNLOAD_UNSUPPORTED, 'message has no downloadable attachment')
+  }
+  const url = downloadRequestUrlOf(message, kind)
+  if (url === '') {
     throw errorWithCode(ERROR_CODE.DOWNLOAD_UNSUPPORTED, 'message has no downloadable attachment')
   }
   const fileName = attachmentFileNameOf(message, kind)

@@ -47,6 +47,56 @@ function currentRoute(): string {
   // #endif
 }
 
+// #ifdef WEB
+// H5 原生 tabBar 深色染色的持久化守护（进程级单例）。
+// 背景：uni-app x 的 H5 runtime 未实现 uni.setTabBarStyle；tabBar 文字色是 Vue 响应式
+// 内联绑定（颜色状态只来自 pages.json 浅色配置，选中 label 无区分 class），切 tab 时
+// selectedIndex 变化触发重渲染，用浅色值重绑内联样式，把 syncH5Chrome 的一次性覆盖冲掉。
+// 这里观察 body 子树中触及 .uni-tabbar 的变化（label 重绑/整棵重挂载），微任务补染；
+// 写回同值不产生 mutation record，不会自激。
+let h5TabBarObserver: MutationObserver | null = null
+let h5TabBarSyncScheduled = false
+
+function isTabBarRelated(record: MutationRecord): boolean {
+  const target = record.target as HTMLElement
+  if (target != null && typeof target.closest === 'function' && target.closest('.uni-tabbar') != null) {
+    return true
+  }
+  if (record.type === 'childList') {
+    const nodes = record.addedNodes.length > 0 ? record.addedNodes : record.removedNodes
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i] as HTMLElement
+      if (node != null && typeof node.querySelector === 'function' &&
+          (node.classList?.contains('uni-tabbar') || node.querySelector('.uni-tabbar') != null)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+function ensureH5TabBarObserver(onMutate: () => void): void {
+  try {
+    if (h5TabBarObserver != null || typeof document === 'undefined') {
+      return
+    }
+    h5TabBarObserver = new MutationObserver((records) => {
+      records.forEach((record) => {
+        if (isTabBarRelated(record)) {
+          onMutate()
+        }
+      })
+    })
+    h5TabBarObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    })
+  } catch (e) {}
+}
+// #endif
+
 export function useThemeChrome(options: EmThemeChromeOptions) {
   initTheme({ tabBarPages: options.tabBarPages })
   const colors: Required<EmThemeChromeColors> = { ...DEFAULT_COLORS, ...options.colors }
@@ -76,9 +126,25 @@ export function useThemeChrome(options: EmThemeChromeOptions) {
     // #endif
   }
 
+  // #ifdef WEB
+  function scheduleSyncH5Chrome(): void {
+    if (h5TabBarSyncScheduled) {
+      return
+    }
+    h5TabBarSyncScheduled = true
+    setTimeout(() => {
+      h5TabBarSyncScheduled = false
+      syncH5Chrome()
+    }, 0)
+  }
+  // #endif
+
   function syncChrome(): void {
     syncNativeThemeUI()
     syncH5Chrome()
+    // #ifdef WEB
+    ensureH5TabBarObserver(scheduleSyncH5Chrome)
+    // #endif
   }
 
   onShow(() => syncChrome())

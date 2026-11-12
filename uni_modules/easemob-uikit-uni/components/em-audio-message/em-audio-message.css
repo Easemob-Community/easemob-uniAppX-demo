@@ -58,3 +58,10 @@
 .em-audio-message__duration--self {
   color: var(--em-bubble-text-self);
 }
+
+.em-audio-message--embedded {
+  max-width: 100%;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+}

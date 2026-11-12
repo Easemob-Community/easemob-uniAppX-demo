@@ -1,0 +1,50 @@
+@import '../../libs/style/variables.css';
+
+.em-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background-color: var(--em-switch-off-bg);
+  transition-property: background-color;
+  transition-duration: 0.2s;
+}
+
+.em-switch--small {
+  width: 28px;
+  height: 16px;
+  border-radius: 8px;
+}
+
+.em-switch.is-checked {
+  background-color: var(--em-primary-color);
+}
+
+.em-switch.is-disabled {
+  opacity: 0.4;
+}
+
+.em-switch__thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background-color: var(--em-text-inverse, #FFFFFF);
+  transition-property: transform;
+  transition-duration: 0.2s;
+}
+
+.em-switch__thumb.is-checked {
+  transform: translateX(12px);
+}
+
+.em-switch__thumb.is-small {
+  top: 2px;
+  left: 2px;
+}

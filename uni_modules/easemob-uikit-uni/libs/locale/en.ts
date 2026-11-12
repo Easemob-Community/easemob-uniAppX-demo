@@ -176,6 +176,7 @@ export default {
 
   'contact.entryGroup': 'Groups',
   'contact.entryContact': 'Contacts',
+  'contact.entryBlocklist': 'Blocklist',
 
   'contact.selectMembers': 'Select Members',
 
@@ -277,6 +278,8 @@ export default {
   'message.file': '[File]',
   'message.cmd': '[Command]',
   'message.custom': '[Custom]',
+  'message.multiBody': '[Composite Message]',
+  'message.location': '[Location]',
   'message.unsupported': '[Unsupported message]',
   'message.stream.error': ' (content generation failed)',
   'message.seconds': '{seconds}s',

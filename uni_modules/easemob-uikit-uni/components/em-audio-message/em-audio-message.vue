@@ -1,6 +1,6 @@
 <template>
   <view
-    :class="[ns.b(), 'em-bubble', message.self ? 'em-bubble--self' : '', playing ? ns.m('playing') : '', customClass]"
+    :class="[ns.b(), 'em-bubble', message.self ? 'em-bubble--self' : '', playing ? ns.m('playing') : '', embedded && ns.m('embedded'), customClass]"
     :style="bubbleStyle + customStyle"
     @touchstart="onTouchStart"
     @click="onPlay"
@@ -32,11 +32,13 @@ import { useLocale } from '../../libs/use/useLocale'
 
 interface Props {
   message: EmMessageItem
+  embedded?: boolean
   customClass?: string   // 宿主自定义类，追加到根节点 class（H5 与小程序页面级样式生效；跨端覆盖优先 customStyle）
   customStyle?: string   // 宿主自定义内联样式，拼接到根节点 style 末尾（五端生效，var() 可用）
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  embedded: false,
   customClass: '',
   customStyle: ''
 })
@@ -55,12 +57,14 @@ const { onTouchStart, shouldSkipClick } = useLongPressClickGuard()
 // 微信式宽度阶梯：随时长线性缩放，夹在 [72, 240]（对齐 vue 版 VOICE_MIN/MAX/PX_PER_SECOND）
 const MIN_WIDTH = 72
 const MAX_WIDTH = 240
+const EMBEDDED_MAX_WIDTH = 216
 const PX_PER_SECOND = 6
 
 const durationSeconds = computed(() => Math.max(0, Math.round(props.message.duration)))
 
 const bubbleStyle = computed(() => {
-  const w = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, durationSeconds.value * PX_PER_SECOND))
+  const maxWidth = props.embedded ? EMBEDDED_MAX_WIDTH : MAX_WIDTH
+  const w = Math.min(maxWidth, Math.max(MIN_WIDTH, durationSeconds.value * PX_PER_SECOND))
   return `width: ${w}px;`
 })
 

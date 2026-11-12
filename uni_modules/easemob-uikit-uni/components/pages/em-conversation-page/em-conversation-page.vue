@@ -21,10 +21,10 @@
         <em-search-bar v-if="showSearch" v-model="keyword" :placeholder="t('conversation.searchPlaceholder')" />
 
         <scroll-view :class="ns.e('scroll')" scroll-y>
-          <!-- 首次同步骨架：条目形态对齐 em-conversation-item（圆头像 + 名字/时间行 + 摘要/未读行，逐行变宽） -->
+          <!-- 首次同步骨架：条目形态对齐 em-conversation-item（头像 + 名字/时间行 + 摘要/未读行，逐行变宽） -->
           <view v-if="syncing && items.length === 0" :class="ns.e('skeleton')">
             <view v-for="(nameWidth, index) in SKELETON_NAME_WIDTHS" :key="index" :class="ns.e('skeleton-item')">
-              <em-skeleton variant="avatar" shape="circle" width="48px" height="48px" />
+              <em-skeleton variant="avatar" :shape="avatarShape" width="48px" height="48px" />
               <view :class="ns.e('skeleton-body')">
                 <view :class="ns.e('skeleton-top')">
                   <em-skeleton :width="nameWidth" height="16px" />
@@ -63,6 +63,7 @@
             :item="entry.item"
             :name="entry.name"
             :avatar="entry.avatar"
+            :avatar-shape="avatarShape"
             :time-text="entry.timeText"
             :draft="entry.draft"
             :has-at-me="entry.hasAtMe"
@@ -139,7 +140,7 @@ import { contactDisplayNameOf, contactStore } from '../../../libs/store/contact'
 import { groupAvatarOf, groupDisplayNameOf } from '../../../libs/store/group'
 import { avatarOf, displayNameOf } from '../../../libs/store/user'
 import type { ConversationTypeValue, ConversationTabKeyValue } from '../../../libs/constants'
-import type { EmActionSheetAction, EmConversationItem as EmConversationData, EmSelectContactItem, EmWatermarkOptions } from '../../../libs/types'
+import type { EmActionSheetAction, EmAvatarShape, EmConversationItem as EmConversationData, EmSelectContactItem, EmWatermarkOptions } from '../../../libs/types'
 import { useNamespace } from '../../../libs/use/useNamespace'
 import { useTheme } from '../../../libs/use/useTheme'
 import { useLocale } from '../../../libs/use/useLocale'
@@ -163,6 +164,8 @@ interface Props {
   autoSync?: boolean
   /** 顶部连接状态条显隐，默认 true */
   showConnectionBanner?: boolean
+  /** 会话列表头像形状，默认 'circle' */
+  avatarShape?: EmAvatarShape
   /** 组件级水印：字符串=文案；对象=可调样式；不传不渲染；空串=不显示（运行期开关） */
   watermark?: string | EmWatermarkOptions
   customClass?: string   // 宿主自定义类，追加到根节点 class（H5 与小程序页面级样式生效；跨端覆盖优先 customStyle）
@@ -177,6 +180,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyText: '',
   autoSync: true,
   showConnectionBanner: true,
+  avatarShape: 'circle',
   customClass: '',
   customStyle: ''
 })

@@ -1,8 +1,8 @@
 <template>
-  <view :class="[ns.b(), 'em-bubble', customClass]" :style="sizeStyle + customStyle" @touchstart="onTouchStart" @click="onPlay" @longpress="onLongpress">
+  <view :class="[ns.b(), 'em-bubble', embedded && ns.m('embedded'), customClass]" :style="sizeStyle + customStyle" @touchstart="onTouchStart" @click="onPlay" @longpress="onLongpress">
     <image
       v-if="message.thumbUrl !== ''"
-      :class="ns.e('thumb')"
+      :class="[ns.e('thumb'), embedded && ns.m('thumb-embedded')]"
       :src="message.thumbUrl"
       mode="aspectFill"
     />
@@ -38,11 +38,13 @@ import { formatVideoDuration } from '../../libs/utils/time'
 
 interface Props {
   message: EmMessageItem
+  embedded?: boolean
   customClass?: string   // 宿主自定义类，追加到根节点 class（H5 与小程序页面级样式生效；跨端覆盖优先 customStyle）
   customStyle?: string   // 宿主自定义内联样式，拼接到根节点 style 末尾（五端生效，var() 可用）
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  embedded: false,
   customClass: '',
   customStyle: ''
 })
@@ -69,15 +71,17 @@ const uploadText = computed(() => {
 
 // 展示尺寸按宽高比约束在 240 内；无元数据回落 16:9 占位（对齐 vue 版，避免加载后撑高列表）
 const MAX_WIDTH = 240
+const EMBEDDED_MAX_WIDTH = 216
 const MAX_HEIGHT = 240
 
 const sizeStyle = computed(() => {
+  const maxWidth = props.embedded ? EMBEDDED_MAX_WIDTH : MAX_WIDTH
   let w = props.message.width
   let h = props.message.height
   if (w <= 0 || h <= 0) {
-    return `width: ${MAX_WIDTH}px; height: 135px;`
+    return `width: ${maxWidth}px; height: 135px;`
   }
-  const scale = Math.min(MAX_WIDTH / w, MAX_HEIGHT / h, 1)
+  const scale = Math.min(maxWidth / w, MAX_HEIGHT / h, 1)
   w = Math.round(w * scale)
   h = Math.round(h * scale)
   return `width: ${w}px; height: ${h}px;`

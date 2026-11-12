@@ -1,7 +1,7 @@
 // 枚举字符串单一真相源（const 对象 + 类型别名模式，对齐 vue 版 src/constants 规范）：
 // 业务代码禁止硬编码下列字面量，一律从此处取。
 // 例外：SDK wire 协议字段的兼容映射（5.x 'image'/'voice' vs 4.x 遗风 'img'/'audio'、
-// PushManager 的 remindType 等 SDK 侧枚举）保留字面量，集中在 libs/chat 的 toMessageItem/summaryOf 边界。
+// PushManager 的 remindType 等 SDK 侧枚举）保留字面量，集中在 libs/chat 的 message-body/toMessageItem/summaryOf 边界。
 
 export const MESSAGE_TYPE = {
   TEXT: 'text',
@@ -12,6 +12,10 @@ export const MESSAGE_TYPE = {
   // 自定义消息（wire 'custom'，事件名/字符串参数在 body，业务载荷另可挂 ext）：
   // 多场景卡片消息的唯一收发通道，#custom-message 插槽按 customEvent 判别
   CUSTOM: 'custom',
+  // 复合消息：只接收展示，body 为有序分段数组，不提供发送入口
+  MULTI_BODY: 'multi_body',
+  // 位置目前仅作为复合消息分段展示；独立位置消息仍走不支持占位
+  LOCATION: 'location',
   // 本地系统通知（群事件/交易状态灰条）：只落本地消息列表，不发服务端
   NOTICE: 'notice',
   OTHER: 'other'
@@ -256,7 +260,8 @@ export type ContactInviteKindValue = (typeof CONTACT_INVITE_KIND)[keyof typeof C
 export const CONTACT_ENTRY_KEY = {
   NOTICE: 'notice',
   GROUP: 'group',
-  CONTACT: 'contact'
+  CONTACT: 'contact',
+  BLOCKLIST: 'blocklist'
 } as const
 
 export type ContactEntryKeyValue = (typeof CONTACT_ENTRY_KEY)[keyof typeof CONTACT_ENTRY_KEY]

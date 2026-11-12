@@ -110,33 +110,6 @@
   color: var(--em-text-primary);
 }
 
-/* 自绘开关（ucss 无 switch 内置组件样式定制能力）：48x28 轨道 + 24 白圆钮，
-   flex 两端对齐切换位置（关=flex-start / 开=flex-end 由 --on 修饰类收口） */
-.em-group-page__switch {
-  width: 48px;
-  height: 28px;
-  border-radius: 14px;
-  background-color: var(--em-border-color);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 2px;
-  flex-shrink: 0;
-}
-
-.em-group-page__switch--on {
-  background-color: var(--em-primary-color);
-  justify-content: flex-end;
-}
-
-.em-group-page__switch-thumb {
-  width: 24px;
-  height: 24px;
-  border-radius: 12px;
-  background-color: var(--em-bg-elevated);
-}
-
 /* 品牌色内联变量作用域层：接替根的 flex 容器角色（flex:1 + height:0 保持滚动约束链） */
 .em-group-page__brand-scope {
   display: flex;

@@ -6,12 +6,14 @@ import { CONVERSATION_SILENT_MODE_BATCH_SIZE, CONVERSATION_TYPE, CONVERSATION_UN
 import type { ConversationTypeValue } from '../constants'
 import { connectionStore } from '../store/connection'
 import { conversationStore } from '../store/conversation'
-import { messageStore } from '../store/message'
+import { messageStore, removeMessageSources } from '../store/message'
 import { groupDisplayNameOf, groupStore } from '../store/group'
 import { avatarOf } from '../store/user'
 import { contactDisplayNameOf } from '../store/contact'
 import { clearDraft } from '../store/draft'
 import { createLogger } from '../utils/logger'
+import { multiBodyPreviewOf } from '../utils/multi-body'
+import { multiBodyPreviewFromWire } from './message-body'
 import type { EmConversationItem } from '../types'
 import { useLocale } from '../use/useLocale'
 import { ensureUserInfos } from './user-info'
@@ -295,6 +297,7 @@ export class EmConversationDomain {
     clearDraft(conversationId)
     conversationStore.items = conversationStore.items.filter((c) => c.conversationId !== conversationId)
     delete conversationStore.atMeByConversationId[conversationId]
+    removeMessageSources(messageStore.messagesByConversationId[conversationId] ?? [])
     delete messageStore.messagesByConversationId[conversationId]
     delete messageStore.cursorByConversationId[conversationId]
     delete messageStore.hasMoreByConversationId[conversationId]
@@ -344,6 +347,7 @@ export class EmConversationDomain {
     // 清空进行中的流式合批缓冲/索引，防计时器把已清空的消息写回
     this.messages.forgetStreams(conversationId)
     if (messageStore.messagesByConversationId[conversationId] != null) {
+      removeMessageSources(messageStore.messagesByConversationId[conversationId])
       messageStore.messagesByConversationId[conversationId] = []
     }
     delete messageStore.cursorByConversationId[conversationId]
@@ -383,6 +387,8 @@ export class EmConversationDomain {
       summary = t('message.file')
     } else if (latest.type === MESSAGE_TYPE.CUSTOM) {
       summary = t('message.custom')
+    } else if (latest.type === MESSAGE_TYPE.MULTI_BODY) {
+      summary = multiBodyPreviewOf(latest.segments ?? [], t)
     }
     item.lastMessageText = summary
     item.lastMessageTime = latest.time
@@ -571,6 +577,8 @@ export class EmConversationDomain {
         return t('message.file')
       case 'custom':
         return t('message.custom')
+      case 'multi_body':
+        return multiBodyPreviewFromWire(last.body, t)
       case 'cmd':
         // typing 等信令不作为会话摘要展示
         return ''

@@ -116,6 +116,7 @@
   --em-bg-active: rgba(51, 177, 255, 0.12);
   /* 控件底（默认按钮、暗色对方气泡、引用块等凸起填充） */
   --em-control-bg: #F3F4F6;
+  --em-switch-off-bg: #E3E6E8;
 
   /* 边框与分割线 */
   --em-border-color: #E5E7EB;
@@ -183,6 +184,7 @@
   /* 设计稿暗色选中底为固定藏青，无法由主色派生 */
   --em-bg-active: #0D2840;
   --em-control-bg: #333537;
+  --em-switch-off-bg: rgba(255, 255, 255, 0.12);
 
   --em-border-color: #3C3F42;
   --em-border-light: #333537;

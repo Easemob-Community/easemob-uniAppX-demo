@@ -274,9 +274,14 @@ export interface EmMessageItem {
   conversationId: string
   chatType: EmChatType
   type: EmMessageType
+  /** 普通文本内容；流式为累计全文；复合父消息为所有非空文本分段按换行拼接的复制文本 */
   text: string
   url: string
   thumbUrl: string
+  /** 图片原图地址（SDK originalImageUrl），未携带时为空串 */
+  originalUrl: string
+  /** 是否为 GIF 图片（SDK body.isGif 或发送文件识别结果） */
+  isGif: boolean
   width: number
   height: number
   time: number
@@ -290,7 +295,8 @@ export interface EmMessageItem {
   fileSize: number   // 文件消息大小（字节）
   /** SDK 消息 ext 透传（自定义消息的业务载荷挂这里；发送方的引用等内部 key 也原样可见，宿主只读勿改） */
   ext: Record<string, unknown>
-  /** 未识别消息类型的 SDK wire type 原文（text/image/audio/video/file/notice 五种内置类型恒为空串；
+  /** 未识别消息类型的 SDK wire type 原文；内置文本/媒体/MULTI_BODY/NOTICE 恒为空串。
+   *  独立位置消息保持 OTHER + rawType='location'，只有复合位置子项使用 LOCATION；
    *  CUSTOM 为 'custom'（旧宿主用 rawType 非空判别自定义消息仍成立）；
    *  #custom-message 插槽的新判别依据是 customEvent） */
   rawType: string
@@ -298,6 +304,15 @@ export interface EmMessageItem {
   customEvent: string
   /** 自定义消息字符串参数（wire custom body.params；结构化业务载荷优先走 ext，二者都原样透出） */
   customParams: Record<string, string>
+  /** 复合消息的有序展示分段；仅 MULTI_BODY 父消息携带，普通消息为 undefined */
+  segments?: EmMessageItem[]
+  /** 位置分段经纬度与地址；当前仅复合消息的 LOCATION 子项使用 */
+  latitude?: number
+  longitude?: number
+  address?: string
+  buildingName?: string
+  /** SDK 附件下载密钥；普通消息与复合消息附件分段共用下载链路 */
+  attachmentSecret?: string
   /** 流式消息元信息（M2.13）：仅 SDK 流式消息 / 历史中的流式终态消息携带；
    *  普通消息为 undefined。渲染层按 status 展示打字机光标 / 终态收敛 / 异常提示 */
   stream?: EmStreamInfo
@@ -574,6 +589,22 @@ export interface EmChatComposerTouchEvent {
 /** textarea @linechange 事件的最小结构（生长输入封顶用；官方 detail：height / heightRpx / lineCount） */
 export interface EmTextareaLineChangeEvent {
   detail: { lineCount: number, height: number, heightRpx: number }
+}
+
+/** 默认输入栏 `#emoji-panel` 的作用域；外壳继续负责面板高度、键盘互斥与禁用态。 */
+export interface EmChatEmojiPanelScope {
+  emojis: string[]
+  disabled: boolean
+  selectEmoji: (emoji: string) => void
+  closePanel: () => void
+  notifyDisabledTap: () => void
+}
+
+/** 聊天页 `#image-message` 的作用域；缺省渲染内置 em-image-message。 */
+export interface EmChatImageMessageScope {
+  message: EmMessageItem
+  preview: (message: EmMessageItem) => void
+  longPress: (message: EmMessageItem) => void
 }
 
 /**

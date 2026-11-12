@@ -26,6 +26,10 @@
 
 ### 新增
 
+- **复合消息接收展示**：`easemob-websdk` 升级为 5.2.0；新增 `MESSAGE_TYPE.MULTI_BODY`、`EmMessageItem.segments` 与 `em-multi-body-message`，在单个气泡内按顺序展示文本、图片、语音、视频、文件、位置和自定义分段。支持会话首段摘要、全部文本分段复制、父消息引用/置顶/撤回/删除，以及分段图片预览、视频播放、语音播放和文件下载。当前不提供复合消息创建或发送能力。
+
+- **通用开关组件**：新增原子组件 `em-switch`，支持 `v-model`、medium/small 两档尺寸、禁用与加载态，以及 `custom-class` / `custom-style`。聊天详情的免打扰/置顶和建群面板的公开群/允许邀请开关统一使用该组件。
+
 - **组件级水印**：新增原子组件 `em-watermark`（纯 view + text 平铺，不依赖 canvas、图片或测量 API，支持字号、透明度、旋转角与颜色）；`em-conversation-page`、`em-chat-page`、`em-contact-page`、`em-contact-list-page`、`em-group-page` 新增 `watermark` prop（字符串或 `EmWatermarkOptions`）与 `#watermark` 插槽。覆盖层不响应点击、长按与滚动；聊天页只覆盖导航栏到消息列表，不含输入栏与弹层；传入空串即可关闭。需要图片或业务 logo 时用插槽整层自绘。
 - **单聊天接入与页面实例配置**：新增可运行的 `templates/chat-only`（登录恢复、单聊天页、微信小程序 SDK 分包和 web/mp 构建检查）。`em-chat-page` 新增 `showNavBar` / `showBack`、`peerName` / `peerAvatar`、页面级 `inputFeatures`（按字段覆盖全局）与 `messageMenuKeys`（数组整体覆盖当前页面）；未登录立即显示「请先登录」并发出 `unauthorized`，不再等待连接超时，登录后自动恢复历史加载。
 - **原生 SDK 实例入口**：新增 `EmKit.getSDKClient(): Promise<ChatClient>`，明确获取 UIKit 内部复用的原生客户端，便于宿主注册 SDK 事件或使用尚未封装的能力；`whenReady()` 保留且返回类型由 `unknown` 修正为 `ChatClient`。
