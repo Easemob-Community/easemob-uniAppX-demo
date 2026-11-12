@@ -181,10 +181,12 @@
 										<text class="login__checkbox-mark">{{ agreed ? '✓' : '' }}</text>
 									</view>
 								</view>
-								<text class="login__terms-text">{{ t('demo.login.termsPrefix') }}</text>
-								<text class="login__terms-link" @click="openTerms">{{ t('demo.login.termsService') }}</text>
-								<text class="login__terms-text login__terms-text--plain">{{ t('demo.login.termsAnd') }}</text>
-								<text class="login__terms-link" @click="openPrivacy">{{ t('demo.login.privacyTitle') }}</text>
+								<view class="login__terms-content">
+									<text class="login__terms-text">{{ t('demo.login.termsPrefix') }}</text>
+									<text class="login__terms-link" @click="openTerms">{{ t('demo.login.termsService') }}</text>
+									<text class="login__terms-text login__terms-text--plain">{{ t('demo.login.termsAnd') }}</text>
+									<text class="login__terms-link" @click="openPrivacy">{{ t('demo.login.privacyTitle') }}</text>
+								</view>
 							</view>
 						</view>
 					</view>
@@ -1170,8 +1172,16 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		justify-content: center;
+		justify-content: flex-start;
 		margin-top: 18px;
+	}
+
+	.login__terms-content {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.login__checkbox-hit {
@@ -1212,7 +1222,6 @@
 	.login__terms-text {
 		font-size: 11px;
 		line-height: 20px;
-		white-space: nowrap;
 		color: rgba(255, 255, 255, 0.35);
 	}
 
