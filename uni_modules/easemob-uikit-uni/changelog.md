@@ -4,6 +4,8 @@
 
 ### 修复
 
+- **iOS 首次麦克风授权后录音异常**：修复系统授权弹窗打断按住说话后，麦克风持续占用、后续录音反复提示时间太短的问题。录音现在跟踪从启动请求到原生停止的完整轮次；授权等待期间收到停止或取消时，会在原生 `onStart` 后立即收尾，旧一轮终止前不会启动新一轮。正常录音、上滑取消、短录音和 60 秒自动停止规则不变。
+
 - **多端登录被踢误报「网络异常」**：被踢/账号失效类断开（SDK 错误码 206 他处登录 / 207 账号被删 / 214 设备超限 / 216 改密被踢 / 217 被其他设备踢）到达时 SDK 以 `reason: "error"` 派发 `onDisconnected`，原连接状态条只认 `token-expired` 与 `limit`，被踢落入「网络异常，请检查网络情况」兜底。现 `onDisconnected` 命中被踢错误码时写入 `connectionStore.kicked` / `kickCode`（重新登录、恢复在线或登出时清除），连接状态条按 `kickCode` 显示被踢专属文案（当前账号已在其他设备登录 / 账号密码已修改 / 登录设备数超过限制 / 当前账号已被迫下线），普通断网仍显示网络异常。
 
 - **App 端弹层偶发「底部 tabBar 收起但弹层不出现」**：蒸汽端（uni-app x App）新建 `v-if` 分支时，新分支的视觉节点会偶发整批不建（只建出命中区），表现为「底部 tabBar 已被收起、弹层却看不见，且整页点击被透明命中区吞掉」（Android 真机实测约 3/12，与点击位置、tabBar 隐藏、延迟补写无关）。`em-popup` 改为**常驻挂载**：去掉 `v-if`，页面挂载时就把 root/遮罩/面板建好；关闭态用根节点内联 `top: 200%` 移到视口下方（不绘制、不吃点击），打开/关闭只改这一个内联样式，不再创建/销毁节点。同时默认态即最终态（遮罩默认不透明、面板默认在最终位置，去掉 `--show` 类）。进场动画改为 **JS 逐帧内联位移**（约 200ms，面板从屏下 100% 滑回 0%，同 `useSpinRotation` 思路）：动画只做「附加位移」，尾段直接归零，因此任何一帧写入丢失都只会少一段动画或位置差一截，不会退回「看不见但吃点击」；收起不做退场动画（收尾那次写入若丢会留下幽灵弹层）。真机 20/20 次开合全部正常、每次 tabBar 如实归还（改前 3/12 失败）。同类弹层（长按会话菜单、选人、@提及、聊天页长按菜单）一并修复；原生 tabBar 持锁同时改为实例级「谁持有谁释放」，`releaseTabBar()` 在计数为 0 时不再调 `showTabBar`。
@@ -29,6 +31,8 @@
 - **WebSDK 初始化配置统一透传**：`EmKitConfig` 新增 `sdkInitOptions`（公开类型 `EmSdkInitOptions`），支持 WebSDK 全部非身份类原生初始化选项，普通字段优先于 UIKit 默认值；必需 Manager 保留并与自定义值去重合并，同步类型支持显式替换，平台适配器与 UIKit 兼容修复组合。默认新增仅含平台名的 `loginExtensionInfo` 设备名 JSON（例如 `{"deviceName":"android"}`），不读取或上报品牌、型号和系统版本；自动 `deviceId` 固定为 `Platform_uikitVersion_uuid` 三段式，旧六段式持久化值自动重新派生。宿主可通过 `sdkInitOptions.loginExtensionInfo` 覆盖并加入业务自定义字段。
 
 - **复合消息接收展示**：`easemob-websdk` 升级为 5.2.0；新增 `MESSAGE_TYPE.MULTI_BODY`、`EmMessageItem.segments` 与 `em-multi-body-message`，在单个气泡内按顺序展示文本、图片、语音、视频、文件、位置和自定义分段。支持会话首段摘要、全部文本分段复制、父消息引用/置顶/撤回/删除，以及分段图片预览、视频播放、语音播放和文件下载。当前不提供复合消息创建或发送能力。
+
+- **默认输入栏与图片消息通用注入点**：`em-chat-inputbar` 新增 `#emoji-panel`，`em-chat-page` 新增 `#image-message`，均保留内置渲染作为缺省回落，宿主可局部自绘而无需替换整个输入栏或消息列表。`EmKit.sendImage` 新增可选 `ext`，支持远程图片 `originalUrl` 与 GIF 识别；`EmMessageItem` 新增 `originalUrl` / `isGif`，并在接收、历史与失败重发中保留。UIKit 不内置特定表情包协议或 GIF 组件。
 
 - **通用开关组件**：新增原子组件 `em-switch`，支持 `v-model`、medium/small 两档尺寸、禁用与加载态，以及 `custom-class` / `custom-style`。聊天详情的免打扰/置顶和建群面板的公开群/允许邀请开关统一使用该组件。
 

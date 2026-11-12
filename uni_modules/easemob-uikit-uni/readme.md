@@ -147,13 +147,17 @@ function onSelect(conversationId: string, chatType: ConversationTypeValue) {
 
 > **关键**：页面根节点必须有确定高度（`height: 100%` 且父级 flex 链完整），否则列表/输入栏会被压成 0 高，表现为白屏。
 
-### 6. 微信小程序 SDK 分包
+### 6. 微信小程序页面与 SDK 分包
 
-小程序主包 2MB 限制下，websdk 不能静态进主包。UIKit 已内置跨分包异步加载入口，宿主只需：
+小程序主包 2MB 限制下，websdk 不能静态进主包。新工程可直接使用 `templates/chat-only`，已预置 `sub-im` 页面分包、`sub-sdk` SDK 分包和统一命令：
 
-1. 用 `scripts/prepare-sdk-subpackage.mjs` 把 SDK IIFE 处理为 `sub-sdk/im-sdk.js`；
-2. `pages.json` 声明 `sub-sdk` 分包与 `preloadRule`；
-3. 无需改业务代码，`EmKit.init()` / `login()` 会自动等待 SDK 就绪。
+```bash
+npm run dev:mp      # HBX dev + 分包 watch
+npm run build:mp    # HBX build + 后处理 + 检查
+npm run check:mp    # 复查 build 产物
+```
+
+HBuilderX GUI 开发时保持 `npm run watch:mp` 运行。既有工程需按实际路由声明普通分包，并复制统一脚本；后处理会同时维护公共和私有项目配置，避免 SDK 被“忽略未使用文件”剔除。无需改 UIKit 业务代码，`EmKit.init()` / `login()` 会自动等待 SDK 就绪。
 
 完整步骤、体积阈值与排错见仓库 `docs/GUIDE-WEAPP-SDK-SUBPACKAGE.md`。
 
@@ -169,7 +173,9 @@ function onSelect(conversationId: string, chatType: ConversationTypeValue) {
 | 文件消息：打开/下载 | ⏳ 仅展示 | ⏳ 仅展示 | ⏳ 仅展示 |
 | 语音消息：发送 | ⏳ 入口隐藏 | ✅ | ✅ |
 
-> **App 自定义基座**：视频播放依赖 uni-app x 内置模块 `uni-video`，该模块会按代码用量摇树。基座如果是在接入视频组件之前打的，`<video>` 会被降级为普通 `<view>`，表现为点开播放器后全屏黑屏；重新打一次自定义基座即可，或在 manifest 的 `app-ios` / `app-android` → `distribute.modules`（HBuilderX 4.71 以下为 `app` → `distribute.modules`）显式声明 `"uni-video": {}`（示例工程已配置）。
+> **App 发行必要配置**：Android、iOS 都要在 manifest 的 `app-android` / `app-ios` → `distribute.modules` 显式声明 `"uni-websocket": {}`。环信 SDK 通过运行时适配对象调用 `connectSocket`，静态摇树可能漏掉该模块，导致发行包无法建立 IM 长连接。其他直接调用的网络、文件和媒体模块通常能自动扫描，无需全量声明。
+>
+> **App 自定义基座**：视频播放依赖 uni-app x 内置模块 `uni-video`，该模块会按代码用量摇树。基座如果是在接入视频组件之前打的，`<video>` 会被降级为普通 `<view>`，表现为点开播放器后全屏黑屏；重新打一次自定义基座即可，或在 manifest 的 `app-ios` / `app-android` → `distribute.modules`（HBuilderX 4.71 以下为 `app` → `distribute.modules`）显式声明 `"uni-video": {}`（示例工程已配置）。原生模块配置变更不能通过 JS 热更新生效。
 
 ## App 端文件发送（宿主注入）
 
@@ -197,7 +203,7 @@ EmKit.setAttachmentProvider({
 - H5 为移动端布局，未做桌面宽屏适配。
 - 语音发送仅 App/小程序；录音 60s 上限自动发送，麦克风权限失败只 toast（不自动跳系统设置）。
 - iOS 相机权限被拒绝后，系统拍摄页可能停在黑屏且不再弹窗；UIKit 在拍摄前预检 `uni.getAppAuthorizeSetting`，`denied` 时弹窗引导去设置。iOS 发布包需在 `manifest.json` 的 `app-ios.distribute.privacyDescription` 声明相机/相册/麦克风用途描述，改后重新打包生效。
-- 鸿蒙的语音与拍摄需在工程 `harmony-configs/entry/src/main/module.json5` 的 `requestPermissions` 声明 `ohos.permission.MICROPHONE` 与 `ohos.permission.CAMERA`（均需带 `reason`、`usedScene.inuse`）；未声明时系统直接拒绝，表现为「录音失败」或点拍摄无反应。该目录是**整文件覆盖**而非按节点合并，文件须含完整 `module` 结构；相册无需声明权限（走系统 Picker）。
+- 鸿蒙需在工程 `harmony-configs/entry/src/main/module.json5` 的 `requestPermissions` 声明 `ohos.permission.MICROPHONE`（语音）、`ohos.permission.CAMERA`（拍摄）与 `ohos.permission.GET_NETWORK_INFO`（网络状态检测；生成工程已包含时保留即可）。麦克风与相机需带 `$string:` 资源形式的 `reason` 和 `usedScene.inuse`，并在 `resources/base/element/string.json` 配置文案。未声明时系统直接拒绝，不会出现授权弹窗，表现为「录音失败」或点拍摄无反应。该目录是**整文件覆盖**而非按节点合并，文件须含完整 `module` 结构并保留已有权限。选择相册/文件走系统 Picker，保存图片/视频走系统保存确认框，均无需额外声明相册或文件权限。完整示例与拒绝后的处理见 `docs/HARMONY-REALDEVICE-RUN.md`。
 - `@` 提及为追加式插入（uni `<input>` 无光标位置 API）；消息列表仍为 `scroll-view` 全量渲染（长会话性能优化在 1.1）。
 - 非当前会话只保留最近 100 条内存消息，回会话时重拉最新页；完整本地历史需宿主自行持久化。
 - 日志原始 payload 默认关闭（`logPayload`），生产排查请临时开启并及时关闭。
