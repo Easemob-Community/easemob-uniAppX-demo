@@ -1,0 +1,138 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t('demo.settings.features.sdkCheck')" @back="onBack" />
+		<scroll-view scroll-y class="body" :style="demoPrimaryColorStyle()">
+			<view class="panel">
+				<view class="row">
+					<text class="label">{{ t('demo.settings.sdkCheck.status') }}</text>
+					<text class="value">{{ statusText }}</text>
+				</view>
+				<view class="row">
+					<text class="label">{{ t('demo.settings.sdkCheck.userId') }}</text>
+					<text class="value">{{ EmKit.state.userId || '-' }}</text>
+				</view>
+				<view class="row">
+					<text class="label">{{ t('demo.settings.sdkCheck.network') }}</text>
+					<text class="value">{{ networkText }}</text>
+				</view>
+				<view class="row" v-if="EmKit.state.reason !== ''">
+					<text class="label">{{ t('demo.settings.sdkCheck.reason') }}</text>
+					<text class="value">{{ EmKit.state.reason }}</text>
+				</view>
+			</view>
+			<view class="panel">
+				<text class="description">{{ t('demo.settings.sdkCheck.description') }}</text>
+				<em-button type="primary" block :loading="checking" :text="t('demo.settings.sdkCheck.run')" @click="onCheck" />
+				<text v-if="resultText !== ''" class="result" :class="{ 'result--error': checkFailed }">{{ resultText }}</text>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { computed, ref } from 'vue'
+	import { CONNECTION_STATUS, EmKit, conversationStore, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { demoPrimaryColorStyle } from '@/common/theme-style'
+
+	const { t } = useLocale()
+	const { themeClass } = useTheme()
+	const checking = ref(false)
+	const resultText = ref('')
+	const checkFailed = ref(false)
+
+	const statusText = computed(() => {
+		switch (EmKit.state.status) {
+			case CONNECTION_STATUS.CONNECTING: return t('demo.settings.sdkCheck.connecting')
+			case CONNECTION_STATUS.RECONNECTING: return t('demo.settings.sdkCheck.reconnecting')
+			case CONNECTION_STATUS.ONLINE: return t('demo.settings.sdkCheck.online')
+			case CONNECTION_STATUS.CLOSED: return t('demo.settings.sdkCheck.closed')
+			default: return t('demo.settings.sdkCheck.idle')
+		}
+	})
+	const networkText = computed(() => {
+		if (EmKit.state.networkOnline === true) return t('demo.settings.sdkCheck.networkOnline')
+		if (EmKit.state.networkOnline === false) return t('demo.settings.sdkCheck.networkOffline')
+		return t('demo.settings.sdkCheck.networkUnknown')
+	})
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+
+	async function onCheck(): Promise<void> {
+		if (checking.value) return
+		checking.value = true
+		checkFailed.value = false
+		resultText.value = ''
+		try {
+			await EmKit.syncConversations()
+			resultText.value = t('demo.settings.sdkCheck.success', { count: conversationStore.items.length })
+		} catch (e: any) {
+			checkFailed.value = true
+			resultText.value = t('demo.settings.sdkCheck.failed', { message: e?.message ?? '' })
+		} finally {
+			checking.value = false
+		}
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+		padding: 12px 16px 24px;
+	}
+
+	.panel {
+		display: flex;
+		flex-direction: column;
+		padding: 16px;
+		margin-bottom: 12px;
+		border-radius: 10px;
+		background-color: var(--em-bg-elevated);
+	}
+
+	.row {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		padding: 8px 0;
+	}
+
+	.label {
+		font-size: 14px;
+		color: var(--em-text-secondary);
+	}
+
+	.value {
+		margin-left: 12px;
+		font-size: 14px;
+		color: var(--em-text-primary);
+	}
+
+	.description {
+		margin-bottom: 16px;
+		font-size: 13px;
+		line-height: 20px;
+		color: var(--em-text-secondary);
+	}
+
+	.result {
+		margin-top: 12px;
+		font-size: 13px;
+		color: var(--em-success-color);
+	}
+
+	.result--error {
+		color: var(--em-danger-color);
+	}
+</style>

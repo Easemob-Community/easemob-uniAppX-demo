@@ -1,0 +1,119 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t('demo.settings.features.states')" @back="onBack" />
+		<scroll-view scroll-y class="body">
+			<view class="section">
+				<text class="section-title">em-button · loading</text>
+				<em-button type="primary" pill block :loading="true" :text="t('button.confirm')" />
+			</view>
+			<view class="section">
+				<text class="section-title">em-load-more · error / loading</text>
+				<em-load-more :state="loadState" @load="onLoadRetry" />
+				<text class="meta">{{ t('demo.settings.states.retryCount', { count: loadRetryCount }) }}</text>
+			</view>
+			<view class="section">
+				<text class="section-title">em-select-contact · submitting</text>
+				<em-button type="primary" pill block :text="t('demo.settings.states.openSelector')" @click="openSubmitDemo" />
+			</view>
+		</scroll-view>
+		<em-select-contact
+			:items="submitDemoItems"
+			:show="submitDemoVisible"
+			:select-mode="SELECT_CONTACT_MODE.MULTIPLE"
+			:submitting="submitDemoSubmitting"
+			@update:show="submitDemoVisible = $event"
+			@confirm="onSubmitDemoConfirm"
+		/>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { onBeforeUnmount, ref } from 'vue'
+	import { LOAD_MORE_STATE, SELECT_CONTACT_MODE, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { EmSelectContactItem, LoadMoreStateValue } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { t } = useLocale()
+	const { themeClass } = useTheme()
+	const loadState = ref<LoadMoreStateValue>(LOAD_MORE_STATE.ERROR)
+	const loadRetryCount = ref(0)
+	let loadRetryTimer: ReturnType<typeof setTimeout> | null = null
+
+	function onLoadRetry(): void {
+		if (loadRetryTimer != null) return
+		loadRetryCount.value += 1
+		loadState.value = LOAD_MORE_STATE.LOADING
+		loadRetryTimer = setTimeout(() => {
+			loadState.value = LOAD_MORE_STATE.ERROR
+			loadRetryTimer = null
+		}, 1200)
+	}
+
+	const submitDemoVisible = ref(false)
+	const submitDemoSubmitting = ref(false)
+	const submitDemoItems: EmSelectContactItem[] = [
+		{ userId: 'demo-neo', name: 'Neo', avatar: '' },
+		{ userId: 'demo-uikit', name: 'UIKit', avatar: '' }
+	]
+	let submitDemoTimer: ReturnType<typeof setTimeout> | null = null
+
+	function openSubmitDemo(): void {
+		submitDemoVisible.value = true
+	}
+
+	function onSubmitDemoConfirm(): void {
+		if (submitDemoTimer != null) clearTimeout(submitDemoTimer)
+		submitDemoSubmitting.value = true
+		submitDemoTimer = setTimeout(() => {
+			submitDemoSubmitting.value = false
+			submitDemoTimer = null
+		}, 2000)
+	}
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+
+	onBeforeUnmount(() => {
+		if (loadRetryTimer != null) clearTimeout(loadRetryTimer)
+		if (submitDemoTimer != null) clearTimeout(submitDemoTimer)
+	})
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+	}
+
+	.section {
+		display: flex;
+		flex-direction: column;
+		padding: 20px 16px;
+		border-bottom-width: 0.5px;
+		border-bottom-style: solid;
+		border-bottom-color: var(--em-border-color);
+	}
+
+	.section-title {
+		margin-bottom: 16px;
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--em-text-tertiary);
+	}
+
+	.meta {
+		margin-top: 8px;
+		text-align: center;
+		font-size: 12px;
+		color: var(--em-text-tertiary);
+	}
+</style>

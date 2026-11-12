@@ -1,0 +1,249 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t('demo.settings.menu.general')" @back="onBack" />
+		<scroll-view scroll-y class="body" :style="demoPrimaryColorStyle()">
+			<text class="group-title">{{ t('demo.settings.general') }}</text>
+			<view class="rows">
+				<view
+					v-for="option in themeOptions"
+					:key="option.value"
+					class="row"
+					@click="onThemeSelect(option.value)"
+				>
+					<text class="row-label">{{ option.label }}</text>
+					<view class="radio" :class="{ 'radio--checked': preference === option.value }" />
+				</view>
+			</view>
+
+			<text class="group-title group-title--divider">{{ t('demo.settings.styleTheme') }}</text>
+			<view class="rows">
+				<view v-for="group in colorGroups" :key="group.key" class="color-row">
+					<text class="row-label">{{ group.label }}</text>
+					<text class="color-hint">{{ group.hint }}</text>
+					<view class="swatches">
+						<view
+							class="swatch swatch--default"
+							:class="{ 'swatch--selected': isColorSelected(group.key, '') }"
+							@click="setDemoThemeColor(group.key, '')"
+						>
+							<text class="swatch-text">{{ t('demo.settings.colorDefault') }}</text>
+						</view>
+						<view
+							v-for="color in group.colors"
+							:key="color"
+							class="swatch"
+							:class="{ 'swatch--selected': isColorSelected(group.key, color) }"
+							:style="swatchStyle(color)"
+							@click="setDemoThemeColor(group.key, color)"
+						/>
+					</view>
+				</view>
+			</view>
+
+			<text class="group-title group-title--divider">{{ t('demo.settings.language') }}</text>
+			<view class="rows">
+				<view
+					v-for="option in localeOptions"
+					:key="option.value"
+					class="row"
+					@click="onLocaleSelect(option.value)"
+				>
+					<text class="row-label">{{ option.label }}</text>
+					<view class="radio" :class="{ 'radio--checked': currentLocale === option.value }" />
+				</view>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { computed } from 'vue'
+	import { getLocale, LOCALE, setLocale, THEME_MODE, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { LocaleValue, ThemeModeValue } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { syncTabBarLocale } from '@/common/locale/index'
+	import {
+		demoPrimaryColorStyle,
+		demoThemeColors,
+		setDemoThemeColor,
+		THEME_COLOR_PRESETS,
+		type DemoThemeColorKey
+	} from '@/common/theme-style'
+
+	const { t } = useLocale()
+	const { themeClass, themeStore, setTheme } = useTheme()
+
+	interface ColorGroup {
+		key: DemoThemeColorKey
+		label: string
+		hint: string
+		colors: string[]
+	}
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+
+	const preference = computed(() => themeStore.preference)
+	const themeOptions = computed<{ label: string; value: ThemeModeValue }[]>(() => [
+		{ label: t('demo.settings.themeAuto'), value: THEME_MODE.AUTO },
+		{ label: t('demo.settings.themeLight'), value: THEME_MODE.LIGHT },
+		{ label: t('demo.settings.themeDark'), value: THEME_MODE.DARK },
+	])
+
+	const colorGroups = computed<ColorGroup[]>(() => [
+		{
+			key: 'primaryColor',
+			label: t('demo.settings.primaryColor'),
+			hint: t('demo.settings.primaryColorHint'),
+			colors: THEME_COLOR_PRESETS.primaryColor
+		},
+		{
+			key: 'otherBubbleColor',
+			label: t('demo.settings.otherBubbleColor'),
+			hint: t('demo.settings.otherBubbleColorHint'),
+			colors: THEME_COLOR_PRESETS.otherBubbleColor
+		},
+		{
+			key: 'selfBubbleColor',
+			label: t('demo.settings.selfBubbleColor'),
+			hint: t('demo.settings.selfBubbleColorHint'),
+			colors: THEME_COLOR_PRESETS.selfBubbleColor
+		}
+	])
+
+	function isColorSelected(key: DemoThemeColorKey, color: string): boolean {
+		return demoThemeColors.value[key] === color
+	}
+
+	function swatchStyle(color: string): string {
+		return `background-color: ${color};`
+	}
+
+	// 语言选项：选中态读 UIKit 持久化偏好，切换即时生效于全部 t() 文案与原生 tabBar
+	const currentLocale = computed(() => getLocale())
+	const localeOptions = computed<{ label: string; value: LocaleValue }[]>(() => [
+		{ label: t('demo.settings.langZhCN'), value: LOCALE.ZH_CN },
+		{ label: t('demo.settings.langEN'), value: LOCALE.EN },
+	])
+
+	function onThemeSelect(value: ThemeModeValue): void {
+		setTheme(value)
+	}
+
+	function onLocaleSelect(value: LocaleValue): void {
+		setLocale(value)
+		syncTabBarLocale()
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+		padding: 16px 16px 24px;
+	}
+
+	.group-title {
+		display: flex;
+		padding: 4px 4px 8px;
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-tertiary);
+	}
+
+	.group-title--divider {
+		margin-top: 24px;
+	}
+
+	/* 设置行：54px 高、底部 1px 分割线（对齐 vue3 demo 设置面板） */
+	.rows {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		height: 54px;
+		border-bottom: 0.5px solid var(--em-border-color);
+	}
+
+	.row-label {
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-primary);
+	}
+
+	.color-row {
+		display: flex;
+		flex-direction: column;
+		padding: 12px 0 16px;
+		border-bottom: 0.5px solid var(--em-border-color);
+	}
+
+	.color-hint {
+		margin-top: 4px;
+		font-size: var(--em-font-size-12, 12px);
+		color: var(--em-text-tertiary);
+	}
+
+	.swatches {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		margin-top: 12px;
+	}
+
+	.swatch {
+		width: 30px;
+		height: 30px;
+		margin-right: 10px;
+		margin-bottom: 10px;
+		border: 2px solid transparent;
+		border-radius: 50%;
+		box-sizing: border-box;
+	}
+
+	.swatch--default {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		border-radius: 15px;
+		background-color: var(--em-bg-secondary);
+	}
+
+	.swatch--selected {
+		border-color: var(--em-text-primary);
+	}
+
+	.swatch-text {
+		font-size: var(--em-font-size-12, 12px);
+		color: var(--em-text-secondary);
+	}
+
+	.radio {
+		width: 20px;
+		height: 20px;
+		border: 1px solid var(--em-border-color);
+		border-radius: 50%;
+		box-sizing: border-box;
+	}
+
+	.radio--checked {
+		border-width: 6px;
+		border-color: var(--em-primary-color);
+	}
+</style>

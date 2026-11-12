@@ -1,0 +1,220 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t('demo.settings.menu.about')" @back="onBack" />
+		<scroll-view scroll-y class="body">
+			<!-- 品牌 banner：插画底 + 标题 / 标语 / 接入按钮 -->
+			<view class="banner">
+				<image class="banner-illustration" src="/static/about/banner-illustration.jpg" mode="aspectFill" />
+				<view class="banner-content">
+					<image class="banner-title" src="/static/about/banner-title.png" mode="aspectFit" />
+					<text class="banner-slogan">{{ t('demo.settings.about.slogan') }}</text>
+					<view class="banner-btn" @click="onRegister">
+						<text class="banner-btn-text">{{ t('demo.settings.about.register') }}</text>
+					</view>
+				</view>
+			</view>
+
+			<view class="content">
+				<text class="welcome">{{ t('demo.settings.about.welcome') }}</text>
+				<image class="logo" :src="logoSrc" mode="aspectFit" />
+				<text class="desc">{{ t('demo.settings.about.description') }}</text>
+
+				<view class="versions">
+					<text class="version-item">{{ t('demo.settings.about.demoVersion') }}：{{ demoVersion }}</text>
+					<text class="version-item">{{ t('demo.settings.about.uikitVersion') }}：{{ uikitVersion }}</text>
+					<text class="version-item">{{ t('demo.settings.about.sdkVersion') }}：{{ sdkVersion }}</text>
+				</view>
+
+				<view class="links">
+					<view class="link-row" @click="onCall">
+						<text class="link-label">{{ t('demo.settings.about.phone') }}</text>
+						<text class="link-value">400-622-1776</text>
+					</view>
+					<view class="link-row" @click="onWebsite">
+						<text class="link-label">{{ t('demo.settings.about.website') }}</text>
+						<text class="link-value link-value--underline">www.easemob.com</text>
+					</view>
+				</view>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { computed, ref } from 'vue'
+	import { EmKit, UIKIT_VERSION, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { t } = useLocale()
+	const { themeClass, isDark } = useTheme()
+
+	const demoVersion = '1.0.0'
+	const uikitVersion = UIKIT_VERSION
+	const sdkVersion = ref('-')
+	const logoSrc = computed(() => isDark.value ? '/static/about/about-logo-dark.png' : '/static/about/about-logo.png')
+
+	EmKit.getSDKClient().then((client) => {
+		sdkVersion.value = client.getVersion()
+	}).catch(() => {})
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+
+	// 官网 / 注册页经 webview 页打开（承载外部链接与原生导航标题）
+	function onRegister(): void {
+		uni.navigateTo({ url: '/pages/webview/webview?url=https%3A%2F%2Fconsole.easemob.com%2Fuser%2Fregister%3Futm_source%3Ddemo' })
+	}
+
+	function onWebsite(): void {
+		uni.navigateTo({ url: '/pages/webview/webview?url=https%3A%2F%2Fwww.easemob.com%2F%3Futm_source%3Ddemo' })
+	}
+
+	function onCall(): void {
+		uni.makePhoneCall({ phoneNumber: '400-622-1776' })
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+		padding: 16px;
+	}
+
+	/* banner：圆角卡片、右侧插画、左侧文字内容 */
+	.banner {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+		height: 140px;
+		border-radius: 12px;
+		overflow: hidden;
+		background-image: linear-gradient(to right, #0b1e46, #1b5bd7);
+	}
+
+	.banner-illustration {
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		width: 55%;
+		opacity: 0.9;
+	}
+
+	.banner-content {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		z-index: 1;
+		padding: 16px;
+	}
+
+	.banner-title {
+		width: 148px;
+		height: 42px;
+	}
+
+	.banner-slogan {
+		margin-top: 8px;
+		font-size: var(--em-font-size-12, 12px);
+		color: rgba(255, 255, 255, 0.85);
+	}
+
+	.banner-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		align-self: flex-start;
+		height: 28px;
+		margin-top: 10px;
+		padding: 0 14px;
+		border-radius: 999px;
+		background-color: #ffffff;
+	}
+
+	.banner-btn-text {
+		font-size: var(--em-font-size-12, 12px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: #123a8f;
+	}
+
+	.content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin-top: 32px;
+		padding: 0 8px;
+	}
+
+	.welcome {
+		font-size: var(--em-font-size-16, 16px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-primary);
+	}
+
+	.logo {
+		width: 200px;
+		height: 29px;
+		margin-top: 12px;
+	}
+
+	.desc {
+		margin-top: 12px;
+		font-size: var(--em-font-size-13, 13px);
+		color: var(--em-text-secondary);
+	}
+
+	.versions {
+		display: flex;
+		flex-direction: row;
+		gap: 12px;
+		margin-top: 12px;
+	}
+
+	.version-item {
+		font-size: var(--em-font-size-12, 12px);
+		color: var(--em-text-tertiary);
+	}
+
+	/* 联系行 */
+	.links {
+		display: flex;
+		flex-direction: column;
+		align-self: stretch;
+		margin-top: 32px;
+	}
+
+	.link-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		height: 54px;
+		border-bottom: 0.5px solid var(--em-border-color);
+	}
+
+	.link-label {
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-primary);
+	}
+
+	.link-value {
+		font-size: var(--em-font-size-14, 14px);
+		color: var(--em-text-secondary);
+	}
+
+	.link-value--underline {
+		text-decoration: underline;
+	}
+</style>

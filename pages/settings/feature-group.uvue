@@ -1,0 +1,270 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t(group.titleKey)" @back="onBack" />
+		<scroll-view scroll-y class="body" :style="demoPrimaryColorStyle()">
+			<view class="rows">
+				<view
+					v-for="item in items"
+					:key="`${item.def.kind}:${item.def.key}`"
+					class="item"
+					:class="{ 'item--action': item.def.kind === 'action', 'item--choice': item.def.kind === 'choice' }"
+					@click="onAction(item.def)"
+				>
+					<view class="item-text">
+						<text class="item-label">{{ item.label }}</text>
+						<text class="item-hint">{{ item.hint }}</text>
+					</view>
+					<view
+						v-if="item.def.kind === 'switch'"
+						class="item-switch"
+						:class="{ 'item-switch--active': item.value === true }"
+						@click.stop="onToggle(item.def, item.value !== true)"
+					>
+						<view class="item-switch-dot" :class="{ 'item-switch-dot--active': item.value === true }" />
+					</view>
+					<em-icon v-else-if="item.def.kind === 'action'" name="chevron-right" :size="16" class="item-arrow" />
+					<view v-else class="choices">
+						<view
+							v-for="option in item.def.kind === 'choice' ? item.def.options : []"
+							:key="option.value"
+							class="choice"
+							:class="{ 'choice--active': item.value === option.value }"
+							@click.stop="onChoice(item.def, option.value)"
+						>
+							<text class="choice-text" :class="{ 'choice-text--active': item.value === option.value }">{{ t(option.labelKey) }}</text>
+						</view>
+					</view>
+				</view>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { computed, ref } from 'vue'
+	import { onLoad } from '@dcloudio/uni-app'
+	import { EmKit, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { demoFeatures, setDemoFeature, type DemoFeatureKeyValue } from '@/common/settings-state'
+	import { featureGroupOf, type ChoiceDef, type FeatureItemDef, type SwitchDef } from '@/common/feature-groups'
+	import { setUIKitFeature, uikitFeatures } from '@/common/uikit-feature-state'
+	import { demoPrimaryColorStyle } from '@/common/theme-style'
+	import { openAiStreamDemo } from '@/common/ai-stream-demo'
+	// #ifdef APP
+	import { createAttachmentProvider } from '@/common/attachment-provider'
+	// #endif
+
+	const { t } = useLocale()
+	const { themeClass } = useTheme()
+	const groupKey = ref('messaging')
+	const group = computed(() => featureGroupOf(groupKey.value))
+
+	interface FeatureItem {
+		def: FeatureItemDef
+		label: string
+		hint: string
+		value: boolean | string
+	}
+
+	const items = computed<FeatureItem[]>(() =>
+		group.value.items.map((def) => {
+			let value: boolean | string = ''
+			if (def.kind === 'choice') {
+				value = uikitFeatures.value[def.key] as string
+			} else if (def.kind === 'switch') {
+				value = def.source === 'uikit'
+					? uikitFeatures.value[def.key] as boolean
+					: demoFeatures.value[def.key] === true
+			}
+			return { def, label: t(def.labelKey), hint: t(def.hintKey), value }
+		})
+	)
+
+	onLoad((query) => {
+		groupKey.value = (query?.['group'] ?? 'messaging') as string
+	})
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+
+	function onToggle(def: FeatureItemDef, value: boolean): void {
+		if (def.kind !== 'switch') return
+		if (def.source === 'uikit') {
+			setUIKitFeature(def.key, value)
+			return
+		}
+		setDemoFeature(def.key as keyof DemoFeatureKeyValue, value)
+	}
+
+	function onChoice(def: FeatureItemDef, value: string): void {
+		if (def.kind !== 'choice') return
+		setUIKitFeature(def.key, value)
+		// #ifdef APP
+		if (def.key === 'attachmentProvider') {
+			EmKit.setAttachmentProvider(createAttachmentProvider(uikitFeatures.value.attachmentProvider))
+		}
+		// #endif
+	}
+
+	function onAction(def: FeatureItemDef): void {
+		if (def.kind !== 'action') return
+		if (def.key === 'aiStream') {
+			openAiStreamDemo()
+			return
+		}
+		if (def.key === 'exportLogs') {
+			const text = EmKit.getLogText()
+			if (text === '') {
+				uni.showToast({ title: t('demo.settings.features.exportLogsFailed'), icon: 'none' })
+				return
+			}
+			try {
+				uni.setClipboardData({
+					data: text,
+					showToast: false,
+					success: () => {
+						uni.showToast({ title: t('demo.settings.features.exportLogsSuccess'), icon: 'none' })
+					},
+					fail: () => {
+						uni.showToast({ title: t('demo.settings.features.exportLogsFailed'), icon: 'none' })
+					}
+				})
+			} catch (e) {
+				uni.showToast({ title: t('demo.settings.features.exportLogsFailed'), icon: 'none' })
+			}
+			return
+		}
+		if (def.key === 'sdkCheck') {
+			uni.navigateTo({ url: '/pages/settings/sdk-check' })
+			return
+		}
+		if (def.key === 'components') {
+			uni.navigateTo({ url: '/pages/settings/uikit-components' })
+			return
+		}
+		if (def.key === 'states') {
+			uni.navigateTo({ url: '/pages/settings/uikit-states' })
+		}
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+		padding: 8px 16px 24px;
+	}
+
+	.rows {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.item {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		min-height: 64px;
+		padding: 10px 0;
+		border-bottom-width: 0.5px;
+		border-bottom-style: solid;
+		border-bottom-color: var(--em-border-color);
+		box-sizing: border-box;
+	}
+
+	.item--choice {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.item-text {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		margin-right: 12px;
+	}
+
+	.item-label {
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-primary);
+	}
+
+	.item-hint {
+		margin-top: 2px;
+		font-size: var(--em-font-size-12, 12px);
+		color: var(--em-text-tertiary);
+	}
+
+	.item-switch {
+		position: relative;
+		flex-shrink: 0;
+		width: 36px;
+		height: 20px;
+		border-radius: 10px;
+		background-color: var(--em-border-color);
+	}
+
+	.item-switch--active {
+		background-color: var(--em-primary-color);
+	}
+
+	.item-switch-dot {
+		position: absolute;
+		top: 4px;
+		left: 4px;
+		width: 12px;
+		height: 12px;
+		border-radius: 6px;
+		background-color: #ffffff;
+		transition-property: transform;
+		transition-duration: 0.2s;
+	}
+
+	.item-switch-dot--active {
+		transform: translateX(12px);
+	}
+
+	.item-arrow {
+		color: var(--em-text-tertiary);
+	}
+
+	.choices {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		margin-top: 10px;
+	}
+
+	.choice {
+		padding: 6px 12px;
+		margin-right: 8px;
+		margin-bottom: 6px;
+		border-radius: 16px;
+		background-color: var(--em-bg-secondary);
+	}
+
+	.choice--active {
+		background-color: var(--em-primary-color);
+	}
+
+	.choice-text {
+		font-size: 12px;
+		color: var(--em-text-secondary);
+	}
+
+	.choice-text--active {
+		color: var(--em-text-inverse);
+	}
+</style>

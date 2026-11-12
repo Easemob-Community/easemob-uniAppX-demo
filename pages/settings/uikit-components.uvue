@@ -1,0 +1,138 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t('demo.settings.features.components')" @back="onBack" />
+		<scroll-view scroll-y class="body">
+			<view class="section">
+				<text class="section-title">em-avatar</text>
+				<view class="avatars">
+					<view class="avatar-item"><em-avatar name="环信" :size="64" :badge="3" /></view>
+					<view class="avatar-item"><em-avatar name="Neo" :size="48" shape="square" :badge="120" /></view>
+					<view class="avatar-item"><em-avatar name="UIKit" :size="40" :badge-dot="true" /></view>
+				</view>
+			</view>
+			<view class="section">
+				<text class="section-title">em-icon</text>
+				<view class="icons">
+					<view v-for="icon in iconNames" :key="icon" class="icon-item">
+						<em-icon :name="icon" :size="24" />
+						<text class="icon-name">{{ icon }}</text>
+					</view>
+				</view>
+			</view>
+			<view class="section">
+				<text class="section-title">em-empty</text>
+				<em-empty icon="list-bullet" :description="t('conversation.empty')" />
+				<em-empty icon="search" size="small" :description="t('conversation.searchEmpty')" />
+			</view>
+			<view class="section">
+				<text class="section-title">em-skeleton</text>
+				<view class="skeleton-row">
+					<em-skeleton variant="avatar" shape="rounded" width="48px" height="48px" />
+					<view class="skeleton-lines">
+						<em-skeleton width="40%" />
+						<em-skeleton class="skeleton-sub" width="70%" />
+					</view>
+				</view>
+				<em-skeleton variant="paragraph" :rows="3" />
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { EmIconName } from '@/uni_modules/easemob-uikit-uni/components/em-icon/em-icons'
+
+	const { t } = useLocale()
+	const { themeClass } = useTheme()
+	const iconNames: EmIconName[] = [
+		'chevron-left', 'search', 'plus', 'mic', 'rect-img', 'camera', 'doc', 'plane',
+		'speaker-wave', 'video', 'check-single', 'circle-bang', 'arrow-down-tray', 'trash'
+	]
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+	}
+
+	.section {
+		display: flex;
+		flex-direction: column;
+		padding: 16px;
+		border-bottom-width: 0.5px;
+		border-bottom-style: solid;
+		border-bottom-color: var(--em-border-color);
+	}
+
+	.section-title {
+		margin-bottom: 14px;
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--em-text-tertiary);
+	}
+
+	.avatars {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		overflow: visible;
+	}
+
+	.avatar-item {
+		margin-right: 16px;
+		overflow: visible;
+	}
+
+	.icons {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	.icon-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 76px;
+		margin-bottom: 14px;
+	}
+
+	.icon-name {
+		margin-top: 4px;
+		font-size: 10px;
+		color: var(--em-text-tertiary);
+	}
+
+	.skeleton-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		margin-bottom: 16px;
+	}
+
+	.skeleton-lines {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		margin-left: 12px;
+	}
+
+	.skeleton-sub {
+		margin-top: 8px;
+	}
+</style>

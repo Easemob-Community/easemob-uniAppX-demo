@@ -1,0 +1,575 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t('demo.settings.menu.account')" @back="onBack" />
+		<scroll-view scroll-y class="body" :style="demoPrimaryColorStyle()">
+			<view class="content">
+				<!-- 资料展示区：头像 + 昵称 + ID（可复制，对齐 vue3 demo AccountInfo） -->
+				<view class="profile">
+					<em-avatar :src="avatar" :name="nickname" :size="100" />
+					<text class="nickname">{{ nickname }}</text>
+					<view class="userid">
+						<text class="userid-text">ID: {{ userId }}</text>
+						<view class="icon-btn" @click="copyUserId">
+							<em-icon name="rects" :size="18" />
+						</view>
+					</view>
+				</view>
+
+				<!-- 资料行：昵称 → 头像 → 签名，行间 1px 分割线（自左 14px 起） -->
+				<view class="rows">
+					<view class="row">
+						<text class="row-label">{{ t('demo.settings.account.nickname') }}</text>
+						<view class="row-field">
+							<text class="row-value">{{ nickname }}</text>
+							<view class="icon-btn" @click="openEdit('nickname')">
+								<em-icon name="rect-notched-pen" :size="16" />
+							</view>
+						</view>
+						<view class="row-divider"></view>
+					</view>
+
+					<view class="row row--avatar">
+						<text class="row-label">{{ t('demo.settings.account.avatar') }}</text>
+						<view class="avatar-wrap" @click="onAvatarEdit">
+							<em-avatar :src="avatar" :name="nickname" :size="40" />
+							<view class="avatar-mask">
+								<em-icon name="rect-notched-pen" :size="24" />
+							</view>
+						</view>
+						<view class="row-divider"></view>
+					</view>
+
+					<view class="row">
+						<text class="row-label">{{ t('demo.settings.account.signature') }}</text>
+						<view class="row-field">
+							<text class="row-value">{{ signatureDisplay }}</text>
+							<view class="icon-btn" @click="openEdit('signature')">
+								<em-icon name="rect-notched-pen" :size="16" />
+							</view>
+						</view>
+						<view class="row-divider"></view>
+					</view>
+				</view>
+
+				<!-- DangerZone：注销账户 + 退出登录 -->
+				<view class="actions">
+					<view class="action-btn" :class="{ 'action-btn--disabled': !canDeleteAccount }" @click="onDeleteAccount">
+						<em-icon name="person-xmark" :size="18" />
+						<text class="action-btn-text">{{ t('demo.settings.account.deactivateAccount') }}</text>
+					</view>
+					<view class="action-btn" @click="onLogout">
+						<em-icon name="rect-rgtarrow" :size="18" />
+						<text class="action-btn-text">{{ t('demo.settings.logout') }}</text>
+					</view>
+				</view>
+			</view>
+		</scroll-view>
+
+		<!-- 昵称 / 签名编辑弹窗 -->
+		<em-popup :visible="editVisible" position="center" :mask-closable="false" @update:visible="onEditVisible">
+			<view class="edit-modal">
+				<text class="edit-title">{{ editTitle }}</text>
+				<input class="edit-input" v-model="editValue" :maxlength="50" :placeholder="editPlaceholder" :disabled="saving" />
+				<text v-if="editError !== ''" class="edit-error">{{ editError }}</text>
+				<view class="edit-footer">
+					<view class="edit-btn edit-btn--cancel" @click="closeEdit">
+						<text class="edit-btn-text">{{ t('button.cancel') }}</text>
+					</view>
+					<view class="edit-btn edit-btn--confirm" @click="confirmEdit">
+						<text class="edit-btn-text edit-btn-text--inverse">{{ t('button.confirm') }}</text>
+					</view>
+				</view>
+			</view>
+		</em-popup>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { computed, onMounted, ref } from 'vue'
+	import { deleteAccount, uploadAvatar } from '@/common/auth-api'
+	import { clearLoginCredentials, clearPhoneCredentials, getPhoneCredentials, getSignature, saveSignature } from '@/common/account-state'
+	import type { PhoneCredentials } from '@/common/account-state'
+	import { APP_SERVER_URL } from '@/common/config'
+	import { demoPrimaryColorStyle } from '@/common/theme-style'
+	import {
+		avatarOf,
+		chooseImage,
+		copyText,
+		displayNameOf,
+		EmKit,
+		mergeUserInfo,
+		useLocale,
+		useTheme
+	} from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { EmUserInfo } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { t } = useLocale()
+	const { themeClass } = useTheme()
+
+	const userId = computed((): string => EmKit.state.userId)
+	const nickname = computed((): string => displayNameOf(userId.value))
+	const avatar = computed((): string => avatarOf(userId.value))
+
+	// 签名：uikit EmUserInfo 不含 sign，本地缓存 + 进入页面时经 SDK 拉取一次
+	const signature = ref('')
+	const signatureDisplay = computed((): string => signature.value !== '' ? signature.value : t('demo.settings.account.defaultSignature'))
+
+	// 仅手机号登录持有凭证（chatToken 兼作头像上传鉴权），userId/token 登录不支持注销与头像上传
+	const phoneCred = ref<PhoneCredentials | null>(getPhoneCredentials())
+	const canDeleteAccount = computed((): boolean => phoneCred.value != null)
+
+	/* ===== 自身资料拉取（昵称 / 头像 / 签名） ===== */
+
+	interface UserInfoManagerLite {
+		getUserInfoByAttribute(params: Record<string, any>): Promise<Record<string, any>[]>
+		updateOwnInfoByAttribute(attribute: string, value: string): Promise<Record<string, any>>
+	}
+
+	function userInfoManager(): Promise<UserInfoManagerLite> {
+		return EmKit.getSDKClient().then((client) => {
+			const mgr = (client as unknown as { userInfoManager?: UserInfoManagerLite }).userInfoManager
+			if (mgr == null) {
+				return Promise.reject(new Error('userInfoManager unavailable'))
+			}
+			return Promise.resolve(mgr)
+		})
+	}
+
+	async function fetchOwnProfile(): Promise<void> {
+		const id = userId.value
+		if (id === '') return
+		try {
+			const mgr = await userInfoManager()
+			const users = await mgr.getUserInfoByAttribute({ userIds: [id], attributes: ['nickname', 'avatarUrl', 'sign'] })
+			const me = users.find((u) => u['userId'] === id)
+			if (me == null) return
+			const info = me as unknown as Record<string, any>
+			if (typeof info['nickname'] === 'string' && info['nickname'] !== '') {
+				mergeUserInfo({ userId: id, nickname: info['nickname'], avatarUrl: '' } as EmUserInfo)
+			}
+			if (typeof info['avatarUrl'] === 'string' && info['avatarUrl'] !== '') {
+				mergeUserInfo({ userId: id, nickname: '', avatarUrl: info['avatarUrl'] } as EmUserInfo)
+			}
+			if (typeof info['sign'] === 'string') {
+				signature.value = info['sign']
+				saveSignature(id, info['sign'])
+			}
+		} catch (e) {
+			// 资料服务未开通或离线时静默降级，展示本地缓存
+			signature.value = getSignature(id)
+		}
+	}
+
+	onMounted(() => {
+		fetchOwnProfile()
+	})
+
+	/* ===== 复制 userId ===== */
+
+	function copyUserId(): void {
+		copyText(userId.value).then(() => {
+			uni.showToast({ title: t('demo.settings.copySuccess'), icon: 'none' })
+		}).catch(() => {
+			// 复制失败静默降级，避免阻塞用户
+		})
+	}
+
+	/* ===== 昵称 / 签名编辑弹窗 ===== */
+
+	type EditField = 'nickname' | 'signature'
+
+	const editVisible = ref(false)
+	const editField = ref<EditField>('nickname')
+	const editValue = ref('')
+	const editError = ref('')
+	const saving = ref(false)
+
+	const editTitle = computed((): string => editField.value === 'nickname' ? t('demo.settings.account.editNickname') : t('demo.settings.account.editSignature'))
+	const editPlaceholder = computed((): string => editField.value === 'nickname' ? t('demo.settings.account.nicknamePlaceholder') : t('demo.settings.account.signaturePlaceholder'))
+
+	function openEdit(field: EditField): void {
+		editField.value = field
+		const rawNickname = EmKit.users.infoByUserId[userId.value]?.nickname ?? ''
+		editValue.value = field === 'nickname' ? rawNickname : signature.value
+		editError.value = ''
+		editVisible.value = true
+	}
+
+	function closeEdit(): void {
+		if (saving.value) return
+		editVisible.value = false
+	}
+
+	function onEditVisible(visible: boolean): void {
+		editVisible.value = visible
+	}
+
+	async function confirmEdit(): Promise<void> {
+		if (saving.value) return
+		const trimmed = editValue.value.trim()
+		if (editField.value === 'nickname' && trimmed === '') {
+			editError.value = t('demo.settings.account.nicknameRequired')
+			return
+		}
+		saving.value = true
+		try {
+			const mgr = await userInfoManager()
+			const id = userId.value
+			if (editField.value === 'nickname') {
+				await mgr.updateOwnInfoByAttribute('nickname', trimmed)
+				mergeUserInfo({ userId: id, nickname: trimmed, avatarUrl: '' } as EmUserInfo)
+			} else {
+				await mgr.updateOwnInfoByAttribute('sign', trimmed)
+				signature.value = trimmed
+				saveSignature(id, trimmed)
+			}
+			uni.showToast({ title: t('demo.settings.saveSuccess'), icon: 'none' })
+			editVisible.value = false
+		} catch (e) {
+			editError.value = e instanceof Error ? e.message : t('demo.settings.saveFailed')
+		} finally {
+			saving.value = false
+		}
+	}
+
+	/* ===== 头像上传（选择图片直传，无裁剪） ===== */
+
+	const uploadingAvatar = ref(false)
+
+	async function onAvatarEdit(): Promise<void> {
+		if (uploadingAvatar.value) return
+		if (phoneCred.value == null) {
+			uni.showToast({ title: t('demo.settings.account.devModeAvatarDisabled'), icon: 'none' })
+			return
+		}
+		if (APP_SERVER_URL === '') {
+			uni.showToast({ title: t('demo.settings.account.appServerRequired'), icon: 'none' })
+			return
+		}
+		const picked = await chooseImage(1, 'album')
+		const file = picked[0]
+		if (file == null) return
+		uploadingAvatar.value = true
+		try {
+			const id = userId.value
+			const { avatarUrl } = await uploadAvatar(id, file.path, phoneCred.value.chatToken)
+			const mgr = await userInfoManager()
+			await mgr.updateOwnInfoByAttribute('avatarUrl', avatarUrl)
+			mergeUserInfo({ userId: id, nickname: '', avatarUrl } as EmUserInfo)
+			uni.showToast({ title: t('demo.settings.saveSuccess'), icon: 'none' })
+		} catch (e) {
+			uni.showToast({ title: t('demo.settings.account.avatarUploadFailed'), icon: 'none' })
+		} finally {
+			uploadingAvatar.value = false
+		}
+	}
+
+	/* ===== 退出登录 / 注销账户 ===== */
+
+	const busy = ref(false)
+
+	// 登出会清空 uikit store，未读数归零触发角标自动移除
+	async function doLogout(): Promise<void> {
+		if (busy.value) return
+		busy.value = true
+		try {
+			await EmKit.logout()
+		} catch (e) {
+		} finally {
+			busy.value = false
+			clearPhoneCredentials()
+			clearLoginCredentials()
+			uni.reLaunch({ url: '/pages/login/login' })
+		}
+	}
+
+	function onLogout(): void {
+		uni.showModal({
+			title: t('demo.settings.account.logoutConfirmTitle'),
+			content: t('demo.settings.account.logoutConfirmMessage'),
+			confirmText: t('demo.settings.logout'),
+			cancelText: t('button.cancel'),
+			success: (res) => {
+				if (res.confirm !== true) return
+				doLogout()
+			}
+		})
+	}
+
+	async function onDeleteAccount(): Promise<void> {
+		const cred = phoneCred.value
+		if (cred == null) {
+			uni.showToast({ title: t('demo.settings.account.deleteAccountUnavailable'), icon: 'none' })
+			return
+		}
+		const res = await uni.showModal({
+			title: t('demo.settings.account.deleteAccountConfirmTitle'),
+			content: t('demo.settings.account.deleteAccountConfirmMessage'),
+			confirmText: t('demo.settings.account.deactivateAccount'),
+			cancelText: t('button.cancel'),
+			confirmColor: '#F54A45'
+		})
+		if (res.confirm !== true) return
+		if (busy.value) return
+		busy.value = true
+		try {
+			await deleteAccount(cred.phoneNumber, cred.chatToken)
+			// 注销成功后复用退出登录的完整清理逻辑
+			await doLogout()
+		} catch (e) {
+			uni.showToast({ title: e instanceof Error ? e.message : t('demo.settings.account.deleteAccountFailed'), icon: 'none' })
+		} finally {
+			busy.value = false
+		}
+	}
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+	}
+
+	/* 内容列：水平居中（宽屏限宽 520px），区块间距对齐 vue3 demo 63px */
+	.content {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		max-width: 520px;
+		margin: 0 auto;
+		padding: 32px 24px;
+		box-sizing: border-box;
+	}
+
+	/* ===== 资料展示区 ===== */
+
+	.profile {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding-top: 16px;
+	}
+
+	/* 100px 头像首字符字号对齐设计稿 34px（作用于 em-avatar 内部文本） */
+	.nickname {
+		margin-top: 16px;
+		font-size: var(--em-font-size-18, 18px);
+		font-weight: var(--em-font-weight-medium, 500);
+		line-height: 26px;
+		color: var(--em-text-primary);
+	}
+
+	.userid {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		margin-top: 3px;
+	}
+
+	.userid-text {
+		font-size: var(--em-font-size-14, 14px);
+		line-height: 20px;
+		color: var(--em-text-tertiary);
+	}
+
+	.icon-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		margin-left: 2px;
+		color: var(--em-text-tertiary);
+	}
+
+	/* ===== 资料行 ===== */
+
+	.rows {
+		display: flex;
+		flex-direction: column;
+		margin-top: 63px;
+	}
+
+	/* 行高 54（头像行 64），左 14 / 右 12 内边距 */
+	.row {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		min-height: 54px;
+		padding: 0 12px 0 14px;
+	}
+
+	.row--avatar {
+		min-height: 64px;
+	}
+
+	/* 分割线自左 14px 起、通到右缘 */
+	.row-divider {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		left: 14px;
+		height: 1px;
+		background-color: var(--em-border-color);
+	}
+
+	.row-label {
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-primary);
+	}
+
+	.row-field {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+	}
+
+	.row-value {
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-secondary);
+	}
+
+	/* 头像行：40px 头像 + 常显遮罩编辑按钮（对齐设计稿 rgba(0,0,0,0.1) + 白色编辑图标） */
+	.avatar-wrap {
+		position: relative;
+		display: flex;
+		width: 40px;
+		height: 40px;
+	}
+
+	.avatar-mask {
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		color: #ffffff;
+		background-color: rgba(0, 0, 0, 0.1);
+	}
+
+	/* ===== DangerZone ===== */
+
+	.actions {
+		display: flex;
+		flex-direction: row;
+		gap: 16px;
+		margin-top: 63px;
+	}
+
+	/* 40px 高、胶囊圆角、次级灰底（对齐 vue3 demo） */
+	.action-btn {
+		display: flex;
+		flex: 1;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		height: 40px;
+		padding: 0 16px;
+		box-sizing: border-box;
+		border-radius: 999px;
+		color: var(--em-text-primary);
+		background-color: var(--em-bg-secondary);
+	}
+
+	.action-btn--disabled {
+		opacity: 0.5;
+	}
+
+	.action-btn-text {
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+	}
+
+	/* ===== 编辑弹窗 ===== */
+
+	.edit-modal {
+		display: flex;
+		flex-direction: column;
+		width: 300px;
+		padding: 20px;
+		box-sizing: border-box;
+		border-radius: 12px;
+		background-color: var(--em-bg-elevated);
+	}
+
+	.edit-title {
+		font-size: var(--em-font-size-16, 16px);
+		font-weight: var(--em-font-weight-semibold, 600);
+		color: var(--em-text-primary);
+	}
+
+	.edit-input {
+		height: 40px;
+		margin-top: 16px;
+		padding: 0 12px;
+		font-size: var(--em-font-size-14, 14px);
+		color: var(--em-text-primary);
+		border-radius: 8px;
+		background-color: var(--em-bg-secondary);
+	}
+
+	.edit-error {
+		margin-top: 8px;
+		font-size: var(--em-font-size-12, 12px);
+		color: #F54A45;
+	}
+
+	.edit-footer {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-end;
+		gap: 12px;
+		margin-top: 20px;
+	}
+
+	.edit-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 36px;
+		padding: 0 16px;
+		box-sizing: border-box;
+		border-radius: 999px;
+	}
+
+	.edit-btn--cancel {
+		background-color: var(--em-bg-secondary);
+	}
+
+	.edit-btn--confirm {
+		background-color: var(--em-primary-color);
+	}
+
+	.edit-btn-text {
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-primary);
+	}
+
+	.edit-btn-text--inverse {
+		color: #ffffff;
+	}
+</style>

@@ -1,0 +1,115 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t('demo.settings.menu.features')" @back="onBack" />
+		<scroll-view scroll-y class="body">
+			<view class="groups">
+				<view class="group" @touchstart="onTouchStart" @click="onOpenDocs" @longpress="onCopyDocs">
+					<view class="group__text">
+						<text class="group__title">{{ t('demo.settings.docs.title') }}</text>
+						<text class="group__sub">{{ DOC_URL }}</text>
+						<text class="group__sub">{{ t('demo.settings.docs.hint') }}</text>
+					</view>
+					<em-icon name="chevron-right" :size="16" class="group__arrow" />
+				</view>
+				<view v-for="group in FEATURE_GROUPS" :key="group.key" class="group" @click="onOpenGroup(group.key)">
+					<view class="group__text">
+						<text class="group__title">{{ t(group.titleKey) }}</text>
+						<text class="group__sub">{{ t(group.subKey) }}</text>
+					</view>
+					<em-icon name="chevron-right" :size="16" class="group__arrow" />
+				</view>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { copyText, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { useLongPressClickGuard } from '@/uni_modules/easemob-uikit-uni/libs/use/useLongPressClickGuard'
+	import { FEATURE_GROUPS } from '@/common/feature-groups'
+
+	// 特性开关分组入口：按功能域分发到二级页（feature-group），避免一长串开关难以分辨
+	const { t } = useLocale()
+	const { themeClass } = useTheme()
+	const { onTouchStart, shouldSkipClick } = useLongPressClickGuard()
+	const DOC_URL = 'https://easemob-community-docs.easemob.com/uniapp/'
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+
+	function onOpenGroup(key: string): void {
+		uni.navigateTo({ url: `/pages/settings/feature-group?group=${key}` })
+	}
+
+	function onOpenDocs(): void {
+		if (shouldSkipClick()) return
+		const title = t('demo.settings.docs.title')
+		uni.navigateTo({ url: `/pages/webview/webview?url=${encodeURIComponent(DOC_URL)}&title=${encodeURIComponent(title)}` })
+	}
+
+	function onCopyDocs(): void {
+		copyText(DOC_URL).then(() => {
+			uni.showToast({ title: t('demo.settings.docs.copied'), icon: 'none' })
+		}).catch(() => {
+			uni.showToast({ title: t('demo.settings.docs.copyFailed'), icon: 'none' })
+		})
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+		padding: 8px 16px 24px;
+	}
+
+	.groups {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.group {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		min-height: 64px;
+		padding: 8px 0;
+		border-bottom-width: 0.5px;
+		border-bottom-style: solid;
+		border-bottom-color: var(--em-border-color);
+	}
+
+	.group__text {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		margin-right: 12px;
+	}
+
+	.group__title {
+		font-size: var(--em-font-size-14, 14px);
+		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-primary);
+	}
+
+	.group__sub {
+		margin-top: 2px;
+		font-size: var(--em-font-size-12, 12px);
+		color: var(--em-text-tertiary);
+	}
+
+	.group__arrow {
+		color: var(--em-text-tertiary);
+	}
+</style>
