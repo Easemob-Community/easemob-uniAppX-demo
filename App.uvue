@@ -3,7 +3,7 @@
 	import { EmKit } from '@/uni_modules/easemob-uikit-uni/libs'
 	import { syncTabBarLocale } from '@/common/locale/index'
 	import { applyDemoThemeColors } from '@/common/theme-style'
-	import { applyUIKitFeatures, uikitFeatures } from '@/common/uikit-feature-state'
+	import { applyUIKitFeatures } from '@/common/uikit-feature-state'
 	// #ifdef APP
 	import { createAttachmentProvider } from '@/common/attachment-provider'
 	// #endif
@@ -31,7 +31,7 @@
 		syncTabBarLocale()
 		// #ifdef APP
 		// 注册 App 端附件能力后，聊天输入栏「文件」格自动出现（H5/小程序走 UIKit 内置选择器）
-		EmKit.setAttachmentProvider(createAttachmentProvider(uikitFeatures.value.attachmentProvider))
+		EmKit.setAttachmentProvider(createAttachmentProvider())
 		// #endif
 		appLogger.info('App Launch')
 	})
