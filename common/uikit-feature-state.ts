@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import type { AttachmentProviderMode } from './attachment-provider'
 import {
 	CHAT_INPUT_MODE,
 	CONTACT_MENU_KEY,
@@ -38,7 +37,6 @@ export interface UIKitFeatureKeyValue {
 	inputCamera: boolean
 	inputVideo: boolean
 	inputFile: boolean
-	attachmentProvider: AttachmentProviderMode
 	inputMode: DemoInputMode
 	messageCopy: boolean
 	messageQuote: boolean
@@ -88,7 +86,6 @@ const DEFAULTS: UIKitFeatureKeyValue = {
 	inputCamera: true,
 	inputVideo: true,
 	inputFile: true,
-	attachmentProvider: 'uni',
 	inputMode: 'default',
 	messageCopy: true,
 	messageQuote: true,
@@ -134,7 +131,6 @@ function loadPreferences(): UIKitFeatureKeyValue {
 			}
 		})
 		merged.inputMode = choiceValue(parsed['inputMode'], ['default', CHAT_INPUT_MODE.SINGLE, CHAT_INPUT_MODE.MULTILINE], DEFAULTS.inputMode)
-		merged.attachmentProvider = choiceValue(parsed['attachmentProvider'], ['uni', 'plugin'], DEFAULTS.attachmentProvider)
 		merged.quickReplyMode = choiceValue(parsed['quickReplyMode'], ['fill', 'send'], DEFAULTS.quickReplyMode)
 		merged.avatarShape = choiceValue(parsed['avatarShape'], ['circle', 'square'], DEFAULTS.avatarShape)
 		merged.messageStatusPosition = choiceValue(parsed['messageStatusPosition'], ['left', 'right'], DEFAULTS.messageStatusPosition)

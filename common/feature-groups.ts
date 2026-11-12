@@ -2,7 +2,7 @@ import type { DemoFeatureKeyValue } from './settings-state'
 import type { UIKitFeatureKey } from './uikit-feature-state'
 
 export type FeatureActionKey = 'aiStream' | 'exportLogs' | 'sdkCheck' | 'components' | 'states'
-export type UIKitChoiceKey = 'inputMode' | 'quickReplyMode' | 'avatarShape' | 'messageStatusPosition' | 'attachmentProvider'
+export type UIKitChoiceKey = 'inputMode' | 'quickReplyMode' | 'avatarShape' | 'messageStatusPosition'
 
 export interface SwitchDef {
 	kind: 'switch'
@@ -88,10 +88,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 			uikit('inputCamera', 'demo.settings.features.inputCamera'),
 			uikit('inputVideo', 'demo.settings.features.inputVideo'),
 			uikit('inputFile', 'demo.settings.features.inputFile'),
-			choice('attachmentProvider', 'demo.settings.features.attachmentProvider', [
-				{ value: 'uni', labelKey: 'demo.settings.features.attachmentProviderUni' },
-				{ value: 'plugin', labelKey: 'demo.settings.features.attachmentProviderPlugin' }
-			]),
 			choice('inputMode', 'demo.settings.features.inputMode', [
 				{ value: 'default', labelKey: 'demo.settings.features.optionDefault' },
 				{ value: 'single', labelKey: 'demo.settings.features.inputSingle' },

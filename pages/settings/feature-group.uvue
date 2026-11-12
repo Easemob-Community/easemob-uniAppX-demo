@@ -49,9 +49,6 @@
 	import { setUIKitFeature, uikitFeatures } from '@/common/uikit-feature-state'
 	import { demoPrimaryColorStyle } from '@/common/theme-style'
 	import { openAiStreamDemo } from '@/common/ai-stream-demo'
-	// #ifdef APP
-	import { createAttachmentProvider } from '@/common/attachment-provider'
-	// #endif
 
 	const { t } = useLocale()
 	const { themeClass } = useTheme()
@@ -99,11 +96,6 @@
 	function onChoice(def: FeatureItemDef, value: string): void {
 		if (def.kind !== 'choice') return
 		setUIKitFeature(def.key, value)
-		// #ifdef APP
-		if (def.key === 'attachmentProvider') {
-			EmKit.setAttachmentProvider(createAttachmentProvider(uikitFeatures.value.attachmentProvider))
-		}
-		// #endif
 	}
 
 	function onAction(def: FeatureItemDef): void {
