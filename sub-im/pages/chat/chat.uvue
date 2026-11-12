@@ -4,20 +4,171 @@
 			v-if="conversationId !== ''"
 			:conversation-id="conversationId"
 			:chat-type="chatType"
+			:watermark="watermarkText"
+			:extra-message-menus="extraMessageMenus"
+			:custom-style="demoBubbleColorStyle()"
+			:show-connection-banner="uikitFeatures.chatConnectionBanner"
+			:show-action="uikitFeatures.chatDetailEntry"
+			:show-member-count="uikitFeatures.chatMemberCount"
+			:show-announcement="uikitFeatures.chatAnnouncement"
+			:enable-mention="uikitFeatures.chatMention"
+			:sender-name-mode="uikitFeatures.chatSenderName ? 'always' : 'hidden'"
+			:avatar-shape="uikitFeatures.avatarShape"
+			:quick-replies="quickReplies"
+			:quick-reply-mode="uikitFeatures.quickReplyMode"
 			@open-info="onOpenInfo"
-		/>
+			@message-menu="onMessageMenu"
+		>
+			<!-- 防诈骗提示条为 Demo 默认行为；关闭仅对当前页面生效，重进会话恢复 -->
+			<template #banner>
+				<demo-anti-fraud-banner v-if="!antiFraudClosed" @close="onCloseAntiFraud" />
+			</template>
+
+			<!-- 富格式流式气泡（#stream-message 插槽）：markdown 渲染（对齐 vue3 demo MarkdownStreamMessage 子集） -->
+			<template #stream-message="{ message }">
+				<demo-stream-markdown :message="message" />
+			</template>
+
+			<template #image-message="scope">
+				<demo-image-message
+					:message="scope.message"
+					@preview="scope.preview"
+					@long-press="scope.longPress"
+				/>
+			</template>
+
+			<template #emoji-panel="scope">
+				<demo-emoji-panel
+					:emojis="scope.emojis"
+					:disabled="scope.disabled"
+					:select-emoji="scope.selectEmoji"
+					:close-panel="scope.closePanel"
+					:notify-disabled-tap="scope.notifyDisabledTap"
+					@select-sticker="onSendSticker"
+				/>
+			</template>
+
+			<!-- 自定义消息（#custom-message 插槽）：名片卡片按 customEvent 分发 -->
+			<template #custom-message="{ message }">
+				<demo-custom-message :message="message" @open-card="onOpenCard" />
+			</template>
+
+			<!-- 输入栏上方业务工具条（#input-toolbar 插槽）：名片入口 -->
+			<template #input-toolbar>
+				<view v-if="showToolbar" class="toolbar">
+					<view v-if="demoFeatures.contactCard" class="toolbar__chip" @click="onSendContactCard">
+						<em-icon name="person-card" :size="16" class="toolbar__chip-icon" />
+						<text class="toolbar__chip-text">{{ t('demo.chat.toolbarContactCard') }}</text>
+					</view>
+				</view>
+			</template>
+		</em-chat-page>
+
+		<demo-forward-sheet v-model:show="showForwardSheet" :message="forwardItem" />
 	</view>
 </template>
 
 <script setup lang="ts">
-	import { ref } from 'vue'
-	import { onLoad } from '@dcloudio/uni-app'
-	import { CONVERSATION_TYPE, EmKit, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
-	import type { ConversationTypeValue } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { computed, ref } from 'vue'
+	import { onLoad, onUnload } from '@dcloudio/uni-app'
+	import {
+		CONVERSATION_TYPE,
+		displayNameOf,
+		avatarOf,
+		EmKit,
+		MESSAGE_TYPE,
+		useLocale,
+		useTheme
+	} from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { ConversationTypeValue, EmMessageItem, EmMessageMenuExtra, EmQuickReply } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { demoFeatures } from '@/common/settings-state'
+	import { demoBubbleColorStyle } from '@/common/theme-style'
+	import { demoQuickReplies, uikitFeatures } from '@/common/uikit-feature-state'
+	import { consumeAiStreamDemo } from '@/common/ai-stream-demo'
+	import { canForwardMessage } from '@/common/message-forward'
+	import { sendContactCard } from '@/common/demo-cards'
+	import { sendDemoSticker } from '@/common/demo-stickers'
+	import type { DemoStickerItem } from '@/common/demo-stickers'
 
 	const { themeClass } = useTheme()
+	const { t } = useLocale()
+
 	const conversationId = ref('')
 	const chatType = ref<ConversationTypeValue>(CONVERSATION_TYPE.SINGLE_CHAT)
+	const quickReplies = computed<EmQuickReply[]>(() => uikitFeatures.value.chatQuickReplies ? demoQuickReplies : [])
+	let cancelAiStream: (() => void) | null = null
+
+	// 防诈骗条关闭态：会话级（重进会话恢复展示）
+	const antiFraudClosed = ref(false)
+
+	function onCloseAntiFraud(): void {
+		antiFraudClosed.value = true
+	}
+
+	// 水印：固定安全提示文案；features 页总开关
+	const watermarkText = computed(() =>
+		demoFeatures.value.watermark ? '环信Demo 仅供参考，谨防诈骗！' : ''
+	)
+
+	// 输入栏工具条：名片入口开就展示容器
+	const showToolbar = computed(() => demoFeatures.value.contactCard)
+
+	const showForwardSheet = ref(false)
+	const forwardItem = ref<EmMessageItem | null>(null)
+
+	// 长按菜单追加「转发」（extraMessageMenus + @message-menu，宿主接管执行；对齐 vue3 demo forward 能力）
+	const extraMessageMenus = computed<EmMessageMenuExtra[]>(() =>
+		demoFeatures.value.messageForward
+			? [
+					{
+						key: 'forward',
+						text: t('demo.chat.forward'),
+						icon: 'forward',
+						types: [MESSAGE_TYPE.TEXT, MESSAGE_TYPE.IMAGE, MESSAGE_TYPE.VIDEO, MESSAGE_TYPE.FILE]
+					}
+				]
+			: []
+	)
+
+	function onMessageMenu(key: string, message: EmMessageItem): void {
+		if (key !== 'forward') return
+		if (!canForwardMessage(message)) return
+		forwardItem.value = message
+		showForwardSheet.value = true
+	}
+
+	function onSendContactCard(): void {
+		const userId = EmKit.state.userId
+		if (userId === '') return
+		uni.showModal({
+			title: t('demo.chat.contactCard.sendTitle'),
+			content: t('demo.chat.contactCard.sendConfirm', { name: displayNameOf(userId) }),
+			success: (res) => {
+				if (!res.confirm) return
+				sendContactCard(conversationId.value, chatType.value, {
+					userId,
+					nickname: displayNameOf(userId),
+					avatarUrl: avatarOf(userId)
+				}).catch(() => {
+					uni.showToast({ title: t('demo.chat.contactCard.sendFailed'), icon: 'none' })
+				})
+			}
+		})
+	}
+
+	async function onSendSticker(sticker: DemoStickerItem): Promise<void> {
+		try {
+			await sendDemoSticker(conversationId.value, chatType.value, sticker)
+		} catch {
+			uni.showToast({ title: t('demo.chat.sticker.sendFailed'), icon: 'none' })
+		}
+	}
+
+	function onOpenCard(userId: string): void {
+		if (userId === '') return
+		EmKit.addConversation(userId, CONVERSATION_TYPE.SINGLE_CHAT)
+		uni.navigateTo({ url: `/sub-im/pages/chat/chat?conversationId=${userId}&chatType=${CONVERSATION_TYPE.SINGLE_CHAT}` })
+	}
 
 	onLoad((query) => {
 		if (EmKit.state.userId === '') {
@@ -29,6 +180,12 @@
 		chatType.value = query?.['chatType'] === CONVERSATION_TYPE.GROUP_CHAT
 			? CONVERSATION_TYPE.GROUP_CHAT
 			: CONVERSATION_TYPE.SINGLE_CHAT
+		cancelAiStream = consumeAiStreamDemo(conversationId.value, chatType.value)
+	})
+
+	onUnload(() => {
+		if (cancelAiStream != null) cancelAiStream()
+		cancelAiStream = null
 	})
 
 	function onOpenInfo(id: string): void {
@@ -45,5 +202,32 @@
 		height: 100%;
 		min-height: 0;
 		background-color: var(--em-chat-bg);
+	}
+
+	/* 输入栏上方业务工具条：胶囊按钮横排（#input-toolbar 固定位） */
+	.toolbar {
+		display: flex;
+		flex-direction: row;
+		padding: 6px 12px;
+	}
+
+	.toolbar__chip {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 6px 12px;
+		margin-right: 8px;
+		border-radius: 16px;
+		background-color: var(--em-bg-secondary);
+	}
+
+	.toolbar__chip-icon {
+		color: var(--em-text-secondary);
+		margin-right: 4px;
+	}
+
+	.toolbar__chip-text {
+		font-size: 13px;
+		color: var(--em-text-primary);
 	}
 </style>

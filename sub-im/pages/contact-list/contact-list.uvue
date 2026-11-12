@@ -1,0 +1,41 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-contact-list-page @select="onSelect" @back="onBack" />
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { onLoad } from '@dcloudio/uni-app'
+	import { CONVERSATION_TYPE, EmKit, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { themeClass } = useTheme()
+
+	onLoad(() => {
+		// 只看是否已登录：断网/自动重连不踢回登录页
+		if (EmKit.state.userId === '') {
+			uni.reLaunch({ url: '/pages/login/login' })
+		}
+	})
+
+	// 预热（对齐会话页点击范式）：跳转前 fire-and-forget 进入会话与历史拉取
+	function onSelect(userId: string): void {
+		EmKit.enterConversation(userId, CONVERSATION_TYPE.SINGLE_CHAT).catch(() => {})
+		EmKit.loadHistory(userId, CONVERSATION_TYPE.SINGLE_CHAT).catch(() => {})
+		uni.navigateTo({ url: `/sub-im/pages/chat/chat?conversationId=${userId}&chatType=${CONVERSATION_TYPE.SINGLE_CHAT}` })
+	}
+
+	function onBack(): void {
+		uni.navigateBack({ delta: 1 })
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		background-color: var(--em-conversation-list-bg);
+	}
+</style>

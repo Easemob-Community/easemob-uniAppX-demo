@@ -1,0 +1,81 @@
+<template>
+	<em-select-contact
+		:show="show"
+		:items="items"
+		:title="t('demo.chat.forwardTo')"
+		:submitting="forwarding"
+		@update:show="onUpdateShow"
+		@select="onSelect"
+	/>
+</template>
+
+<script setup lang="ts">
+	import { computed, ref, watch } from 'vue'
+	import {
+		avatarOf,
+		contactDisplayNameOf,
+		contactStore,
+		CONVERSATION_TYPE,
+		useLocale
+	} from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { ConversationTypeValue, EmMessageItem, EmSelectContactItem } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { forwardMessage } from '@/common/message-forward'
+
+	// 逐条转发选人弹层：复用 uikit em-select-contact（单选形态），选中即转发并 toast
+	interface Props {
+		show: boolean
+		message: EmMessageItem | null
+	}
+
+	const props = defineProps<Props>()
+
+	const emit = defineEmits<{
+		(e: 'update:show', value: boolean): void
+		(e: 'forwarded', to: string): void
+	}>()
+
+	defineOptions({ styleIsolation: 'app-and-page' })
+
+	const { t } = useLocale()
+
+	const forwarding = ref(false)
+
+	const items = computed<EmSelectContactItem[]>(() =>
+		contactStore.items.map((c) => ({
+			userId: c.userId,
+			name: contactDisplayNameOf(c.userId),
+			avatar: avatarOf(c.userId)
+		}))
+	)
+
+	function onUpdateShow(show: boolean): void {
+		if (forwarding.value) return
+		emit('update:show', show)
+	}
+
+	watch(
+		() => props.show,
+		(show) => {
+			if (show) forwarding.value = false
+		}
+	)
+
+	function onSelect(userId: string): void {
+		const message = props.message
+		if (message == null || forwarding.value) return
+		forwarding.value = true
+		const chatType: ConversationTypeValue = CONVERSATION_TYPE.SINGLE_CHAT
+		forwardMessage(message, userId, chatType)
+			.then(() => {
+				uni.showToast({ title: t('demo.chat.forwardSuccess'), icon: 'none' })
+				emit('update:show', false)
+				emit('forwarded', userId)
+			})
+			.catch(() => {
+				uni.showToast({ title: t('demo.chat.forwardFailed'), icon: 'none' })
+			})
+			.finally(() => {
+				forwarding.value = false
+			})
+	}
+</script>

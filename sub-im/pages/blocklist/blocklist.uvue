@@ -1,0 +1,157 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-nav-bar :title="t('demo.blocklist.title')" @back="onBack" />
+		<scroll-view scroll-y class="body">
+			<view v-for="item in list" :key="item.userId" class="row">
+				<em-avatar :src="item.avatar" :name="item.name" :size="40" />
+				<view class="row__text">
+					<text class="row__name">{{ item.name }}</text>
+					<text class="row__id">{{ item.userId }}</text>
+				</view>
+				<view class="row__remove" @click="onRemove(item)">
+					<text class="row__remove-text">{{ t('demo.blocklist.remove') }}</text>
+				</view>
+			</view>
+			<view v-if="loading" class="state">
+				<text class="state-text">{{ t('demo.blocklist.loading') }}</text>
+			</view>
+			<em-empty v-else-if="list.length === 0" icon="person-ban" :description="t('demo.blocklist.empty')" />
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { onLoad } from '@dcloudio/uni-app'
+	import { ref } from 'vue'
+	import { avatarOf, displayNameOf, EmKit, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	// 黑名单管理（对齐 vue3 demo 黑名单能力；uikit 未内置，经 EmKit.getSDKClient() 的 ContactManager 实现）
+	interface BlocklistRow {
+		userId: string
+		name: string
+		avatar: string
+	}
+
+	const { themeClass } = useTheme()
+	const { t } = useLocale()
+
+	const list = ref<BlocklistRow[]>([])
+	const loading = ref(true)
+
+	onLoad(() => {
+		if (EmKit.state.userId === '') {
+			uni.reLaunch({ url: '/pages/login/login' })
+			return
+		}
+		load()
+	})
+
+	async function load(): Promise<void> {
+		loading.value = true
+		try {
+			const client = await EmKit.getSDKClient()
+			const blocklist = await client.contactManager.getBlocklist()
+			list.value = blocklist.map((u) => ({
+				userId: u.userId,
+				name: displayNameOf(u.userId, u.nickname ?? ''),
+				avatar: avatarOf(u.userId) !== '' ? avatarOf(u.userId) : (u.avatarUrl ?? '')
+			}))
+		} catch (e) {
+			uni.showToast({ title: t('demo.blocklist.loadFailed'), icon: 'none' })
+		} finally {
+			loading.value = false
+		}
+	}
+
+	function onRemove(item: BlocklistRow): void {
+		uni.showModal({
+			title: t('demo.blocklist.removeTitle'),
+			content: t('demo.blocklist.removeConfirm', { name: item.name }),
+			success: (res) => {
+				if (!res.confirm) return
+				EmKit.getSDKClient()
+					.then((client) => client.contactManager.removeUserFromBlocklist({ userIds: [item.userId] }))
+					.then(() => {
+						list.value = list.value.filter((row) => row.userId !== item.userId)
+						uni.showToast({ title: t('demo.blocklist.removeSuccess'), icon: 'none' })
+					})
+					.catch(() => {
+						uni.showToast({ title: t('demo.blocklist.removeFailed'), icon: 'none' })
+					})
+			}
+		})
+	}
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-bg-base);
+	}
+
+	.body {
+		flex: 1;
+		min-height: 0;
+	}
+
+	.row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 10px 16px;
+		border-bottom-width: 0.5px;
+		border-bottom-style: solid;
+		border-bottom-color: var(--em-border-color);
+	}
+
+	.row__text {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		margin-left: 12px;
+		margin-right: 12px;
+	}
+
+	.row__name {
+		font-size: 15px;
+		font-weight: 500;
+		color: var(--em-text-primary);
+	}
+
+	.row__id {
+		font-size: 12px;
+		color: var(--em-text-tertiary);
+	}
+
+	.row__remove {
+		padding: 5px 12px;
+		border-radius: 14px;
+		background-color: var(--em-bg-secondary);
+	}
+
+	.row__remove-text {
+		font-size: 13px;
+		color: var(--em-text-secondary);
+	}
+
+	.state {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 24px;
+	}
+
+	.state-text {
+		font-size: 13px;
+		color: var(--em-text-tertiary);
+	}
+</style>

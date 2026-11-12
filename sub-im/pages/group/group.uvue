@@ -1,0 +1,41 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-group-page @click-group="onClickGroup" @created="onClickGroup" @back="onBack" />
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { onLoad } from '@dcloudio/uni-app'
+	import { CONVERSATION_TYPE, EmKit, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { themeClass } = useTheme()
+
+	onLoad(() => {
+		// 只看是否已登录：断网/自动重连不踢回登录页
+		if (EmKit.state.userId === '') {
+			uni.reLaunch({ url: '/pages/login/login' })
+		}
+	})
+
+	// 群条目点击：预热（enterConversation/loadHistory 带 groupChat）+ 跳聊天页，与会话列表点选同 handler 口径
+	function onClickGroup(groupId: string): void {
+		EmKit.enterConversation(groupId, CONVERSATION_TYPE.GROUP_CHAT).catch(() => {})
+		EmKit.loadHistory(groupId, CONVERSATION_TYPE.GROUP_CHAT).catch(() => {})
+		uni.navigateTo({ url: `/sub-im/pages/chat/chat?conversationId=${groupId}&chatType=${CONVERSATION_TYPE.GROUP_CHAT}` })
+	}
+
+	function onBack(): void {
+		uni.navigateBack()
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		background-color: var(--em-conversation-list-bg);
+	}
+</style>

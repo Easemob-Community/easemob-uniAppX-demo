@@ -1,0 +1,183 @@
+<template>
+	<view class="md" :class="message.self ? 'md--self' : ''">
+		<block v-for="(block, index) in blocks" :key="index">
+			<text v-if="block.type === 'h'" :class="['md__h', `md__h${block.level ?? 1}`]">{{ runsText(block) }}</text>
+			<view v-else-if="block.type === 'li'" class="md__li">
+				<text class="md__li-marker">{{ block.ordered === true ? '• ' : '• ' }}</text>
+				<text class="md__p md__inline"><text v-for="(run, ri) in block.runs" :key="ri" :class="runClass(run)">{{ run.text }}</text></text>
+			</view>
+			<view v-else-if="block.type === 'code'" class="md__code">
+				<text class="md__code-text">{{ block.text }}</text>
+			</view>
+			<view v-else-if="block.type === 'quote'" class="md__quote">
+				<text class="md__p md__inline"><text v-for="(run, ri) in block.runs" :key="ri" :class="runClass(run)">{{ run.text }}</text></text>
+			</view>
+			<view v-else-if="block.type === 'hr'" class="md__hr" />
+			<text v-else class="md__p md__inline"><text v-for="(run, ri) in block.runs" :key="ri" :class="runClass(run)">{{ run.text }}</text></text>
+		</block>
+		<text v-if="streaming" class="md__cursor">{{ STREAM_CURSOR_CHAR }}</text>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { computed } from 'vue'
+	import { STREAM_CURSOR_CHAR, STREAM_MESSAGE_STATUS } from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { EmMessageItem } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { parseMarkdown, type MdBlock, type MdRun } from '@/common/markdown-lite'
+
+	// #stream-message 插槽接管富格式流式气泡：内容随分片增长，渲染 markdown 子集（common/markdown-lite）
+	interface Props {
+		message: EmMessageItem
+	}
+
+	const props = defineProps<Props>()
+
+	defineOptions({ styleIsolation: 'app-and-page' })
+
+	const text = computed(() => props.message.stream?.fullText ?? props.message.text)
+	const blocks = computed<MdBlock[]>(() => parseMarkdown(text.value))
+
+	const streaming = computed(() => {
+		const stream = props.message.stream
+		if (stream == null) return false
+		return stream.status === STREAM_MESSAGE_STATUS.START || stream.status === STREAM_MESSAGE_STATUS.IN_PROGRESS
+	})
+
+	function runsText(block: MdBlock): string {
+		return (block.runs ?? []).map((r) => r.text).join('')
+	}
+
+	function runClass(run: MdRun): string {
+		const cls = ['md__run']
+		if (run.bold === true) cls.push('md__run--bold')
+		if (run.italic === true) cls.push('md__run--italic')
+		if (run.code === true) cls.push('md__run--code')
+		return cls.join(' ')
+	}
+</script>
+
+<style>
+	/* 气泡视觉对齐 uikit 文本气泡（__bubble）：圆角/底色/文字色走 --em-bubble-* 变量，随主题与己方/对方切换 */
+	.md {
+		max-width: 520rpx;
+		padding: 10px 12px;
+		border-radius: var(--em-bubble-radius, 16px);
+		background-color: var(--em-bubble-bg-other);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.md--self {
+		background-color: var(--em-bubble-bg-self);
+	}
+
+	.md__h {
+		font-weight: 600;
+		color: var(--em-bubble-text-other);
+		margin-bottom: 4px;
+	}
+
+	.md--self .md__h {
+		color: var(--em-bubble-text-self);
+	}
+
+	.md__h1 { font-size: 18px; line-height: 24px; }
+	.md__h2 { font-size: 16px; line-height: 22px; }
+	.md__h3 { font-size: 15px; line-height: 21px; }
+	.md__h4, .md__h5, .md__h6 { font-size: 14px; line-height: 20px; }
+
+	.md__p {
+		font-size: 15px;
+		line-height: 22px;
+		color: var(--em-bubble-text-other);
+		margin-bottom: 4px;
+	}
+
+	.md--self .md__p {
+		color: var(--em-bubble-text-self);
+	}
+
+	.md__inline {
+		display: inline;
+	}
+
+	.md__li {
+		flex-direction: row;
+		margin-bottom: 2px;
+	}
+
+	.md__li-marker {
+		font-size: 15px;
+		line-height: 22px;
+		color: var(--em-bubble-text-other);
+	}
+
+	.md--self .md__li-marker {
+		color: var(--em-bubble-text-self);
+	}
+
+	.md__run--bold {
+		font-weight: 700;
+	}
+
+	.md__run--italic {
+		font-style: italic;
+	}
+
+	.md__run--code {
+		font-family: monospace;
+		font-size: 13px;
+		background-color: rgba(0, 0, 0, 0.08);
+		border-radius: 4px;
+		padding: 0 3px;
+	}
+
+	.md--self .md__run--code {
+		background-color: rgba(255, 255, 255, 0.25);
+	}
+
+	.md__code {
+		background-color: rgba(0, 0, 0, 0.75);
+		border-radius: 6px;
+		padding: 8px 10px;
+		margin-bottom: 4px;
+	}
+
+	.md__code-text {
+		font-family: monospace;
+		font-size: 12px;
+		line-height: 17px;
+		color: #e8eaed;
+	}
+
+	.md__quote {
+		border-left-width: 3px;
+		border-left-style: solid;
+		border-left-color: rgba(0, 0, 0, 0.2);
+		padding-left: 8px;
+		margin-bottom: 4px;
+	}
+
+	.md--self .md__quote {
+		border-left-color: rgba(255, 255, 255, 0.4);
+	}
+
+	.md__hr {
+		height: 1px;
+		background-color: rgba(0, 0, 0, 0.15);
+		margin: 6px 0;
+	}
+
+	.md--self .md__hr {
+		background-color: rgba(255, 255, 255, 0.35);
+	}
+
+	.md__cursor {
+		font-size: 15px;
+		color: var(--em-bubble-text-other);
+	}
+
+	.md--self .md__cursor {
+		color: var(--em-bubble-text-self);
+	}
+</style>

@@ -1,0 +1,54 @@
+<template>
+	<view v-if="isDemoSticker(message)" class="sticker" @longpress="onLongPress">
+		<image class="sticker__image" :src="demoStickerUrl(message)" mode="aspectFit" :style="imageStyle" />
+	</view>
+	<em-image-message
+		v-else
+		:message="message"
+		@preview="emit('preview', message)"
+		@long-press="emit('long-press', message)"
+	/>
+</template>
+
+<script setup lang="ts">
+	import { computed } from 'vue'
+	import type { EmMessageItem } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { demoStickerUrl, isDemoSticker } from '@/common/demo-stickers'
+
+	interface Props {
+		message: EmMessageItem
+	}
+
+	const props = defineProps<Props>()
+	const emit = defineEmits<{
+		(e: 'preview', message: EmMessageItem): void
+		(e: 'long-press', message: EmMessageItem): void
+	}>()
+
+	defineOptions({ styleIsolation: 'app-and-page', virtualHost: true })
+
+	const imageStyle = computed(() => {
+		let width = props.message.width > 0 ? props.message.width : 120
+		let height = props.message.height > 0 ? props.message.height : 120
+		const scale = Math.min(120 / width, 120 / height, 1)
+		width = Math.round(width * scale)
+		height = Math.round(height * scale)
+		return `width: ${width}px; height: ${height}px;`
+	})
+
+	function onLongPress(): void {
+		emit('long-press', props.message)
+	}
+</script>
+
+<style>
+	.sticker {
+		display: flex;
+		background-color: transparent;
+		overflow: visible;
+	}
+
+	.sticker__image {
+		display: flex;
+	}
+</style>

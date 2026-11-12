@@ -1,0 +1,115 @@
+<template>
+	<view class="afb">
+		<view class="afb__main">
+			<em-icon name="circle-bang" :size="18" class="afb__icon" />
+			<view class="afb__content">
+				<text class="afb__title">{{ t('demo.chat.antiFraud.title') }}</text>
+				<view class="afb__body-row">
+					<text class="afb__body">{{ antiFraudText }}<text class="afb__report" @click="onReport">{{ t('demo.chat.antiFraud.report') }}</text></text>
+				</view>
+			</view>
+		</view>
+		<view class="afb__close" @click="emit('close')">
+			<em-icon name="xmark-bold" :size="16" class="afb__close-icon" />
+		</view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { computed, ref } from 'vue'
+	import { useLocale } from '@/uni_modules/easemob-uikit-uni/libs'
+
+	const { t } = useLocale()
+
+	const emit = defineEmits<{
+		(e: 'close'): void
+		(e: 'report'): void
+	}>()
+
+	defineOptions({ styleIsolation: 'app-and-page' })
+
+	const antiFraudText = computed(() => t('demo.chat.antiFraud.text'))
+	const reporting = ref(false)
+
+	async function onReport(): Promise<void> {
+		if (reporting.value) return
+		reporting.value = true
+		uni.showLoading({ title: t('demo.chat.antiFraud.reporting'), mask: true })
+		try {
+			await new Promise<void>((resolve) => {
+				setTimeout(() => resolve(), 800)
+			})
+		} finally {
+			uni.hideLoading()
+			reporting.value = false
+		}
+		uni.showToast({ title: t('demo.chat.antiFraud.reported'), icon: 'none' })
+		emit('report')
+	}
+</script>
+
+<style>
+	.afb {
+		display: flex;
+		flex-direction: row;
+		align-items: flex-start;
+		margin: 8px 12px;
+		padding: 12px 12px 10px;
+		border-radius: 8px;
+		background-color: #ffe6b3;
+	}
+
+	.afb__main {
+		flex: 1;
+		display: flex;
+		flex-direction: row;
+		align-items: flex-start;
+	}
+
+	.afb__icon {
+		color: #ff661a;
+		margin-right: 8px;
+		margin-top: 1px;
+	}
+
+	.afb__content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.afb__title {
+		font-size: 16px;
+		font-weight: 500;
+		line-height: 18px;
+		color: #171a1c;
+	}
+
+	.afb__body-row {
+		margin-top: 8px;
+	}
+
+	.afb__body {
+		font-size: 12px;
+		line-height: 18px;
+		color: #171a1c;
+	}
+
+	.afb__report {
+		font-size: 12px;
+		line-height: 18px;
+		font-weight: 500;
+		color: #ff661a;
+		margin-left: 4px;
+	}
+
+	.afb__close {
+		padding: 1px;
+		margin-left: 8px;
+	}
+
+	.afb__close-icon {
+		color: #171a1c;
+		opacity: 0.8;
+	}
+</style>

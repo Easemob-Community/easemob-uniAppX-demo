@@ -1,0 +1,157 @@
+<template>
+	<view class="emoji-panel">
+		<view class="emoji-panel__tabs">
+			<view
+				:class="['emoji-panel__tab', activeTab === 'emoji' ? 'emoji-panel__tab--active' : '']"
+				@click="activeTab = 'emoji'"
+			>
+				<text class="emoji-panel__tab-emoji">😀</text>
+			</view>
+			<view
+				:class="['emoji-panel__tab', activeTab === 'huanxin' ? 'emoji-panel__tab--active' : '']"
+				@click="activeTab = 'huanxin'"
+			>
+				<image class="emoji-panel__tab-icon" :src="DEMO_STICKER_PACK.stickers[0].thumbUrl" mode="aspectFit" />
+			</view>
+		</view>
+		<scroll-view scroll-y class="emoji-panel__body">
+			<view v-if="activeTab === 'emoji'" class="emoji-panel__grid">
+				<view
+					v-for="emoji in emojis"
+					:key="emoji"
+					class="emoji-panel__emoji-cell"
+					@click="selectEmoji(emoji)"
+				>
+					<text class="emoji-panel__emoji-char">{{ emoji }}</text>
+				</view>
+			</view>
+			<view v-else class="emoji-panel__grid">
+				<view
+					v-for="sticker in DEMO_STICKER_PACK.stickers"
+					:key="sticker.key"
+					class="emoji-panel__sticker-cell"
+					@click="onSticker(sticker)"
+				>
+					<image class="emoji-panel__sticker-image" :src="sticker.thumbUrl || sticker.url" mode="aspectFit" />
+				</view>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { ref } from 'vue'
+	import { DEMO_STICKER_PACK } from '@/common/demo-stickers'
+	import type { DemoStickerItem } from '@/common/demo-stickers'
+
+	interface Props {
+		emojis: string[]
+		disabled: boolean
+		selectEmoji: (emoji: string) => void
+		closePanel: () => void
+		notifyDisabledTap: () => void
+	}
+
+	const props = defineProps<Props>()
+	const emit = defineEmits<{
+		(e: 'select-sticker', sticker: DemoStickerItem): void
+	}>()
+
+	defineOptions({ styleIsolation: 'app-and-page' })
+
+	const activeTab = ref<'emoji' | 'huanxin'>('emoji')
+
+	function onSticker(sticker: DemoStickerItem): void {
+		if (props.disabled) {
+			props.notifyDisabledTap()
+			return
+		}
+		props.closePanel()
+		emit('select-sticker', sticker)
+	}
+</script>
+
+<style>
+	.emoji-panel {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.emoji-panel__body {
+		flex: 1;
+		height: 0;
+	}
+
+	.emoji-panel__grid {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		padding: 8px;
+	}
+
+	.emoji-panel__emoji-cell {
+		width: 12.5%;
+		height: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.emoji-panel__emoji-char {
+		font-size: 24px;
+		line-height: 32px;
+	}
+
+	.emoji-panel__sticker-cell {
+		width: 25%;
+		height: 88px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.emoji-panel__sticker-image {
+		width: 64px;
+		height: 64px;
+	}
+
+	.emoji-panel__tabs {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		height: 48px;
+		padding: 4px 8px;
+		border-bottom-width: 1px;
+		border-bottom-style: solid;
+		border-bottom-color: var(--em-divider-color);
+		flex-shrink: 0;
+	}
+
+	.emoji-panel__tab {
+		height: 40px;
+		min-width: 40px;
+		padding: 0 8px;
+		margin-right: 4px;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		border-radius: 6px;
+	}
+
+	.emoji-panel__tab--active {
+		background-color: var(--em-bg-active);
+	}
+
+	.emoji-panel__tab-emoji {
+		font-size: 24px;
+		line-height: 28px;
+	}
+
+	.emoji-panel__tab-icon {
+		width: 24px;
+		height: 24px;
+		border-radius: 4px;
+	}
+</style>
