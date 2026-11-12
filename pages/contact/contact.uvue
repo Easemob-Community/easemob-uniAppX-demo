@@ -1,0 +1,270 @@
+<template>
+	<view class="page" :class="themeClass">
+		<em-contact-page class="contact-wrap" @entry-click="onEntryClick" @add="onAdd" />
+		<view v-if="showAddContact" class="addcontact">
+			<view class="addcontact__panel" :style="demoPrimaryColorStyle()">
+				<text class="addcontact__title">添加好友</text>
+				<view class="addcontact__modes">
+					<view class="addcontact__mode" :class="addMode === 'id' ? 'addcontact__mode--active' : ''" @click="onSwitchMode('id')">
+						<text class="addcontact__mode-text">用户 ID</text>
+					</view>
+					<view class="addcontact__mode" :class="addMode === 'phone' ? 'addcontact__mode--active' : ''" @click="onSwitchMode('phone')">
+						<text class="addcontact__mode-text">手机号</text>
+					</view>
+				</view>
+				<input class="addcontact__input" v-model="peerId" :placeholder="addMode === 'id' ? '输入用户 ID' : '输入手机号'" :disabled="sendingInvite" />
+				<input class="addcontact__input" v-model="inviteMessage" placeholder="输入验证信息（可选）" :disabled="sendingInvite" />
+				<view class="addcontact__row">
+					<button class="addcontact__btn addcontact__btn--plain" @click="showAddContact = false">取消</button>
+					<button class="addcontact__btn" :disabled="sendingInvite" @click="onSendInvite">发送申请</button>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script setup lang="ts">
+	import { onLoad, onShow } from '@dcloudio/uni-app'
+	import { ref } from 'vue'
+	import { CONTACT_ENTRY_KEY, EmKit, useTabBarBadge, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { syncTabBarLocale } from '@/common/locale/index'
+	import { fetchUserIdByPhone } from '@/common/auth-api'
+	import { getLoginCredentials } from '@/common/account-state'
+	import { demoPrimaryColorStyle } from '@/common/theme-style'
+
+	// 原生 tabBar 深色跟随：onShow + 主题变化时同步 uni.setTabBarStyle / H5 tabbar DOM
+	const { themeClass } = useThemeChrome({
+		tabBarPages: [
+			'pages/conversation/conversation',
+			'pages/contact/contact',
+			'pages/settings/settings',
+		],
+	})
+
+	const badges = useTabBarBadge({ conversationIndex: 0, contactIndex: 1 })
+
+	const showAddContact = ref(false)
+	const addMode = ref<'id' | 'phone'>('id')
+	const peerId = ref('')
+	const inviteMessage = ref('')
+	const sendingInvite = ref(false)
+	const inviteRequestId = ref(0)
+
+	// 只按「是否已登录」判断：断网/自动重连不应把用户踢回登录页（同会话页口径）
+	function ensureLogin(): boolean {
+		if (EmKit.state.userId === '') {
+			uni.reLaunch({ url: '/pages/login/login' })
+			return false
+		}
+		return true
+	}
+
+	onLoad(() => {
+		if (!ensureLogin()) return
+		EmKit.syncContacts().catch(() => {})
+	})
+
+	onShow(() => {
+		if (!ensureLogin()) return
+		// 从聊天页/二级页返回时补同步角标（原生 setTabBarBadge 要求当前页是 tab 页）
+		badges.sync()
+		// 持久化语言应用到原生 tabBar 文案（守卫内跳过非 tab 页）
+		syncTabBarLocale()
+		EmKit.syncContacts().catch(() => {})
+	})
+
+	// 入口页 entry-click 分发（对齐 vue 版 address-book 宿主接线路由语义）：
+	// notice → 新通知页；group → 群列表页；contact → 好友列表页；blocklist → 黑名单页
+	function onEntryClick(key: string): void {
+		if (key === CONTACT_ENTRY_KEY.NOTICE) {
+			uni.navigateTo({ url: '/sub-im/pages/contact-requests/contact-requests' })
+			return
+		}
+		if (key === CONTACT_ENTRY_KEY.GROUP) {
+			uni.navigateTo({ url: '/sub-im/pages/group/group' })
+			return
+		}
+		if (key === CONTACT_ENTRY_KEY.CONTACT) {
+			uni.navigateTo({ url: '/sub-im/pages/contact-list/contact-list' })
+			return
+		}
+		if (key === CONTACT_ENTRY_KEY.BLOCKLIST) {
+			uni.navigateTo({ url: '/sub-im/pages/blocklist/blocklist' })
+		}
+	}
+
+	// 添加好友为 demo 级 modal（对齐 vue 版契约：页面组件只 emit add，弹窗由业务侧实现）
+	function onAdd(): void {
+		inviteRequestId.value += 1
+		sendingInvite.value = false
+		addMode.value = 'id'
+		peerId.value = ''
+		inviteMessage.value = ''
+		showAddContact.value = true
+	}
+
+	function onSwitchMode(mode: 'id' | 'phone'): void {
+		if (addMode.value === mode) return
+		addMode.value = mode
+		peerId.value = ''
+	}
+
+	// 手机号模式先经 App Server 把手机号解析为环信用户 ID（对齐 vue 版 useContactAdd）
+	function resolvePeerId(): Promise<string> {
+		const raw = peerId.value.trim()
+		if (addMode.value === 'id') {
+			if (raw === '') return Promise.reject(new Error('请输入用户 ID'))
+			return Promise.resolve(raw)
+		}
+		if (raw === '') return Promise.reject(new Error('请输入手机号'))
+		if (!/^1[3-9]\d{9}$/.test(raw)) return Promise.reject(new Error('请输入正确的手机号码'))
+		const cred = getLoginCredentials()
+		if (cred == null || cred.token === '') {
+			return Promise.reject(new Error('登录凭证缺失，请重新登录'))
+		}
+		return fetchUserIdByPhone(raw, cred.token, EmKit.state.userId)
+	}
+
+	function onSendInvite(): void {
+		if (sendingInvite.value) return
+		const requestId = ++inviteRequestId.value
+		const message = inviteMessage.value.trim()
+		sendingInvite.value = true
+		resolvePeerId()
+			.then((id) => {
+				if (requestId !== inviteRequestId.value) return
+				if (id === EmKit.state.userId) {
+					uni.showToast({ title: '不能添加自己为好友', icon: 'none' })
+					return
+				}
+				return EmKit.addContact(id, message).then(() => {
+					if (requestId !== inviteRequestId.value) return
+					showAddContact.value = false
+					uni.showToast({ title: '好友申请已发送', icon: 'none' })
+				})
+			})
+			.catch((e: Error) => {
+				if (requestId !== inviteRequestId.value) return
+				uni.showToast({ title: e.message !== '' ? e.message : '添加失败，请稍后重试', icon: 'none' })
+			})
+			.finally(() => {
+				if (requestId === inviteRequestId.value) {
+					sendingInvite.value = false
+				}
+			})
+	}
+</script>
+
+<style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+		background-color: var(--em-conversation-list-bg);
+	}
+
+	/* 黑名单入口已迁至 uikit 通讯录入口列表（CONTACT_ENTRY_KEY.BLOCKLIST），此处不再自绘 */
+
+	.contact-wrap {
+		flex: 1;
+		min-height: 0;
+	}
+
+	.addcontact {
+		position: fixed;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		background-color: var(--em-mask-color);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.addcontact__panel {
+		display: flex;
+		flex-direction: column;
+		width: 280px;
+		padding: 16px;
+		background-color: var(--em-bg-elevated);
+		border-radius: 12px;
+	}
+
+	.addcontact__title {
+		font-size: 16px;
+		font-weight: 600;
+		color: var(--em-text-primary);
+		margin-bottom: 12px;
+	}
+
+	.addcontact__modes {
+		display: flex;
+		flex-direction: row;
+		padding: 2px;
+		background-color: var(--em-bg-secondary);
+		border-radius: 8px;
+		margin-bottom: 12px;
+	}
+
+	.addcontact__mode {
+		flex: 1;
+		height: 30px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 6px;
+	}
+
+	.addcontact__mode--active {
+		background-color: var(--em-bg-elevated);
+	}
+
+	.addcontact__mode-text {
+		font-size: 13px;
+		color: var(--em-text-secondary);
+	}
+
+	.addcontact__mode--active .addcontact__mode-text {
+		color: var(--em-text-primary);
+		font-weight: 500;
+	}
+
+	.addcontact__input {
+		height: 38px;
+		padding: 0 10px;
+		border-width: 1px;
+		border-style: solid;
+		border-color: var(--em-border-color);
+		border-radius: 6px;
+		font-size: 14px;
+		color: var(--em-text-primary);
+		background-color: var(--em-bg-base);
+		margin-bottom: 12px;
+	}
+
+	.addcontact__row {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-end;
+	}
+
+	.addcontact__btn {
+		height: 34px;
+		line-height: 34px;
+		padding: 0 16px;
+		font-size: 14px;
+		color: var(--em-text-inverse);
+		background-color: var(--em-primary-color);
+		border-radius: 6px;
+	}
+
+	.addcontact__btn--plain {
+		color: var(--em-text-secondary);
+		background-color: var(--em-bg-secondary);
+		margin-right: 10px;
+	}
+</style>
