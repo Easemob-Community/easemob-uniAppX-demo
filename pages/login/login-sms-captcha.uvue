@@ -1,0 +1,111 @@
+<template>
+	<view class="sms-captcha" :style="rootStyle">
+		<view class="sms-captcha__header" :style="{ paddingTop: safeTop + 'px' }">
+			<text class="sms-captcha__title">{{ title }}</text>
+			<button class="sms-captcha__cancel" @click="emit('cancel')">{{ cancelText }}</button>
+		</view>
+		<web-view class="sms-captcha__web" :src="captchaSrc" :fullscreen="false" @message="onMessage" @error="onError"></web-view>
+	</view>
+</template>
+
+<script setup>
+	const props = defineProps<{
+		visible: boolean
+		phone: string
+		title: string
+		cancelText: string
+		errorText: string
+		locale: string
+		sceneId: string
+		prefix: string
+		secret: string
+	}>()
+
+	const emit = defineEmits<{
+		(e: 'verified', captchaVerifyParam: string): void
+		(e: 'cancel'): void
+		(e: 'error', message: string): void
+	}>()
+
+	const safeTop = uni.getWindowInfo().safeAreaInsets?.top ?? 0
+	const rootStyle = computed((): string => props.visible ? '' : 'top: 200%;')
+	const captchaUrl = computed((): string => {
+		const language = props.locale === 'en' ? 'en' : 'cn'
+		const sceneId = encodeURIComponent(props.sceneId)
+		const prefix = encodeURIComponent(props.prefix)
+		const secret = encodeURIComponent(props.secret)
+		return `/static/sms-captcha/index.html?telephone=${encodeURIComponent(props.phone)}&lang=${language}&sceneId=${sceneId}&prefix=${prefix}&secret=${secret}`
+	})
+	const captchaSrc = computed((): string | null => props.visible ? captchaUrl.value : null)
+
+	function onMessage(event: any) {
+		if (!props.visible) return
+		const data = event.detail?.data
+		const payload = Array.isArray(data) ? data[0] : data
+		const captchaVerifyParam = payload?.['captchaVerifyParam']
+		if (typeof captchaVerifyParam === 'string' && captchaVerifyParam !== '') {
+			emit('verified', captchaVerifyParam)
+			return
+		}
+		emit('error', props.errorText)
+	}
+
+	function onError() {
+		if (!props.visible) return
+		emit('error', props.errorText)
+	}
+</script>
+
+<style>
+	.sms-captcha {
+		display: flex;
+		flex-direction: column;
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background-color: #ffffff;
+		z-index: 1000;
+	}
+
+	.sms-captcha__header {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		flex-shrink: 0;
+		height: 56px;
+		padding-right: 16px;
+		padding-left: 20px;
+		border-bottom-width: 1px;
+		border-bottom-style: solid;
+		border-bottom-color: #eeeeee;
+		box-sizing: content-box;
+	}
+
+	.sms-captcha__title {
+		font-size: 17px;
+		font-weight: 600;
+		color: #1f2937;
+	}
+
+	.sms-captcha__cancel {
+		margin: 0;
+		padding: 0 8px;
+		background-color: transparent;
+		font-size: 15px;
+		line-height: 44px;
+		color: #009eff;
+	}
+
+	.sms-captcha__cancel::after {
+		border-width: 0;
+	}
+
+	.sms-captcha__web {
+		flex: 1;
+		width: 100%;
+		height: 0;
+	}
+</style>

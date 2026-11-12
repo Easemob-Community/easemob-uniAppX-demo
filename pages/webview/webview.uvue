@@ -3,7 +3,11 @@
 </template>
 
 <script setup lang="ts">
+	import { useLocale } from '@/uni_modules/easemob-uikit-uni/libs'
+
 	const url = ref('')
+
+	const { t } = useLocale()
 
 	function optionText(options: Record<string, any>, key: string, fallback: string): string {
 		const value = options[key]
@@ -14,7 +18,7 @@
 	onLoad((options) => {
 		const pageOptions = options as Record<string, any>
 		url.value = optionText(pageOptions, 'url', '')
-		uni.setNavigationBarTitle({ title: optionText(pageOptions, 'title', '环信') })
+		uni.setNavigationBarTitle({ title: optionText(pageOptions, 'title', t('demo.webview.defaultTitle')) })
 	})
 </script>
 

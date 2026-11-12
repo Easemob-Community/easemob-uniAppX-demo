@@ -3,6 +3,12 @@
 		<view class="login__glow login__glow--pink" />
 		<view class="login__glow login__glow--core" />
 
+		<!-- 启动屏：凭证检查/自动登录期间只渲染 splash，登录表单绝不闪现 -->
+		<view v-if="splashVisible" class="login__splash">
+			<image class="login__splash-logo" src="/static/logo.png" mode="aspectFit" />
+		</view>
+
+		<template v-else>
 		<view class="login__brand" @click="openHome">
 			<image class="login__brand-logo" src="/static/brand-logo.svg" mode="aspectFit" />
 		</view>
@@ -15,7 +21,7 @@
 
 					<view class="login__body">
 						<view class="login__titles">
-							<text class="login__subtitle">欢迎体验</text>
+							<text class="login__subtitle">{{ t('demo.login.welcome') }}</text>
 							<image class="login__title-logo" src="/static/logo.png" mode="aspectFit" />
 							<text class="login__tagline">EASEMOB IM DEMO · FOR VUE</text>
 						</view>
@@ -23,23 +29,21 @@
 						<view v-if="devEnabled" class="login__dev-config">
 							<view class="login__dev-divider">
 								<view class="login__dev-line" />
-								<text class="login__dev-divider-text">开发者配置</text>
+								<text class="login__dev-divider-text">{{ t('demo.login.devConfig') }}</text>
 								<view class="login__dev-line" />
 							</view>
 
 							<view class="login__dev-row">
-								<text class="login__dev-row-label">持久化配置</text>
-								<view class="login__switch" :class="{ 'login__switch--active': persistEnabled }" @click="onPersistToggle">
-									<view class="login__switch-dot" :class="{ 'login__switch-dot--active': persistEnabled }" />
-								</view>
+								<text class="login__dev-row-label">{{ t('demo.login.persistConfig') }}</text>
+								<em-switch v-model="persistEnabled" custom-style="--em-switch-off-bg: rgba(255, 255, 255, 0.12); --em-primary-color: rgba(0, 158, 255, 0.85);" @change="onPersistChange" />
 							</view>
 
 							<view class="login__dev-row">
-								<text class="login__dev-row-label">使用自定义 AppKey</text>
+								<text class="login__dev-row-label">{{ t('demo.login.customAppKey') }}</text>
 							</view>
 
 							<view class="login__dev-field">
-								<text class="login__dev-label">AppKey</text>
+								<text class="login__dev-label">{{ t('demo.login.appKey') }}</text>
 								<input
 									class="login__input"
 									:class="{ 'login__input--focused': focused === 'devAppKey' }"
@@ -53,15 +57,13 @@
 							</view>
 
 							<view class="login__dev-row">
-								<text class="login__dev-row-label">使用私有服务器</text>
-								<view class="login__switch" :class="{ 'login__switch--active': usePrivateServer }" @click="onPrivateServerToggle">
-									<view class="login__switch-dot" :class="{ 'login__switch-dot--active': usePrivateServer }" />
-								</view>
+								<text class="login__dev-row-label">{{ t('demo.login.privateServer') }}</text>
+								<em-switch v-model="usePrivateServer" custom-style="--em-switch-off-bg: rgba(255, 255, 255, 0.12); --em-primary-color: rgba(0, 158, 255, 0.85);" />
 							</view>
 
 							<template v-if="usePrivateServer">
 								<view class="login__dev-field">
-									<text class="login__dev-label">IM 服务器地址</text>
+									<text class="login__dev-label">{{ t('demo.login.imServer') }}</text>
 									<input
 										class="login__input"
 										:class="{ 'login__input--focused': focused === 'devIm' }"
@@ -74,7 +76,7 @@
 									/>
 								</view>
 								<view class="login__dev-field">
-									<text class="login__dev-label">REST 服务器地址</text>
+									<text class="login__dev-label">{{ t('demo.login.restServer') }}</text>
 									<input
 										class="login__input"
 										:class="{ 'login__input--focused': focused === 'devRest' }"
@@ -92,12 +94,12 @@
 								<button class="login__dev-save" :class="{ 'login__dev-save--success': devSaveState === 'success', 'login__dev-save--error': devSaveState === 'error' }" @click="onDevSave">
 									{{ devSaveText }}
 								</button>
-								<button class="login__dev-exit" @click="onDevExit">退出</button>
+								<button class="login__dev-exit" @click="onDevExit">{{ t('demo.login.devExit') }}</button>
 							</view>
 
 							<view class="login__dev-divider login__dev-divider--light">
 								<view class="login__dev-line login__dev-line--light" />
-								<text class="login__dev-divider-text login__dev-divider-text--light">登录</text>
+								<text class="login__dev-divider-text login__dev-divider-text--light">{{ t('demo.login.loginDivider') }}</text>
 								<view class="login__dev-line login__dev-line--light" />
 							</view>
 						</view>
@@ -108,7 +110,7 @@
 									class="login__input login__input--standalone"
 									:class="{ 'login__input--focused': focused === 'userId' }"
 									v-model="userId"
-									placeholder="请输入 userId"
+									:placeholder="t('demo.login.userIdPlaceholder')"
 									placeholder-style="color: #b0bec5"
 									cursor-color="#009eff"
 									@focus="onFocus('userId')"
@@ -118,7 +120,7 @@
 									class="login__input login__input--standalone"
 									:class="{ 'login__input--focused': focused === 'token' }"
 									v-model="token"
-									placeholder="请输入 token"
+									:placeholder="t('demo.login.tokenPlaceholder')"
 									placeholder-style="color: #b0bec5"
 									cursor-color="#009eff"
 									@focus="onFocus('token')"
@@ -133,7 +135,7 @@
 										class="login__phone-input"
 										v-model="phone"
 										type="tel"
-										placeholder="请输入手机号"
+										:placeholder="t('demo.login.phonePlaceholder')"
 										placeholder-style="color: #b0bec5"
 										cursor-color="#009eff"
 										maxlength="11"
@@ -149,7 +151,7 @@
 											v-model="smsCode"
 											type="text"
 											inputmode="numeric"
-											placeholder="短信验证码"
+											:placeholder="t('demo.login.smsPlaceholder')"
 											placeholder-style="color: #b0bec5"
 											cursor-color="#009eff"
 											maxlength="6"
@@ -170,17 +172,19 @@
 							<text v-if="noticeText !== ''" class="login__notice">{{ noticeText }}</text>
 
 							<button class="login__submit" :class="{ 'login__submit--busy': loginLoading }" :disabled="loginLoading" @click="onLogin">
-								{{ loginLoading ? '登录中...' : '立即登录' }}
+								{{ loginLoading ? t('demo.login.loggingIn') : t('demo.login.loginNow') }}
 							</button>
 
 							<view v-if="!devEnabled" class="login__terms">
-								<button class="login__checkbox" :class="{ 'login__checkbox--checked': agreed }" @click="toggleAgreement">
-									<text v-if="agreed" class="login__checkbox-mark">✓</text>
-								</button>
-								<text class="login__terms-text">我已阅读并同意环信</text>
-								<text class="login__terms-link" @click="openTerms">服务条款</text>
-								<text class="login__terms-text login__terms-text--plain">和</text>
-								<text class="login__terms-link" @click="openPrivacy">隐私政策</text>
+								<view class="login__checkbox-hit" @click="toggleAgreement">
+									<view class="login__checkbox" :class="{ 'login__checkbox--checked': agreed }">
+										<text class="login__checkbox-mark">{{ agreed ? '✓' : '' }}</text>
+									</view>
+								</view>
+								<text class="login__terms-text">{{ t('demo.login.termsPrefix') }}</text>
+								<text class="login__terms-link" @click="openTerms">{{ t('demo.login.termsService') }}</text>
+								<text class="login__terms-text login__terms-text--plain">{{ t('demo.login.termsAnd') }}</text>
+								<text class="login__terms-link" @click="openPrivacy">{{ t('demo.login.privacyTitle') }}</text>
 							</view>
 						</view>
 					</view>
@@ -189,17 +193,81 @@
 			</view>
 		</scroll-view>
 
+		</template>
+
 		<view class="login__footer" :style="{ paddingBottom: (24 + safeBottom) + 'px' }">
-			<text class="login__footer-copyright">© 2026 环信</text>
-			<text class="login__footer-version">SDK版本：5.1.3  UIKit版本：VUE 3.11.0  Demo版本：0.6.4</text>
+			<text class="login__footer-copyright">{{ t('demo.login.copyright') }}</text>
+			<text class="login__footer-version">{{ t('demo.login.versionLine', { sdk: '5.2.0', uikit: UIKIT_VERSION, demo: '1.0.0' }) }}</text>
+			<text class="login__logs-entry" @click="openLogs">{{ t('demo.login.logsEntry') }}</text>
 		</view>
+
+		<view v-if="logsVisible" class="login__logs-panel">
+			<view class="login__logs-header" :style="{ paddingTop: safeTop + 'px' }">
+				<text class="login__logs-title">{{ t('demo.login.logsTitle') }}</text>
+				<button class="login__logs-close" @click="logsVisible = false">{{ t('demo.login.logsClose') }}</button>
+			</view>
+			<scroll-view class="login__logs-scroll" scroll-y>
+				<text class="login__logs-text">{{ logText === '' ? t('demo.login.logsEmpty') : logText }}</text>
+			</scroll-view>
+			<view class="login__logs-actions" :style="{ paddingBottom: (12 + safeBottom) + 'px' }">
+				<button class="login__logs-copy" :class="{ 'login__logs-copy--disabled': logText === '' }" :disabled="logText === ''" @click="copyLogs">
+					{{ t('demo.login.logsCopy') }}
+				</button>
+			</view>
+		</view>
+
+		<em-popup :visible="agreementVisible" position="center" :mask-closable="false">
+			<view class="login__agreement-dialog">
+				<text class="login__agreement-title">{{ t('demo.login.agreementTitle') }}</text>
+				<view class="login__agreement-content">
+					<text class="login__agreement-text">{{ t('demo.login.agreementContentPrefix') }}</text>
+					<text class="login__agreement-link" @click="openTerms">{{ t('demo.login.termsService') }}</text>
+					<text class="login__agreement-text">{{ t('demo.login.termsAnd') }}</text>
+					<text class="login__agreement-link" @click="openPrivacy">{{ t('demo.login.privacyTitle') }}</text>
+					<text class="login__agreement-text">{{ t('demo.login.agreementContentSuffix') }}</text>
+				</view>
+				<view class="login__agreement-actions">
+					<view class="login__agreement-action" @click="onAgreementCancel">
+						<text class="login__agreement-action-text">{{ t('demo.login.agreementDecline') }}</text>
+					</view>
+					<view class="login__agreement-action" @click="onAgreementConfirm">
+						<text class="login__agreement-action-text login__agreement-action-text--confirm">{{ t('demo.login.agreementAccept') }}</text>
+					</view>
+				</view>
+			</view>
+		</em-popup>
+
+		<LoginSmsCaptcha
+			:visible="smsCaptchaVisible"
+			:phone="phone"
+			:title="t('demo.login.captchaTitle')"
+			:cancel-text="t('demo.login.captchaCancel')"
+			:error-text="t('demo.login.captchaLoadFailed')"
+			:locale="getLocale()"
+			:scene-id="CAPTCHA_SCENE_ID"
+			:prefix="CAPTCHA_PREFIX"
+			:secret="CAPTCHA_SECRET"
+			@verified="onSmsCaptchaVerified"
+			@cancel="onSmsCaptchaCancel"
+			@error="onSmsCaptchaError"
+		/>
 	</view>
 </template>
 
 <script setup lang="ts">
-	import { loginByPhone, mapPhoneLoginError } from '@/common/auth-api'
+	import { loginByPhone, mapLoginSmsError, mapPhoneLoginError, sendLoginSms } from '@/common/auth-api'
+	import { clearPhoneCredentials, getPhoneCredentials, savePhoneCredentials, clearLoginCredentials, getLoginCredentials, saveLoginCredentials } from '@/common/account-state'
+	import { CAPTCHA_PREFIX, CAPTCHA_SCENE_ID, CAPTCHA_SECRET, DEFAULT_APP_KEY } from '@/common/config'
+	import { tokenExpiredHandler, tokenWillExpireHandler } from '@/common/token-renewal'
 	import { DevConfig, getDevConfig, getEffectiveAppKey, getPersistEnabled, setDevConfig, setPersistEnabled } from '@/common/dev-config'
-	import { EmKit } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { EmKit, getLogLevel, UIKIT_VERSION, useLocale, createLogger } from '@/uni_modules/easemob-uikit-uni/libs'
+	import EmPopup from '@/uni_modules/easemob-uikit-uni/components/em-popup/em-popup'
+	import LoginSmsCaptcha from '@/pages/login/login-sms-captcha'
+
+	type PendingAgreementAction = 'sms' | 'login'
+
+	const { t, getLocale } = useLocale()
+	const loginLogger = createLogger('login')
 
 	const DEV_ICON = '</>'
 	const windowInfo = uni.getWindowInfo()
@@ -209,15 +277,21 @@
 	const phone = ref('')
 	const smsCode = ref('')
 	const agreed = ref(false)
+	const agreementVisible = ref(false)
+	const pendingAgreementAction = ref<PendingAgreementAction | null>(null)
 	const focused = ref('')
 	const loginLoading = ref(false)
 	const errorText = ref('')
 	const noticeText = ref('')
+	const logsVisible = ref(false)
+	const logText = ref('')
 
 	const userId = ref('')
 	const token = ref('')
 	const devEnabled = ref(false)
 	const devTapCount = ref(0)
+	// 启动屏门控：setup 先于首帧渲染执行，初始 true 保证登录表单在凭证检查完成前不被绘制
+	const splashVisible = ref(true)
 
 	const persistEnabled = ref(true)
 	const usePrivateServer = ref(false)
@@ -226,25 +300,52 @@
 	const devRestServer = ref('')
 	const devSaveState = ref('idle')
 	const devSaveText = computed((): string => {
-		if (devSaveState.value === 'success') return '✓ 已保存'
-		if (devSaveState.value === 'error') return '请检查必填项'
-		return '保存配置'
+		if (devSaveState.value === 'success') return t('demo.login.devSaved')
+		if (devSaveState.value === 'error') return t('demo.login.devSaveError')
+		return t('demo.login.devSave')
 	})
 
 	const smsCountdown = ref(0)
 	const smsLoading = ref(false)
+	const smsCaptchaVisible = ref(false)
 	let smsTimer: number | null = null
 	let devResetTimer: number | null = null
 	let devSaveTimer: number | null = null
 
 	const canSendSms = computed((): boolean => phone.value.length === 11 && smsCountdown.value === 0 && !smsLoading.value)
 	const smsButtonText = computed((): string => {
-		if (smsLoading.value) return '发送中...'
+		if (smsLoading.value) return t('demo.login.smsSending')
 		if (smsCountdown.value > 0) return `${smsCountdown.value}s`
-		return '获取验证码'
+		return t('demo.login.smsGet')
 	})
 
+	function openLogs(): void {
+		logText.value = EmKit.getLogText()
+		logsVisible.value = true
+	}
+
+	function copyLogs(): void {
+		const text = EmKit.getLogText()
+		logText.value = text
+		if (text === '') return
+		try {
+			uni.setClipboardData({
+				data: text,
+				showToast: false,
+				success: () => {
+					uni.showToast({ title: t('demo.login.logsCopySuccess'), icon: 'none' })
+				},
+				fail: () => {
+					uni.showToast({ title: t('demo.login.logsCopyFailed'), icon: 'none' })
+				}
+			})
+		} catch (e) {
+			uni.showToast({ title: t('demo.login.logsCopyFailed'), icon: 'none' })
+		}
+	}
+
 	onMounted(() => {
+		loginLogger.info('login page mounted')
 		const config = getDevConfig()
 		devAppKey.value = config.appKey
 		devImServer.value = config.imServer
@@ -253,7 +354,39 @@
 		persistEnabled.value = getPersistEnabled()
 		userId.value = config.devUserId
 		token.value = config.devToken
+		void tryAutoLogin()
 	})
+
+	// 免输入自动登录：进程内已登录直接进首页；有持久化凭证则直连 SDK（期间保持启动屏），
+	// 失败清凭证落在登录表单并展示原因；无凭证直接亮出登录表单（与 vue3 demo 的 AppInitializer 同思路）
+	async function tryAutoLogin(): Promise<void> {
+		if (EmKit.state.userId !== '') {
+			loginLogger.info('auto login skipped: active session')
+			uni.reLaunch({ url: '/pages/conversation/conversation' })
+			return
+		}
+		const creds = getLoginCredentials()
+		if (creds == null) {
+			loginLogger.info('auto login skipped: no credentials')
+			splashVisible.value = false
+			return
+		}
+		const start = Date.now()
+		loginLogger.info('auto login started')
+		loginLoading.value = true
+		try {
+			const appkey = getPhoneCredentials() != null ? DEFAULT_APP_KEY : getEffectiveAppKey()
+			await loginIm(creds.userId, creds.token, appkey)
+		} catch (error: any) {
+			logLoginError('auto login failed:', error, [creds.userId, creds.token])
+			clearLoginCredentials()
+			errorText.value = errorMessage(error)
+			splashVisible.value = false
+		} finally {
+			loginLogger.info('auto login finished:', `${Date.now() - start}ms`)
+			loginLoading.value = false
+		}
+	}
 
 	onUnmounted(() => {
 		clearSmsTimer()
@@ -306,13 +439,8 @@
 		return /^[^#\s]+#[^#\s]+$/.test(value.trim())
 	}
 
-	function onPersistToggle() {
-		persistEnabled.value = !persistEnabled.value
-		setPersistEnabled(persistEnabled.value)
-	}
-
-	function onPrivateServerToggle() {
-		usePrivateServer.value = !usePrivateServer.value
+	function onPersistChange(value: boolean) {
+		setPersistEnabled(value)
 	}
 
 	function onDevSave() {
@@ -327,7 +455,7 @@
 			devSaveState.value = 'success'
 			const existing = getDevConfig()
 			setDevConfig(new DevConfig(appKey, imServer, restServer, usePrivateServer.value, existing.devUserId, existing.devToken))
-			uni.showToast({ title: '配置已保存', icon: 'none' })
+			uni.showToast({ title: t('demo.login.configSaved'), icon: 'none' })
 		}
 		clearDevSaveTimer()
 		devSaveTimer = setTimeout(() => {
@@ -361,7 +489,7 @@
 			clearDevResetTimer()
 			errorText.value = ''
 			noticeText.value = ''
-			uni.showToast({ title: '已进入开发者模式', icon: 'none' })
+			uni.showToast({ title: t('demo.login.devModeEntered'), icon: 'none' })
 			return
 		}
 		clearDevResetTimer()
@@ -370,56 +498,132 @@
 			devResetTimer = null
 		}, 3000)
 		if (devTapCount.value > 4) {
-			uni.showToast({ title: `再点 ${7 - devTapCount.value} 次进入开发者模式`, icon: 'none' })
+			uni.showToast({ title: t('demo.login.devTapHint', { count: 7 - devTapCount.value }), icon: 'none' })
 		}
 	}
 
 	function toggleAgreement() {
 		agreed.value = !agreed.value
-		if (agreed.value && errorText.value === '请先同意环信服务条款和隐私政策') {
-			errorText.value = ''
+	}
+
+	function requestAgreement(action: PendingAgreementAction): void {
+		pendingAgreementAction.value = action
+		agreementVisible.value = true
+	}
+
+	function onAgreementCancel(): void {
+		agreementVisible.value = false
+		pendingAgreementAction.value = null
+	}
+
+	function onAgreementConfirm(): void {
+		const action = pendingAgreementAction.value
+		if (action == null) return
+		agreed.value = true
+		agreementVisible.value = false
+		pendingAgreementAction.value = null
+		if (action === 'sms') {
+			onGetSms()
+		} else {
+			void onLogin()
 		}
 	}
 
 	function errorMessage(error: any): string {
 		if (error instanceof Error) return error.message
-		return '请求失败，请检查网络后重试'
+		return t('demo.login.requestFailed')
+	}
+
+	function logLoginError(stage: string, error: any, credentials: string[] = []): void {
+		let message = errorMessage(error)
+		const sensitiveValues = [phone.value, userId.value, token.value, smsCode.value, ...credentials]
+		for (const value of sensitiveValues) {
+			const sensitive = value.trim()
+			if (sensitive !== '') message = message.split(sensitive).join('[redacted]')
+		}
+		loginLogger.error(stage, message)
 	}
 
 	function validPhone(): boolean {
 		return /^1[3-9]\d{9}$/.test(phone.value)
 	}
 
-	async function onGetSms() {
+	function onGetSms() {
 		errorText.value = ''
 		noticeText.value = ''
 		if (!validPhone()) {
-			errorText.value = '请输入正确的手机号码'
+			errorText.value = t('demo.login.invalidPhone')
 			return
 		}
 		if (!canSendSms.value) return
+		if (!agreed.value) {
+			requestAgreement('sms')
+			return
+		}
+		if (CAPTCHA_SCENE_ID === '' || CAPTCHA_PREFIX === '' || CAPTCHA_SECRET === '') {
+			errorText.value = t('demo.login.captchaConfigMissing')
+			return
+		}
+		smsCaptchaVisible.value = true
+	}
+
+	function onSmsCaptchaCancel() {
+		smsCaptchaVisible.value = false
+	}
+
+	function onSmsCaptchaError(message: string) {
+		smsCaptchaVisible.value = false
+		errorText.value = message
+	}
+
+	async function onSmsCaptchaVerified(captchaVerifyParam: string) {
+		if (!smsCaptchaVisible.value || smsLoading.value || smsCountdown.value > 0) return
+		smsCaptchaVisible.value = false
+		errorText.value = ''
+		noticeText.value = ''
 		smsLoading.value = true
 		try {
-			await new Promise<void>((resolve) => {
-				setTimeout(() => resolve(), 500)
-			})
+			await sendLoginSms(phone.value, captchaVerifyParam)
 			startSmsCountdown()
-			noticeText.value = '开发环境模拟发送成功，已启动 60 秒倒计时'
+			noticeText.value = t('demo.login.smsSentNotice')
+		} catch (error: any) {
+			errorText.value = mapLoginSmsError(errorMessage(error))
 		} finally {
 			smsLoading.value = false
 		}
 	}
 
-	async function loginIm(id: string, credential: string): Promise<void> {
-		const appkey = getEffectiveAppKey()
+	async function loginIm(id: string, credential: string, appkey: string): Promise<void> {
 		if (appkey === '') {
-			throw new Error('请先在开发者配置中填写 AppKey')
+			throw new Error(t('demo.login.needAppKey'))
 		}
-		// 每个应用进程只生效一次；appkey 来自开发者配置，故 init 放在登录时而非 App.uvue
+		const start = Date.now()
+		if (EmKit.state.appkey !== '' && EmKit.state.appkey !== appkey) {
+			loginLogger.info('IM appkey changed, logout previous session')
+			try {
+				await EmKit.logout()
+			} catch (e) {}
+		}
+		loginLogger.info('IM init requested:', appkey)
 		// sdkLogLevel 取 WARN：鸿蒙上 SDK 的 DEBUG 日志会命中 ArkTS 限制打断会话同步
-		EmKit.init({ appkey, enableReadReceipt: true, sdkLogLevel: 'WARN' })
+		EmKit.init({
+			appkey,
+			enableReadReceipt: true,
+			logLevel: getLogLevel(),
+			sdkLogLevel: 'WARN',
+			onTokenWillExpire: tokenWillExpireHandler,
+			onTokenExpired: tokenExpiredHandler
+		})
+		loginLogger.info('IM login started')
 		await EmKit.login({ userId: id, token: credential })
-		uni.reLaunch({ url: '/pages/conversation/conversation' })
+		loginLogger.info('IM login succeeded:', `${Date.now() - start}ms`)
+		// 免输入自动登录凭证：登录成功即落盘，启动页据此直连
+		saveLoginCredentials(id, credential)
+		uni.reLaunch({
+			url: '/pages/conversation/conversation',
+			success: () => loginLogger.info('conversation navigation succeeded'),
+			fail: (error) => loginLogger.error('conversation navigation failed:', error)
+		})
 	}
 
 	async function onLogin() {
@@ -428,15 +632,20 @@
 		noticeText.value = ''
 		if (devEnabled.value) {
 			if (userId.value.trim() === '' || token.value.trim() === '') {
-				errorText.value = '请输入 userId 和 token'
+				errorText.value = t('demo.login.needUserToken')
 				return
 			}
 			const config = getDevConfig()
 			setDevConfig(new DevConfig(config.appKey, config.imServer, config.restServer, config.usePrivateServer, userId.value.trim(), token.value.trim()))
+			clearLoginCredentials()
+			// userId/token 登录不支持注销账户，清除可能残留的手机号凭证
+			clearPhoneCredentials()
+			loginLogger.info('developer login started')
 			loginLoading.value = true
 			try {
-				await loginIm(userId.value.trim(), token.value.trim())
+				await loginIm(userId.value.trim(), token.value.trim(), getEffectiveAppKey())
 			} catch (error: any) {
+				logLoginError('developer login failed:', error)
 				errorText.value = errorMessage(error)
 			} finally {
 				loginLoading.value = false
@@ -444,24 +653,29 @@
 			return
 		}
 		if (!agreed.value) {
-			errorText.value = '请先同意环信服务条款和隐私政策'
+			requestAgreement('login')
 			return
 		}
 		if (!validPhone()) {
-			errorText.value = '请输入正确的手机号码'
+			errorText.value = t('demo.login.invalidPhone')
 			return
 		}
 		if (smsCode.value.trim() === '') {
-			errorText.value = '验证码不能为空'
+			errorText.value = t('demo.login.smsRequired')
 			return
 		}
+		const start = Date.now()
+		loginLogger.info('phone login started')
 		loginLoading.value = true
 		try {
 			const result = await loginByPhone(phone.value, smsCode.value)
-			userId.value = result.chatUserName
-			token.value = result.token
-			await loginIm(result.chatUserName, result.token)
+			loginLogger.info('App Server login succeeded:', `${Date.now() - start}ms`)
+			clearLoginCredentials()
+			// 注销账户依赖手机号 + chatToken，登录成功后落盘
+			savePhoneCredentials(phone.value, result.token)
+			await loginIm(result.chatUserName, result.token, DEFAULT_APP_KEY)
 		} catch (error: any) {
+			logLoginError('phone login failed:', error)
 			errorText.value = mapPhoneLoginError(errorMessage(error), phone.value)
 		} finally {
 			loginLoading.value = false
@@ -473,15 +687,15 @@
 	}
 
 	function openHome() {
-		openPage('https://www.easemob.com', '环信')
+		openPage('https://www.easemob.com', t('demo.login.brand'))
 	}
 
 	function openTerms() {
-		openPage('https://www.easemob.com/demo/agreement', '服务条款')
+		openPage('https://www.easemob.com/demo/agreement', t('demo.login.termsService'))
 	}
 
 	function openPrivacy() {
-		openPage('https://www.easemob.com/console/privacy', '隐私政策')
+		openPage('https://www.easemob.com/console/privacy', t('demo.login.privacyTitle'))
 	}
 </script>
 
@@ -514,6 +728,23 @@
 
 	.login__glow--core {
 		background-image: linear-gradient(225deg, rgba(255, 214, 255, 0.5) 0%, rgba(255, 120, 255, 0.3) 8%, rgba(220, 80, 255, 0.1) 18%, rgba(220, 80, 255, 0) 30%);
+	}
+
+	/* 启动屏：与页面同底色，居中品牌 logo；凭证检查/自动登录期间替代登录表单 */
+	.login__splash {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		width: 100%;
+		height: 100%;
+		z-index: 10;
+	}
+
+	.login__splash-logo {
+		width: 200px;
+		height: 44px;
 	}
 
 	.login__brand {
@@ -719,6 +950,10 @@
 		border-style: solid;
 		border-color: transparent;
 		background-image: linear-gradient(135deg, #009eff 0%, #6c63ff 100%);
+		background-color: #009eff;
+		/* #ifdef APP-HARMONY */
+		background-image: none;
+		/* #endif */
 		font-size: 14px;
 		font-weight: 700;
 		line-height: 47px;
@@ -819,34 +1054,6 @@
 		color: rgba(255, 255, 255, 0.55);
 	}
 
-	.login__switch {
-		position: relative;
-		width: 36px;
-		height: 20px;
-		border-radius: 10px;
-		background-color: rgba(255, 255, 255, 0.12);
-	}
-
-	.login__switch--active {
-		background-color: rgba(0, 158, 255, 0.85);
-	}
-
-	.login__switch-dot {
-		position: absolute;
-		top: 4px;
-		left: 4px;
-		width: 12px;
-		height: 12px;
-		border-radius: 6px;
-		background-color: #ffffff;
-		transition-property: transform;
-		transition-duration: 0.2s;
-	}
-
-	.login__switch-dot--active {
-		transform: translateX(12px);
-	}
-
 	.login__dev-field {
 		margin-bottom: 16px;
 	}
@@ -880,6 +1087,10 @@
 		border-style: solid;
 		border-color: rgba(0, 0, 0, 0);
 		background-image: linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(109, 40, 217, 0.6));
+		background-color: rgba(109, 40, 217, 0.6);
+		/* #ifdef APP-HARMONY */
+		background-image: none;
+		/* #endif */
 		font-size: 14px;
 		font-weight: 700;
 		line-height: 42px;
@@ -889,6 +1100,10 @@
 
 	.login__dev-save--success {
 		background-image: linear-gradient(135deg, #34d399, #059669);
+		background-color: #059669;
+		/* #ifdef APP-HARMONY */
+		background-image: none;
+		/* #endif */
 	}
 
 	.login__dev-save--error {
@@ -954,9 +1169,18 @@
 	.login__terms {
 		display: flex;
 		flex-direction: row;
-		align-items: flex-start;
+		align-items: center;
 		justify-content: center;
 		margin-top: 18px;
+	}
+
+	.login__checkbox-hit {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 32px;
+		height: 32px;
 	}
 
 	.login__checkbox {
@@ -966,9 +1190,6 @@
 		flex-shrink: 0;
 		width: 16px;
 		height: 16px;
-		margin-top: 2px;
-		margin-right: 10px;
-		padding: 0;
 		border-radius: 4px;
 		border-width: 1.5px;
 		border-style: solid;
@@ -1001,6 +1222,65 @@
 
 	.login__terms-link {
 		font-size: 11px;
+		line-height: 20px;
+		font-weight: 600;
+		color: #009eff;
+	}
+
+	.login__agreement-dialog {
+		width: 300px;
+		padding: 24px;
+		box-sizing: border-box;
+	}
+
+	.login__agreement-title {
+		font-size: 18px;
+		font-weight: 600;
+		line-height: 26px;
+		color: #1f2937;
+	}
+
+	.login__agreement-content {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		margin-top: 16px;
+	}
+
+	.login__agreement-text,
+	.login__agreement-link {
+		font-size: 14px;
+		line-height: 22px;
+		color: #4b5563;
+	}
+
+	.login__agreement-link {
+		color: #009eff;
+	}
+
+	.login__agreement-actions {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: flex-end;
+		margin-top: 20px;
+	}
+
+	.login__agreement-action {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 64px;
+		height: 40px;
+		padding: 0 8px;
+	}
+
+	.login__agreement-action-text {
+		font-size: 15px;
+		color: #6b7280;
+	}
+
+	.login__agreement-action-text--confirm {
 		font-weight: 600;
 		color: #009eff;
 	}
@@ -1028,5 +1308,102 @@
 		font-size: 14px;
 		line-height: 24px;
 		color: rgba(255, 255, 255, 0.25);
+	}
+
+	.login__logs-entry {
+		margin-top: 2px;
+		padding: 8px 16px;
+		text-align: center;
+		font-size: 12px;
+		line-height: 24px;
+		color: #009eff;
+	}
+
+	.login__logs-panel {
+		display: flex;
+		flex-direction: column;
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background-color: #100c35;
+		z-index: 1200;
+	}
+
+	.login__logs-header {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		flex-shrink: 0;
+		height: 56px;
+		padding-right: 16px;
+		padding-left: 20px;
+		border-bottom-width: 1px;
+		border-bottom-style: solid;
+		border-bottom-color: rgba(255, 255, 255, 0.1);
+		box-sizing: content-box;
+	}
+
+	.login__logs-title {
+		font-size: 17px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.login__logs-close {
+		margin: 0;
+		padding: 0 8px;
+		background-color: transparent;
+		font-size: 14px;
+		line-height: 44px;
+		color: #009eff;
+	}
+
+	.login__logs-close::after,
+	.login__logs-copy::after {
+		border-width: 0;
+	}
+
+	.login__logs-scroll {
+		flex: 1;
+		height: 0;
+		padding: 16px 20px;
+		box-sizing: border-box;
+	}
+
+	.login__logs-text {
+		font-size: 11px;
+		line-height: 18px;
+		white-space: pre-wrap;
+		color: rgba(255, 255, 255, 0.75);
+	}
+
+	.login__logs-actions {
+		flex-shrink: 0;
+		padding-top: 12px;
+		padding-right: 20px;
+		padding-left: 20px;
+		border-top-width: 1px;
+		border-top-style: solid;
+		border-top-color: rgba(255, 255, 255, 0.1);
+	}
+
+	.login__logs-copy {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 44px;
+		padding: 0 16px;
+		border-radius: 8px;
+		background-color: #009eff;
+		font-size: 14px;
+		line-height: 42px;
+		color: #ffffff;
+	}
+
+	.login__logs-copy--disabled {
+		opacity: 0.4;
 	}
 </style>
