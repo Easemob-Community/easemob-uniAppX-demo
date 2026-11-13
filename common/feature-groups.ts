@@ -2,7 +2,7 @@ import type { DemoFeatureKeyValue } from './settings-state'
 import type { UIKitFeatureKey } from './uikit-feature-state'
 
 export type FeatureActionKey = 'aiStream' | 'exportLogs' | 'sdkCheck' | 'components' | 'states'
-export type UIKitChoiceKey = 'inputMode' | 'quickReplyMode' | 'avatarShape' | 'messageStatusPosition'
+export type UIKitChoiceKey = 'inputMode' | 'quickReplyMode' | 'messageStatusPosition'
 
 export interface SwitchDef {
 	kind: 'switch'
@@ -125,11 +125,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 			uikit('conversationDelete', 'demo.settings.features.conversationDelete'),
 			uikit('conversationConnectionBanner', 'demo.settings.features.connectionBanner'),
 			uikit('conversationSearch', 'demo.settings.features.conversationSearch'),
-			uikit('conversationTabs', 'demo.settings.features.conversationTabs'),
-			choice('avatarShape', 'demo.settings.features.conversationAvatarShape', [
-				{ value: 'circle', labelKey: 'demo.settings.features.avatarCircle' },
-				{ value: 'square', labelKey: 'demo.settings.features.avatarSquare' }
-			])
+			uikit('conversationTabs', 'demo.settings.features.conversationTabs')
 		]
 	},
 	{
@@ -145,11 +141,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 			uikit('chatAnnouncement', 'demo.settings.features.chatAnnouncement'),
 			uikit('chatMention', 'demo.settings.features.chatMention'),
 			uikit('chatSenderName', 'demo.settings.features.chatSenderName'),
-			uikit('enableGroupNameEdit', 'demo.settings.features.enableGroupNameEdit'),
-			choice('avatarShape', 'demo.settings.features.avatarShape', [
-				{ value: 'circle', labelKey: 'demo.settings.features.avatarCircle' },
-				{ value: 'square', labelKey: 'demo.settings.features.avatarSquare' }
-			])
+			uikit('enableGroupNameEdit', 'demo.settings.features.enableGroupNameEdit')
 		]
 	},
 	{

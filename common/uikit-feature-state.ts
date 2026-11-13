@@ -200,7 +200,8 @@ export function applyUIKitFeatures(): void {
 		messageMenuKeys: enabledMessageKeys(state),
 		conversationMenuKeys: enabledConversationKeys(state),
 		contactMenuKeys: enabledContactKeys(state),
-		messageStatus: { position: state.messageStatusPosition }
+		messageStatus: { position: state.messageStatusPosition },
+		avatarShape: state.avatarShape
 	})
 }
 
