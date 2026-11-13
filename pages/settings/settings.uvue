@@ -7,10 +7,9 @@
 					v-for="item in menuItems"
 					:key="item.key"
 					class="item"
-					:class="{ 'item--active': activeKey === item.key }"
 					@click="onSelect(item)"
 				>
-					<em-icon :name="iconOf(item)" :size="24" :color="activeKey === item.key ? 'var(--em-primary-color)' : 'var(--em-text-primary)'" />
+					<em-icon :name="item.icon" :size="24" color="var(--em-text-primary)" />
 					<text class="label">{{ item.label }}</text>
 				</view>
 			</view>
@@ -24,7 +23,6 @@
 	import { EmKit, useLocale, useTabBarBadge, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 	import type { EmIconName } from '@/uni_modules/easemob-uikit-uni/components/em-icon/em-icons'
 	import { syncTabBarLocale } from '@/common/locale/index'
-	import { settingsActiveKey } from '@/common/settings-state'
 	import { demoPrimaryColorStyle } from '@/common/theme-style'
 
 	const { t } = useLocale()
@@ -43,47 +41,35 @@
 		key: string
 		label: string
 		icon: EmIconName
-		iconFilled: EmIconName
 		url: string
 	}
 
-	// 菜单项对齐 vue3 demo：线性图标 + 选中项切 filled 面性变体
 	const menuItems = computed<MenuItem[]>(() => [
 		{
 			key: 'account',
 			label: t('demo.settings.menu.account'),
 			icon: 'person-single',
-			iconFilled: 'person-single-filled',
 			url: '/pages/settings/account',
 		},
 		{
 			key: 'general',
 			label: t('demo.settings.menu.general'),
 			icon: 'flower',
-			iconFilled: 'flower-filled',
 			url: '/pages/settings/general',
 		},
 		{
 			key: 'about',
 			label: t('demo.settings.menu.about'),
 			icon: 'rect-candle',
-			iconFilled: 'rect-candle-filled',
 			url: '/pages/settings/about',
 		},
 		{
 			key: 'features',
 			label: t('demo.settings.menu.features'),
 			icon: 'console',
-			iconFilled: 'console-filled',
 			url: '/pages/settings/features',
 		},
 	])
-
-	const activeKey = settingsActiveKey
-
-	function iconOf(item: MenuItem): EmIconName {
-		return activeKey.value === item.key ? item.iconFilled : item.icon
-	}
 
 	onShow(() => {
 		if (EmKit.state.userId === '') {
@@ -96,7 +82,6 @@
 	})
 
 	function onSelect(item: MenuItem): void {
-		settingsActiveKey.value = item.key
 		uni.navigateTo({ url: item.url })
 	}
 </script>
@@ -124,7 +109,7 @@
 		padding: 0 8px 8px;
 	}
 
-	/* 菜单项：64px 高、24px 图标、14px 文字、圆角 8px；常态无底，选中品牌色 + 浅蓝底 */
+	/* 菜单项：64px 高、24px 图标、14px 文字、圆角 8px */
 	.item {
 		display: flex;
 		flex-direction: row;
@@ -136,17 +121,9 @@
 		border-radius: var(--em-component-radius, 8px);
 	}
 
-	.item--active {
-		background-color: var(--em-bg-active);
-	}
-
 	.label {
 		font-size: var(--em-font-size-14, 14px);
 		font-weight: var(--em-font-weight-medium, 500);
 		color: var(--em-text-primary);
-	}
-
-	.item--active .label {
-		color: var(--em-primary-color);
 	}
 </style>

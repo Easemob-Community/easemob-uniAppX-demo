@@ -1,7 +1,5 @@
-// 设置页菜单选中态 + demo 业务特性开关（模块级共享，持久化到 uni storage）
+// demo 业务特性开关（模块级共享，持久化到 uni storage）
 import { ref } from 'vue'
-
-export const settingsActiveKey = ref<string>('account')
 
 // ===== demo 业务特性开关（features 页直连，聊天页/会话页消费） =====
 // 与 uiConfig 解耦：这些是 demo 宿主侧能力，不进 uikit 配置容器

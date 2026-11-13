@@ -23,7 +23,7 @@
   - `request.ts`：`requestJson` 统一请求封装
   - `auth-api.ts`：登录/短信/手机号解析/注销/头像上传等 App Server 接口
   - `account-state.ts`：手机号登录凭证与签名的本地存储
-  - `settings-state.ts`：设置页共享的响应式状态与 Demo 业务开关
+  - `settings-state.ts`：Demo 业务开关的共享响应式状态与持久化
   - `uikit-feature-state.ts`：UIKit 特性开关/选择项的统一响应式状态、持久化与 `setConfig` 同步
   - `theme-style.ts`：主题色及聊天气泡色的持久化与页面样式
   - `ai-stream-demo.ts`：AI 流式消息演示请求与本地分片模拟
