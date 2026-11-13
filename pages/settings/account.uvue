@@ -501,6 +501,7 @@
 	.action-btn-text {
 		font-size: var(--em-font-size-14, 14px);
 		font-weight: var(--em-font-weight-medium, 500);
+		color: var(--em-text-inverse);
 	}
 
 	/* ===== 编辑弹窗 ===== */
