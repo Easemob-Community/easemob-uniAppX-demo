@@ -13,7 +13,6 @@
 			:show-announcement="uikitFeatures.chatAnnouncement"
 			:enable-mention="uikitFeatures.chatMention"
 			:sender-name-mode="uikitFeatures.chatSenderName ? 'always' : 'hidden'"
-			:avatar-shape="uikitFeatures.avatarShape"
 			:quick-replies="quickReplies"
 			:quick-reply-mode="uikitFeatures.quickReplyMode"
 			@open-info="onOpenInfo"

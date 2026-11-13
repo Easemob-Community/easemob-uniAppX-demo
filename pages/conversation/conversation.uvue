@@ -4,7 +4,6 @@
 			:show-connection-banner="uikitFeatures.conversationConnectionBanner"
 			:show-search="uikitFeatures.conversationSearch"
 			:show-tabs="uikitFeatures.conversationTabs"
-			:avatar-shape="uikitFeatures.avatarShape"
 			@select="onSelect"
 			@menu="onMenu"
 		/>
