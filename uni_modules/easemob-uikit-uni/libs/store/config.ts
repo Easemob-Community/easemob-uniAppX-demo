@@ -47,6 +47,7 @@ export const uiConfig = reactive<EmUiConfig>({
   contactMenuKeys: [CONTACT_MENU_KEY.REMARK, CONTACT_MENU_KEY.DELETE],
   emojiList: DEFAULT_EMOJI_LIST,
   primaryColor: '',
+  avatarShape: 'circle',
   logPayload: false
 })
 
@@ -114,6 +115,7 @@ export function applyKitConfig(kitConfig: EmKitConfig): void {
   if (kitConfig.conversationMenuKeys != null) patch.conversationMenuKeys = [...kitConfig.conversationMenuKeys]
   if (kitConfig.contactMenuKeys != null) patch.contactMenuKeys = [...kitConfig.contactMenuKeys]
   if (kitConfig.emojiList != null) patch.emojiList = [...kitConfig.emojiList]
+  if (kitConfig.avatarShape !== undefined) patch.avatarShape = kitConfig.avatarShape
   if (kitConfig.logPayload !== undefined) patch.logPayload = kitConfig.logPayload
   setConfig(patch)
   if (kitConfig.primaryColor != null && kitConfig.primaryColor !== '') {

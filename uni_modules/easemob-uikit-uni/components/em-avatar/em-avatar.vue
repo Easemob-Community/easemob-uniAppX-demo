@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import EmBadge from '../em-badge/em-badge.vue'
+import { useConfig } from '../../libs/store/config'
 import { useNamespace } from '../../libs/use/useNamespace'
 
 // 文字头像占位底色板（平移自 Web 版 avatar.vue）：按 name 首字符 hash 取色；
@@ -40,7 +41,6 @@ const props = withDefaults(defineProps<Props>(), {
   src: '',
   name: '',
   size: 40,
-  shape: 'circle',
   badge: 0,
   badgeDot: false,
   badgeMax: 99,
@@ -51,6 +51,8 @@ const props = withDefaults(defineProps<Props>(), {
 defineOptions({ styleIsolation: 'app-and-page', virtualHost: true })
 
 const ns = useNamespace('avatar')
+const { config } = useConfig()
+const resolvedShape = computed(() => props.shape ?? config.avatarShape)
 
 const loadFailed = ref(false)
 const showImage = computed(() => props.src.length > 0 && !loadFailed.value)
@@ -64,13 +66,13 @@ const placeholderColor = computed(() => {
   return palette[props.name.charCodeAt(0) % palette.length]
 })
 
-const rootClass = computed(() => [ns.b(), ns.m(props.shape)])
+const rootClass = computed(() => [ns.b(), ns.m(resolvedShape.value)])
 const rootStyle = computed(() => {
   const base = `width: ${props.size}px; height: ${props.size}px;`
   if (showImage.value) return base
   return `${base} background-color: ${placeholderColor.value};`
 })
-const imgClass = computed(() => [ns.e('img'), ns.m(props.shape)])
+const imgClass = computed(() => [ns.e('img'), ns.m(resolvedShape.value)])
 const nameStyle = computed(() => `font-size: ${Math.round(props.size * 0.4)}px;`)
 
 // 徽标内置（平移 Web 版规范）：定位偏移随头像尺寸换算（基准 48px → 负偏移 = 直径/4）；

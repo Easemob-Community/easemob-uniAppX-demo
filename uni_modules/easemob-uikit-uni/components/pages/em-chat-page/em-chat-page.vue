@@ -153,7 +153,7 @@
               <em-text :text="m.text" :text-class="ns.e('notice-text')" :text-style="noticeTextStyle" :class="ns.e('notice-text-host')" />
             </view>
             <template v-else>
-              <em-avatar :src="avatarOf(m.from)" :name="senderNameOf(m)" :size="36" :shape="avatarShape" />
+              <em-avatar :src="avatarOf(m.from)" :name="senderNameOf(m)" :size="36" :shape="resolvedAvatarShape" />
               <view :class="[ns.e('content'), m.self && ns.m('content-self')]">
                 <!-- 群聊发送者昵称行（己方不显示；senderNameMode 控制显隐，伪装模式预留 'on-change' 档） -->
                 <em-text v-if="showSenderName(m)" :text="senderNameOf(m)" :text-class="ns.e('sender-name')" :text-style="senderNameTextStyle" :class="ns.e('sender-name-host')" />
@@ -502,7 +502,7 @@ interface Props {
   conversationId: string
   /** 会话类型（M2.9 起必传，breaking）：单聊/群聊行为分流（typing/已读回执单聊专属，群聊走群数据层） */
   chatType: ConversationTypeValue
-  /** 头像形状（透传 em-avatar 的 shape），默认 'circle' */
+  /** 头像形状局部覆盖（透传 em-avatar 的 shape），缺省跟随全局配置（全局默认 'circle'） */
   avatarShape?: EmAvatarShape
   /** 群聊标题区成员数副标题显隐（仅群聊生效；typing 单聊专属，两态互斥），默认 true */
   showMemberCount?: boolean
@@ -547,7 +547,6 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  avatarShape: 'circle',
   showMemberCount: true,
   senderNameMode: 'always',
   showAnnouncement: true,
@@ -588,6 +587,7 @@ const ns = useNamespace('chat-page')
 const { themeClass } = useTheme()
 const { t } = useLocale()
 const { config } = useConfig()
+const resolvedAvatarShape = computed(() => props.avatarShape ?? config.avatarShape)
 const resolvedInputFeatures = computed<EmInputFeatures>(() => ({ ...config.inputFeatures, ...props.inputFeatures }))
 const resolvedMessageMenuKeys = computed<MessageMenuKeyValue[]>(() => props.messageMenuKeys ?? config.messageMenuKeys)
 

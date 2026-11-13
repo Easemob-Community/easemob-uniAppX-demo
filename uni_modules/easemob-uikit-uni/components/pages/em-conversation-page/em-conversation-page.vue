@@ -24,7 +24,7 @@
           <!-- 首次同步骨架：条目形态对齐 em-conversation-item（头像 + 名字/时间行 + 摘要/未读行，逐行变宽） -->
           <view v-if="syncing && items.length === 0" :class="ns.e('skeleton')">
             <view v-for="(nameWidth, index) in SKELETON_NAME_WIDTHS" :key="index" :class="ns.e('skeleton-item')">
-              <em-skeleton variant="avatar" :shape="avatarShape" width="48px" height="48px" />
+              <em-skeleton variant="avatar" :shape="resolvedAvatarShape" width="48px" height="48px" />
               <view :class="ns.e('skeleton-body')">
                 <view :class="ns.e('skeleton-top')">
                   <em-skeleton :width="nameWidth" height="16px" />
@@ -63,7 +63,7 @@
             :item="entry.item"
             :name="entry.name"
             :avatar="entry.avatar"
-            :avatar-shape="avatarShape"
+            :avatar-shape="resolvedAvatarShape"
             :time-text="entry.timeText"
             :draft="entry.draft"
             :has-at-me="entry.hasAtMe"
@@ -164,7 +164,7 @@ interface Props {
   autoSync?: boolean
   /** 顶部连接状态条显隐，默认 true */
   showConnectionBanner?: boolean
-  /** 会话列表头像形状，默认 'circle' */
+  /** 会话列表头像形状局部覆盖，缺省跟随全局配置（全局默认 'circle'） */
   avatarShape?: EmAvatarShape
   /** 组件级水印：字符串=文案；对象=可调样式；不传不渲染；空串=不显示（运行期开关） */
   watermark?: string | EmWatermarkOptions
@@ -180,7 +180,6 @@ const props = withDefaults(defineProps<Props>(), {
   emptyText: '',
   autoSync: true,
   showConnectionBanner: true,
-  avatarShape: 'circle',
   customClass: '',
   customStyle: ''
 })
@@ -194,6 +193,7 @@ const ns = useNamespace('conversation-page')
 const { themeClass } = useTheme()
 const { t } = useLocale()
 const { config } = useConfig()
+const resolvedAvatarShape = computed(() => props.avatarShape ?? config.avatarShape)
 
 const syncFailed = computed(() => conversationStore.syncFailed)
 const syncPending = ref(false)

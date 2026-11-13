@@ -28,6 +28,8 @@
 
 ### 新增
 
+- **全局头像形状配置**：`EmKitConfig` / `EmUiConfig` 新增 `avatarShape`（`'circle' | 'square'`，默认 `'circle'`），支持经 `EmKit.init` 或 `setConfig` 统一设置。`em-avatar`、聊天页、会话页及会话条目未显式传入形状时跟随全局配置，局部 `shape` / `avatarShape` 仍可覆盖；会话首次同步的头像骨架屏同步该形状。
+
 - **WebSDK 初始化配置统一透传**：`EmKitConfig` 新增 `sdkInitOptions`（公开类型 `EmSdkInitOptions`），支持 WebSDK 全部非身份类原生初始化选项，普通字段优先于 UIKit 默认值；必需 Manager 保留并与自定义值去重合并，同步类型支持显式替换，平台适配器与 UIKit 兼容修复组合。默认新增仅含平台名的 `loginExtensionInfo` 设备名 JSON（例如 `{"deviceName":"android"}`），不读取或上报品牌、型号和系统版本；自动 `deviceId` 固定为 `Platform_uikitVersion_uuid` 三段式，旧六段式持久化值自动重新派生。宿主可通过 `sdkInitOptions.loginExtensionInfo` 覆盖并加入业务自定义字段。
 
 - **复合消息接收展示**：`easemob-websdk` 升级为 5.2.0；新增 `MESSAGE_TYPE.MULTI_BODY`、`EmMessageItem.segments` 与 `em-multi-body-message`，在单个气泡内按顺序展示文本、图片、语音、视频、文件、位置和自定义分段。支持会话首段摘要、全部文本分段复制、父消息引用/置顶/撤回/删除，以及分段图片预览、视频播放、语音播放和文件下载。当前不提供复合消息创建或发送能力。

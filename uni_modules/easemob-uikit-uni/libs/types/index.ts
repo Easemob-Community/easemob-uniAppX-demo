@@ -154,6 +154,8 @@ export interface EmUiConfig {
   emojiList: string[]
   /** 品牌色覆盖（init 时落 --em-primary-color），空串 = 用 token 默认 */
   primaryColor: string
+  /** 全局头像形状，默认 'circle'；组件显式 shape/avatarShape 优先 */
+  avatarShape: EmAvatarShape
   /** 是否把 SDK 原始 payload 写入日志（默认 false；开启后仅 debug 级别采集，仍可能含 userId/昵称等，生产慎用） */
   logPayload: boolean
 }
@@ -227,6 +229,8 @@ export interface EmKitConfig {
   emojiList?: string[]
   /** 品牌色（合法 CSS 颜色值），init 时写 --em-primary-color；不传用 token 默认 */
   primaryColor?: string
+  /** 全局头像形状，默认 'circle'；组件显式 shape/avatarShape 优先 */
+  avatarShape?: EmAvatarShape
   /** Token 即将过期（约 80% 生命周期）回调：返回新 token，UIKit 自动 `renewToken`。
    *  不实现时 SDK 会继续用旧 token 直到过期，宿主可随时手动 `EmKit.renewToken(token)` */
   onTokenWillExpire?: () => string | Promise<string>

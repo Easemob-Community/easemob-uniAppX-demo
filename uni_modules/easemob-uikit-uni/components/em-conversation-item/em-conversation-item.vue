@@ -64,7 +64,7 @@ interface Props {
   item: EmConversationItem                          // 会话数据（含置顶/免打扰/未读数/摘要）
   name: string                                      // 展示名（页面侧已走 nickname > conversation.name > id 回落链）
   avatar: string                                    // 头像 URL（已合并 userStore 与 conversation.avatar）
-  avatarShape?: EmAvatarShape                       // 头像形状，默认圆形
+  avatarShape?: EmAvatarShape                       // 头像形状局部覆盖，缺省跟随全局配置
   timeText: string                                  // 五档格式化时间（formatConversationTime，草稿时间优先在页面侧已并入）
   draft: { text: string, time: number } | null      // 草稿态；null 展示最后消息摘要
   hasAtMe?: boolean                                 // 群聊「有人@我」未读标记（摘要主色前缀），默认 false
@@ -74,7 +74,6 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  avatarShape: 'circle',
   hasAtMe: false,
   ext: undefined,
   customClass: '',

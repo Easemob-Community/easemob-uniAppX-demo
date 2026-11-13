@@ -15,10 +15,10 @@
         <em-search-bar v-model="keyword" :placeholder="t('group.searchPlaceholder')" />
 
         <scroll-view :class="ns.e('scroll')" scroll-y @scrolltolower="onScrollToLower">
-          <!-- 群同步骨架：条目形态对齐真实群条目（方形头像 + 群名 + 右侧人数，部分群无人数），逐行变宽 -->
+          <!-- 群同步骨架：条目形态对齐真实群条目（全局形状头像 + 群名 + 右侧人数，部分群无人数），逐行变宽 -->
           <view v-if="syncing && items.length === 0" :class="ns.e('skeleton')">
             <view v-for="(nameWidth, index) in SKELETON_NAME_WIDTHS" :key="index" :class="ns.e('skeleton-item')">
-              <em-skeleton variant="avatar" shape="square" width="48px" height="48px" />
+              <em-skeleton variant="avatar" :shape="config.avatarShape" width="48px" height="48px" />
               <view :class="ns.e('skeleton-lines')">
                 <em-skeleton :width="nameWidth" height="16px" />
               </view>
@@ -45,7 +45,7 @@
             :class="ns.e('item')"
             @click="emit('click-group', entry.group.groupId)"
           >
-            <em-avatar :src="entry.avatar" :name="entry.name" :size="48" shape="square" />
+            <em-avatar :src="entry.avatar" :name="entry.name" :size="48" />
             <em-text :text="entry.name" :text-class="ns.e('name')" :text-style="nameTextStyle" :class="ns.e('name-host')" />
             <text v-if="entry.group.memberCount > 0" :class="ns.e('count')">{{ entry.group.memberCount }}</text>
           </view>
@@ -127,7 +127,7 @@ import { EmKit } from '../../../libs'
 import { CONVERSATION_TYPE, GROUP_NAME_MAX_LENGTH, LOAD_MORE_STATE, SELECT_CONTACT_MODE } from '../../../libs/constants'
 import { groupAvatarOf, groupDisplayNameOf, groupStore } from '../../../libs/store/group'
 import { contactDisplayNameOf, contactStore } from '../../../libs/store/contact'
-import { primaryColorStyle } from '../../../libs/store/config'
+import { primaryColorStyle, useConfig } from '../../../libs/store/config'
 import { avatarOf } from '../../../libs/store/user'
 import { TEXT_STYLE_NAME } from '../../../libs/style/textStyles'
 import type { LoadMoreStateValue } from '../../../libs/constants'
@@ -170,6 +170,7 @@ const emit = defineEmits<{
 const ns = useNamespace('group-page')
 const { themeClass } = useTheme()
 const { t } = useLocale()
+const { config } = useConfig()
 
 const nameTextStyle = TEXT_STYLE_NAME
 
