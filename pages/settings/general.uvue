@@ -18,6 +18,19 @@
 				</view>
 			</view>
 
+			<text class="group-title group-title--divider">{{ t('demo.settings.language') }}</text>
+			<view class="rows">
+				<view
+					v-for="option in localeOptions"
+					:key="option.value"
+					class="row"
+					@click="onLocaleSelect(option.value)"
+				>
+					<text class="row-label">{{ option.label }}</text>
+					<view class="radio" :class="{ 'radio--checked': currentLocale === option.value }" />
+				</view>
+			</view>
+
 			<text class="group-title group-title--divider">{{ t('demo.settings.styleTheme') }}</text>
 			<view class="rows">
 				<view v-for="group in colorGroups" :key="group.key" class="color-row">
@@ -42,17 +55,19 @@
 					</view>
 				</view>
 			</view>
-
-			<text class="group-title group-title--divider">{{ t('demo.settings.language') }}</text>
-			<view class="rows">
-				<view
-					v-for="option in localeOptions"
-					:key="option.value"
-					class="row"
-					@click="onLocaleSelect(option.value)"
-				>
-					<text class="row-label">{{ option.label }}</text>
-					<view class="radio" :class="{ 'radio--checked': currentLocale === option.value }" />
+			<view class="avatar-options">
+				<text class="row-label">{{ t('demo.settings.avatarShape') }}</text>
+				<text class="color-hint">{{ t('demo.settings.avatarShapeHint') }}</text>
+				<view class="rows">
+					<view
+						v-for="option in avatarOptions"
+						:key="option.value"
+						class="row"
+						@click="onAvatarShapeSelect(option.value)"
+					>
+						<text class="row-label">{{ option.label }}</text>
+						<view class="radio" :style="avatarRadioStyle(option.value)" />
+					</view>
 				</view>
 			</view>
 		</scroll-view>
@@ -62,8 +77,9 @@
 <script setup lang="ts">
 	import { computed } from 'vue'
 	import { getLocale, LOCALE, setLocale, THEME_MODE, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
-	import type { LocaleValue, ThemeModeValue } from '@/uni_modules/easemob-uikit-uni/libs'
+	import type { EmAvatarShape, LocaleValue, ThemeModeValue } from '@/uni_modules/easemob-uikit-uni/libs'
 	import { syncTabBarLocale } from '@/common/locale/index'
+	import { setUIKitFeature, uikitFeatures } from '@/common/uikit-feature-state'
 	import {
 		demoPrimaryColorStyle,
 		demoThemeColors,
@@ -123,6 +139,22 @@
 		{ label: t('demo.settings.langEN'), value: LOCALE.EN },
 	])
 
+	const avatarShape = computed(() => uikitFeatures.value.avatarShape)
+
+	function avatarRadioStyle(value: EmAvatarShape): string {
+		const checked = avatarShape.value === value
+		return `border-width: ${checked ? 6 : 1}px; border-color: var(${checked ? '--em-primary-color' : '--em-border-color'});`
+	}
+
+	const avatarOptions = computed<{ label: string; value: EmAvatarShape }[]>(() => [
+		{ label: t('demo.settings.avatarCircle'), value: 'circle' },
+		{ label: t('demo.settings.avatarSquare'), value: 'square' }
+	])
+
+	function onAvatarShapeSelect(value: EmAvatarShape): void {
+		setUIKitFeature('avatarShape', value)
+	}
+
 	function onThemeSelect(value: ThemeModeValue): void {
 		setTheme(value)
 	}
@@ -146,6 +178,7 @@
 
 	.body {
 		flex: 1;
+		height: 0;
 		min-height: 0;
 		padding: 16px 16px 24px;
 	}
@@ -181,6 +214,12 @@
 		font-size: var(--em-font-size-14, 14px);
 		font-weight: var(--em-font-weight-medium, 500);
 		color: var(--em-text-primary);
+	}
+
+	.avatar-options {
+		display: flex;
+		flex-direction: column;
+		padding-top: 12px;
 	}
 
 	.color-row {
