@@ -4,14 +4,17 @@
 		<scroll-view scroll-y class="body" :style="demoPrimaryColorStyle()">
 			<text class="group-title">{{ t('demo.settings.general') }}</text>
 			<view class="rows">
-				<view
-					v-for="option in themeOptions"
-					:key="option.value"
-					class="row"
-					@click="onThemeSelect(option.value)"
-				>
-					<text class="row-label">{{ option.label }}</text>
-					<view class="radio" :class="{ 'radio--checked': preference === option.value }" />
+				<view class="row" @click="onThemeSelect(THEME_MODE.AUTO)">
+					<text class="row-label">{{ t('demo.settings.themeAuto') }}</text>
+					<view class="radio" :class="{ 'radio--checked': preference === THEME_MODE.AUTO }" />
+				</view>
+				<view class="row" @click="onThemeSelect(THEME_MODE.LIGHT)">
+					<text class="row-label">{{ t('demo.settings.themeLight') }}</text>
+					<view class="radio" :class="{ 'radio--checked': preference === THEME_MODE.LIGHT }" />
+				</view>
+				<view class="row" @click="onThemeSelect(THEME_MODE.DARK)">
+					<text class="row-label">{{ t('demo.settings.themeDark') }}</text>
+					<view class="radio" :class="{ 'radio--checked': preference === THEME_MODE.DARK }" />
 				</view>
 			</view>
 
@@ -84,12 +87,6 @@
 	}
 
 	const preference = computed(() => themeStore.preference)
-	const themeOptions = computed<{ label: string; value: ThemeModeValue }[]>(() => [
-		{ label: t('demo.settings.themeAuto'), value: THEME_MODE.AUTO },
-		{ label: t('demo.settings.themeLight'), value: THEME_MODE.LIGHT },
-		{ label: t('demo.settings.themeDark'), value: THEME_MODE.DARK },
-	])
-
 	const colorGroups = computed<ColorGroup[]>(() => [
 		{
 			key: 'primaryColor',
