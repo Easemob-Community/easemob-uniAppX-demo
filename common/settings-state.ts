@@ -5,7 +5,6 @@ import { ref } from 'vue'
 // 与 uiConfig 解耦：这些是 demo 宿主侧能力，不进 uikit 配置容器
 
 export interface DemoFeatureKeyValue {
-	watermark: boolean
 	contactCard: boolean
 	messageForward: boolean
 }
@@ -13,7 +12,6 @@ export interface DemoFeatureKeyValue {
 const STORAGE_KEY = 'demo_feature_toggles'
 
 const DEFAULTS: DemoFeatureKeyValue = {
-	watermark: true,
 	contactCard: true,
 	messageForward: true
 }

@@ -133,7 +133,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 		titleKey: 'demo.features.group.chat',
 		subKey: 'demo.features.group.chatSub',
 		items: [
-			demo('watermark', 'demo.settings.features.watermark'),
 			demo('contactCard', 'demo.settings.features.contactCard'),
 			uikit('chatConnectionBanner', 'demo.settings.features.connectionBanner'),
 			uikit('chatDetailEntry', 'demo.settings.features.chatDetailEntry'),
