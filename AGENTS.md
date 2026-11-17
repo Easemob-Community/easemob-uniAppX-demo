@@ -41,6 +41,12 @@
 - tabBar 文案随语言切换由 `syncTabBarLocale()` 处理（`common/locale/index.ts`），仅在 tab 页上生效。
 - `unpackage/` 是构建产物，不要手改；HBuilderX 编译验证为准。
 
+## 鸿蒙 WebView 与弹层
+
+- 鸿蒙 `web-view` 创建时会对 `src` 直接做路径解析，`null` 会触发 `startsWith` 异常；隐藏时用 `v-if` 避免创建，显示时绑定字符串 URL，并用 `APP-HARMONY` 条件编译保留其他平台已验证路径。
+- 当前鸿蒙 runtime 同帧关闭协议弹层并创建验证 WebView，可能丢失两层 `top` 更新，表现为协议层仍遮挡、验证层仍在 `top:200%`，但已有 WebView 日志。先用 `hdc shell uitest dumpLayout -i` 确认，再仅鸿蒙用 `setTimeout(..., 0)` 把打开验证拆到下一轮任务；不要无证据加延时。
+- 验收必须看真机画面并实际完成滑块、短信发送与倒计时；`getMessage`、`@load` 或 Vue `visible=true` 不能单独证明 WebView 可见可交互。详细示例见 `.agents/skills/uniappx-vapor-guide/SKILL.md`。
+
 ## 回退方案
 
 若 HBuilderX 版本较旧、蒸汽模式下无法解析 `.ts` 外部模块（报无法找到模块之类错误），把 `common/` 文件改回 `.uts` 后缀即可（ts 写法在 .uts 文件里蒸汽模式同样支持），并同步恢复 import 路径。
