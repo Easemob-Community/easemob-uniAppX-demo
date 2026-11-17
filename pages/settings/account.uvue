@@ -135,6 +135,13 @@
 		})
 	}
 
+	function cacheOwnNickname(userId: string, nickname: string): void {
+		mergeUserInfo({ userId, nickname, avatarUrl: '' })
+		if (EmKit.users.overrideByUserId[userId]?.nickname === userId) {
+			EmKit.setUserPresentation(userId, { nickname: '' })
+		}
+	}
+
 	async function fetchOwnProfile(): Promise<void> {
 		const id = userId.value
 		if (id === '') return
@@ -145,7 +152,7 @@
 			if (me == null) return
 			const info = me as unknown as Record<string, any>
 			if (typeof info['nickname'] === 'string' && info['nickname'] !== '') {
-				mergeUserInfo({ userId: id, nickname: info['nickname'], avatarUrl: '' } as EmUserInfo)
+				cacheOwnNickname(id, info['nickname'])
 			}
 			if (typeof info['avatarUrl'] === 'string' && info['avatarUrl'] !== '') {
 				mergeUserInfo({ userId: id, nickname: '', avatarUrl: info['avatarUrl'] } as EmUserInfo)
@@ -217,7 +224,7 @@
 			const id = userId.value
 			if (editField.value === 'nickname') {
 				await mgr.updateOwnInfoByAttribute('nickname', trimmed)
-				mergeUserInfo({ userId: id, nickname: trimmed, avatarUrl: '' } as EmUserInfo)
+				cacheOwnNickname(id, trimmed)
 			} else {
 				await mgr.updateOwnInfoByAttribute('sign', trimmed)
 				signature.value = trimmed
