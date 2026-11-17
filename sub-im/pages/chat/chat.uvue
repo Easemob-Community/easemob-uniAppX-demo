@@ -4,7 +4,7 @@
 			v-if="conversationId !== ''"
 			:conversation-id="conversationId"
 			:chat-type="chatType"
-			:watermark="watermarkText"
+			watermark="环信Demo 仅供参考，谨防诈骗！"
 			:extra-message-menus="extraMessageMenus"
 			:custom-style="demoBubbleColorStyle()"
 			:show-connection-banner="uikitFeatures.chatConnectionBanner"
@@ -103,11 +103,6 @@
 	function onCloseAntiFraud(): void {
 		antiFraudClosed.value = true
 	}
-
-	// 水印：固定安全提示文案；features 页总开关
-	const watermarkText = computed(() =>
-		demoFeatures.value.watermark ? '环信Demo 仅供参考，谨防诈骗！' : ''
-	)
 
 	// 输入栏工具条：名片入口开就展示容器
 	const showToolbar = computed(() => demoFeatures.value.contactCard)
