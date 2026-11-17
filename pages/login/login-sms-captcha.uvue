@@ -4,7 +4,11 @@
 			<text class="sms-captcha__title">{{ title }}</text>
 			<button class="sms-captcha__cancel" @click="emit('cancel')">{{ cancelText }}</button>
 		</view>
+		<!-- #ifdef APP-HARMONY -->
+		<web-view v-if="visible" class="sms-captcha__web" :src="captchaUrl" :fullscreen="false" @message="onMessage" @error="onError"></web-view>
+		<!-- #else -->
 		<web-view class="sms-captcha__web" :src="captchaSrc" :fullscreen="false" @message="onMessage" @error="onError"></web-view>
+		<!-- #endif -->
 	</view>
 </template>
 

@@ -525,6 +525,10 @@
 		agreementVisible.value = false
 		pendingAgreementAction.value = null
 		if (action === 'sms') {
+			// #ifdef APP-HARMONY
+			setTimeout(() => onGetSms(), 0)
+			return
+			// #endif
 			onGetSms()
 		} else {
 			void onLogin()
