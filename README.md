@@ -104,6 +104,8 @@ VITE_CAPTCHA_SECRET=你的secret
 - App 端文件选择能力由 `common/attachment-provider.ts` 在启动时通过 `EmKit.setAttachmentProvider()` 注册。
 - 如自定义基座缺少视频模块，请重新打基座，原生模块变化不能通过 JS 热更新生效。
 
+深色主题还需要同步系统状态栏前景色。项目在根目录 `theme.json` 中定义明暗两套 `navigationBarTextStyle` / `navigationBarBackgroundColor`，并在 `pages.json` 的 `globalStyle` 中通过 `@` 引用；`initTheme()` / `setTheme()` 在 App 端调用 `uni.setAppTheme` 驱动切换。自定义导航栏页面的状态栏背景为透明，由 `em-nav-bar` 的顶部安全区提供页面背景，因此深色模式下时间、信号、电量等系统图标为白色，浅色模式下为黑色。新增页面如果单独覆盖 `navigationBarTextStyle`，需要同时保证它与页面顶部背景的对比度。
+
 ### HarmonyOS
 
 - 鸿蒙签名位于 `manifest.json` 的 `app-harmony.distribute.signingConfigs`，请替换为本机配置，不要提交证书或密码。
@@ -150,6 +152,7 @@ node scripts/prepare-sdk-subpackage.mjs unpackage/dist/build/mp-weixin .
 | --- | --- |
 | `App.uvue` | 主题、UIKit 特性、tabBar 文案、附件能力与返回退出初始化 |
 | `main.uts` | uni-app x 入口，创建 Vue 应用 |
+| `theme.json` | 原生导航栏与系统状态栏的明暗主题变量 |
 | `pages/login/login.uvue` | 双模式登录、自动登录、开发者配置与安全验证流程 |
 | `pages/login/login-sms-captcha.uvue` | 短信安全验证 WebView 与原生消息回调 |
 | `common/config.ts` | AppKey、App Server、请求超时与验证环境变量 |
@@ -175,6 +178,7 @@ node scripts/prepare-sdk-subpackage.mjs unpackage/dist/build/mp-weixin .
 ├── main.uts
 ├── manifest.json
 ├── pages.json
+├── theme.json               # 原生导航栏与状态栏明暗主题
 ├── package.json
 ├── common/                 # 纯 TypeScript 公共业务模块
 ├── pages/                  # 主包页面
