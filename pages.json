@@ -253,10 +253,10 @@
 		"backgroundColor": "#F8F8F8"
 	},
 	"tabBar": {
-		"color": "#919BA1",
+		"color": "@tabBarColor",
 		"selectedColor": "#009EFF",
-		"backgroundColor": "#FFFFFF",
-		"borderStyle": "white",
+		"backgroundColor": "@tabBarBackgroundColor",
+		"borderStyle": "@tabBarBorderStyle",
 		"list": [
 			{
 				"pagePath": "pages/conversation/conversation",
