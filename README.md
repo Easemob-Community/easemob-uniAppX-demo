@@ -21,7 +21,7 @@ Demo 内置会话、单聊、群聊、联系人、好友申请、聊天详情、
 | HBuilderX | 5.21+，推荐 5.26+；当前项目使用 5.34 验证 |
 | uni-app x | 蒸汽模式，Vue 3 组合式 API |
 | 环信 SDK | `easemob-websdk` 5.2.0 |
-| UIKit | `easemob-uikit-uni` 1.0.0-rc.2，已放在 `uni_modules/` |
+| UIKit | `easemob-uikit-uni` 1.0.0，已发布至 uni-app 插件市场，源码已放在 `uni_modules/` |
 | Node.js | 仅在安装 npm 依赖或执行微信小程序后处理脚本时需要 |
 | Android | Android 6.0+，项目 `minSdkVersion` 为 24 |
 | iOS | iOS 15+，按本机签名与自定义基座要求运行 |
@@ -215,5 +215,6 @@ node scripts/prepare-sdk-subpackage.mjs unpackage/dist/build/mp-weixin .
 
 - [环信控制台](https://console.easemob.com)
 - [环信文档中心](https://doc.easemob.com)
+- [环信 uni-app x UIKit 插件市场](https://ext.dcloud.net.cn/plugin?id=30940)
 - [环信 uni-app x UIKit 仓库](https://github.com/Easemob-Community/easemob-uikit-uniapp)
 - [uni-app x 文档](https://doc.dcloud.net.cn/uni-app-x/)

@@ -35,7 +35,7 @@
 npm install easemob-websdk@5.2.0
 ```
 
-把 `uni_modules/easemob-uikit-uni/` 放入宿主工程（插件市场导入或直接拷贝）。
+把 `uni_modules/easemob-uikit-uni/` 放入宿主工程（[插件市场](https://ext.dcloud.net.cn/plugin?id=30940)导入或直接拷贝）。
 
 **HBuilderX 5.34**：若引入 SDK 后报 `Identifier "h" has already been declared`，在宿主工程根目录新增 `vite.config.ts`：
 

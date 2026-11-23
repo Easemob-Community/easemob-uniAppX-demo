@@ -1,6 +1,6 @@
 # AGENTS.md — easemob-uniAppX-demo
 
-环信 IM uni-app x Demo（蒸汽模式），基于 `uni_modules/easemob-uikit-uni` UIKit。
+环信 IM uni-app x Demo（蒸汽模式），基于 `uni_modules/easemob-uikit-uni` UIKit（[uni-app 插件市场](https://ext.dcloud.net.cn/plugin?id=30940)）。
 
 ## 分支规范
 
