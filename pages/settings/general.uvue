@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 	import { computed } from 'vue'
-	import { getLocale, LOCALE, setLocale, THEME_MODE, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { getLocale, LOCALE, setLocale, THEME_MODE, useLocale, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 	import type { EmAvatarShape, LocaleValue, ThemeModeValue } from '@/uni_modules/easemob-uikit-uni/libs'
 	import { syncTabBarLocale } from '@/common/locale/index'
 	import { setUIKitFeature, uikitFeatures } from '@/common/uikit-feature-state'
@@ -89,7 +89,7 @@
 	} from '@/common/theme-style'
 
 	const { t } = useLocale()
-	const { themeClass, themeStore, setTheme } = useTheme()
+	const { themeClass, themeStore, setTheme } = useThemeChrome({ tabBarPages: [] })
 
 	interface ColorGroup {
 		key: DemoThemeColorKey

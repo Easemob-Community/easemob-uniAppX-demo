@@ -90,6 +90,7 @@
 	import { clearLoginCredentials, clearPhoneCredentials, getPhoneCredentials, getSignature, saveSignature } from '@/common/account-state'
 	import type { PhoneCredentials } from '@/common/account-state'
 	import { APP_SERVER_URL } from '@/common/config'
+	import { compressAvatarImage } from '@/common/image-compression'
 	import { demoPrimaryColorStyle } from '@/common/theme-style'
 	import {
 		avatarOf,
@@ -99,12 +100,12 @@
 		EmKit,
 		mergeUserInfo,
 		useLocale,
-		useTheme
+		useThemeChrome
 	} from '@/uni_modules/easemob-uikit-uni/libs'
 	import type { EmUserInfo } from '@/uni_modules/easemob-uikit-uni/libs'
 
 	const { t } = useLocale()
-	const { themeClass } = useTheme()
+	const { themeClass } = useThemeChrome({ tabBarPages: [] })
 
 	const userId = computed((): string => EmKit.state.userId)
 	const nickname = computed((): string => displayNameOf(userId.value))
@@ -257,14 +258,22 @@
 		const file = picked[0]
 		if (file == null) return
 		uploadingAvatar.value = true
+		let stage = 'compress'
 		try {
 			const id = userId.value
-			const { avatarUrl } = await uploadAvatar(id, file.path, phoneCred.value.chatToken)
+			console.info('[avatar] picked:', file.path)
+			const compressedPath = await compressAvatarImage(file.path)
+			console.info('[avatar] compressed:', compressedPath)
+			stage = 'upload'
+			const { avatarUrl } = await uploadAvatar(id, compressedPath, phoneCred.value.chatToken)
+			console.info('[avatar] uploaded:', avatarUrl)
+			stage = 'update profile'
 			const mgr = await userInfoManager()
 			await mgr.updateOwnInfoByAttribute('avatarUrl', avatarUrl)
 			mergeUserInfo({ userId: id, nickname: '', avatarUrl } as EmUserInfo)
 			uni.showToast({ title: t('demo.settings.saveSuccess'), icon: 'none' })
 		} catch (e) {
+			console.error(`[avatar] ${stage} failed:`, e)
 			uni.showToast({ title: t('demo.settings.account.avatarUploadFailed'), icon: 'none' })
 		} finally {
 			uploadingAvatar.value = false
@@ -508,7 +517,7 @@
 	.action-btn-text {
 		font-size: var(--em-font-size-14, 14px);
 		font-weight: var(--em-font-weight-medium, 500);
-		color: var(--em-text-inverse);
+		color: var(--em-text-primary);
 	}
 
 	/* ===== 编辑弹窗 ===== */

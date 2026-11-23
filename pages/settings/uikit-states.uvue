@@ -29,11 +29,11 @@
 
 <script setup lang="ts">
 	import { onBeforeUnmount, ref } from 'vue'
-	import { LOAD_MORE_STATE, SELECT_CONTACT_MODE, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { LOAD_MORE_STATE, SELECT_CONTACT_MODE, useLocale, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 	import type { EmSelectContactItem, LoadMoreStateValue } from '@/uni_modules/easemob-uikit-uni/libs'
 
 	const { t } = useLocale()
-	const { themeClass } = useTheme()
+	const { themeClass } = useThemeChrome({ tabBarPages: [] })
 	const loadState = ref<LoadMoreStateValue>(LOAD_MORE_STATE.ERROR)
 	const loadRetryCount = ref(0)
 	let loadRetryTimer: ReturnType<typeof setTimeout> | null = null

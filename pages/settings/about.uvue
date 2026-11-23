@@ -42,12 +42,13 @@
 
 <script setup lang="ts">
 	import { computed, ref } from 'vue'
-	import { EmKit, UIKIT_VERSION, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { getDemoVersion } from '@/common/app-version'
+	import { EmKit, UIKIT_VERSION, useLocale, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 
 	const { t } = useLocale()
-	const { themeClass, isDark } = useTheme()
+	const { themeClass, isDark } = useThemeChrome({ tabBarPages: [] })
 
-	const demoVersion = '1.0.0'
+	const demoVersion = getDemoVersion()
 	const uikitVersion = UIKIT_VERSION
 	const sdkVersion = ref('-')
 	const logoSrc = computed(() => isDark.value ? '/static/about/about-logo-dark.png' : '/static/about/about-logo.png')

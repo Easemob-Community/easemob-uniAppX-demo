@@ -7,7 +7,7 @@
 					v-for="item in items"
 					:key="`${item.def.kind}:${item.def.key}`"
 					class="item"
-					:class="{ 'item--action': item.def.kind === 'action', 'item--choice': item.def.kind === 'choice' }"
+					:class="{ 'item--action': item.def.kind === 'action' }"
 					@click="onAction(item.def)"
 				>
 					<view class="item-text">
@@ -22,18 +22,7 @@
 					>
 						<view class="item-switch-dot" :class="{ 'item-switch-dot--active': item.value === true }" />
 					</view>
-					<em-icon v-else-if="item.def.kind === 'action'" name="chevron-right" :size="16" class="item-arrow" />
-					<view v-else class="choices">
-						<view
-							v-for="option in item.def.kind === 'choice' ? item.def.options : []"
-							:key="option.value"
-							class="choice"
-							:class="{ 'choice--active': item.value === option.value }"
-							@click.stop="onChoice(item.def, option.value)"
-						>
-							<text class="choice-text" :class="{ 'choice-text--active': item.value === option.value }">{{ t(option.labelKey) }}</text>
-						</view>
-					</view>
+					<em-icon v-else name="chevron-right" :size="16" class="item-arrow" />
 				</view>
 			</view>
 		</scroll-view>
@@ -43,15 +32,15 @@
 <script setup lang="ts">
 	import { computed, ref } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
-	import { EmKit, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { EmKit, useLocale, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 	import { demoFeatures, setDemoFeature, type DemoFeatureKeyValue } from '@/common/settings-state'
-	import { featureGroupOf, type ChoiceDef, type FeatureItemDef, type SwitchDef } from '@/common/feature-groups'
+	import { featureGroupOf, type FeatureItemDef } from '@/common/feature-groups'
 	import { setUIKitFeature, uikitFeatures } from '@/common/uikit-feature-state'
 	import { demoPrimaryColorStyle } from '@/common/theme-style'
 	import { openAiStreamDemo } from '@/common/ai-stream-demo'
 
 	const { t } = useLocale()
-	const { themeClass } = useTheme()
+	const { themeClass } = useThemeChrome({ tabBarPages: [] })
 	const groupKey = ref('messaging')
 	const group = computed(() => featureGroupOf(groupKey.value))
 
@@ -65,9 +54,7 @@
 	const items = computed<FeatureItem[]>(() =>
 		group.value.items.map((def) => {
 			let value: boolean | string = ''
-			if (def.kind === 'choice') {
-				value = uikitFeatures.value[def.key] as string
-			} else if (def.kind === 'switch') {
+			if (def.kind === 'switch') {
 				value = def.source === 'uikit'
 					? uikitFeatures.value[def.key] as boolean
 					: demoFeatures.value[def.key] === true
@@ -91,11 +78,6 @@
 			return
 		}
 		setDemoFeature(def.key as keyof DemoFeatureKeyValue, value)
-	}
-
-	function onChoice(def: FeatureItemDef, value: string): void {
-		if (def.kind !== 'choice') return
-		setUIKitFeature(def.key, value)
 	}
 
 	function onAction(def: FeatureItemDef): void {
@@ -175,11 +157,6 @@
 		box-sizing: border-box;
 	}
 
-	.item--choice {
-		flex-direction: column;
-		align-items: stretch;
-	}
-
 	.item-text {
 		display: flex;
 		flex-direction: column;
@@ -230,33 +207,5 @@
 
 	.item-arrow {
 		color: var(--em-text-tertiary);
-	}
-
-	.choices {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
-		margin-top: 10px;
-	}
-
-	.choice {
-		padding: 6px 12px;
-		margin-right: 8px;
-		margin-bottom: 6px;
-		border-radius: 16px;
-		background-color: var(--em-bg-secondary);
-	}
-
-	.choice--active {
-		background-color: var(--em-primary-color);
-	}
-
-	.choice-text {
-		font-size: 12px;
-		color: var(--em-text-secondary);
-	}
-
-	.choice-text--active {
-		color: var(--em-text-inverse);
 	}
 </style>

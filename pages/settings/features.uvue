@@ -24,13 +24,13 @@
 </template>
 
 <script setup lang="ts">
-	import { copyText, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { copyText, useLocale, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 	import { useLongPressClickGuard } from '@/uni_modules/easemob-uikit-uni/libs/use/useLongPressClickGuard'
 	import { FEATURE_GROUPS } from '@/common/feature-groups'
 
 	// 特性开关分组入口：按功能域分发到二级页（feature-group），避免一长串开关难以分辨
 	const { t } = useLocale()
-	const { themeClass } = useTheme()
+	const { themeClass } = useThemeChrome({ tabBarPages: [] })
 	const { onTouchStart, shouldSkipClick } = useLongPressClickGuard()
 	const DOC_URL = 'https://easemob-community-docs.easemob.com/uniapp/'
 

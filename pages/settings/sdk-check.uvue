@@ -31,11 +31,11 @@
 
 <script setup lang="ts">
 	import { computed, ref } from 'vue'
-	import { CONNECTION_STATUS, EmKit, conversationStore, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { CONNECTION_STATUS, EmKit, conversationStore, useLocale, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 	import { demoPrimaryColorStyle } from '@/common/theme-style'
 
 	const { t } = useLocale()
-	const { themeClass } = useTheme()
+	const { themeClass } = useThemeChrome({ tabBarPages: [] })
 	const checking = ref(false)
 	const resultText = ref('')
 	const checkFailed = ref(false)
