@@ -7,14 +7,11 @@
 			watermark="环信Demo 仅供参考，谨防诈骗！"
 			:extra-message-menus="extraMessageMenus"
 			:custom-style="demoBubbleColorStyle()"
-			:show-connection-banner="uikitFeatures.chatConnectionBanner"
-			:show-action="uikitFeatures.chatDetailEntry"
 			:show-member-count="uikitFeatures.chatMemberCount"
 			:show-announcement="uikitFeatures.chatAnnouncement"
 			:enable-mention="uikitFeatures.chatMention"
 			:sender-name-mode="uikitFeatures.chatSenderName ? 'always' : 'hidden'"
 			:quick-replies="quickReplies"
-			:quick-reply-mode="uikitFeatures.quickReplyMode"
 			@open-info="onOpenInfo"
 			@message-menu="onMessageMenu"
 		>
@@ -46,21 +43,6 @@
 					@select-sticker="onSendSticker"
 				/>
 			</template>
-
-			<!-- 自定义消息（#custom-message 插槽）：名片卡片按 customEvent 分发 -->
-			<template #custom-message="{ message }">
-				<demo-custom-message :message="message" @open-card="onOpenCard" />
-			</template>
-
-			<!-- 输入栏上方业务工具条（#input-toolbar 插槽）：名片入口 -->
-			<template #input-toolbar>
-				<view v-if="showToolbar" class="toolbar">
-					<view v-if="demoFeatures.contactCard" class="toolbar__chip" @click="onSendContactCard">
-						<em-icon name="person-card" :size="16" class="toolbar__chip-icon" />
-						<text class="toolbar__chip-text">{{ t('demo.chat.toolbarContactCard') }}</text>
-					</view>
-				</view>
-			</template>
 		</em-chat-page>
 
 		<demo-forward-sheet v-model:show="showForwardSheet" :message="forwardItem" />
@@ -72,12 +54,10 @@
 	import { onLoad, onUnload } from '@dcloudio/uni-app'
 	import {
 		CONVERSATION_TYPE,
-		displayNameOf,
-		avatarOf,
 		EmKit,
 		MESSAGE_TYPE,
 		useLocale,
-		useTheme
+		useThemeChrome
 	} from '@/uni_modules/easemob-uikit-uni/libs'
 	import type { ConversationTypeValue, EmMessageItem, EmMessageMenuExtra, EmQuickReply } from '@/uni_modules/easemob-uikit-uni/libs'
 	import { demoFeatures } from '@/common/settings-state'
@@ -85,11 +65,10 @@
 	import { demoQuickReplies, uikitFeatures } from '@/common/uikit-feature-state'
 	import { consumeAiStreamDemo } from '@/common/ai-stream-demo'
 	import { canForwardMessage } from '@/common/message-forward'
-	import { sendContactCard } from '@/common/demo-cards'
 	import { sendDemoSticker } from '@/common/demo-stickers'
 	import type { DemoStickerItem } from '@/common/demo-stickers'
 
-	const { themeClass } = useTheme()
+	const { themeClass } = useThemeChrome({ tabBarPages: [] })
 	const { t } = useLocale()
 
 	const conversationId = ref('')
@@ -103,9 +82,6 @@
 	function onCloseAntiFraud(): void {
 		antiFraudClosed.value = true
 	}
-
-	// 输入栏工具条：名片入口开就展示容器
-	const showToolbar = computed(() => demoFeatures.value.contactCard)
 
 	const showForwardSheet = ref(false)
 	const forwardItem = ref<EmMessageItem | null>(null)
@@ -131,37 +107,12 @@
 		showForwardSheet.value = true
 	}
 
-	function onSendContactCard(): void {
-		const userId = EmKit.state.userId
-		if (userId === '') return
-		uni.showModal({
-			title: t('demo.chat.contactCard.sendTitle'),
-			content: t('demo.chat.contactCard.sendConfirm', { name: displayNameOf(userId) }),
-			success: (res) => {
-				if (!res.confirm) return
-				sendContactCard(conversationId.value, chatType.value, {
-					userId,
-					nickname: displayNameOf(userId),
-					avatarUrl: avatarOf(userId)
-				}).catch(() => {
-					uni.showToast({ title: t('demo.chat.contactCard.sendFailed'), icon: 'none' })
-				})
-			}
-		})
-	}
-
 	async function onSendSticker(sticker: DemoStickerItem): Promise<void> {
 		try {
 			await sendDemoSticker(conversationId.value, chatType.value, sticker)
 		} catch {
 			uni.showToast({ title: t('demo.chat.sticker.sendFailed'), icon: 'none' })
 		}
-	}
-
-	function onOpenCard(userId: string): void {
-		if (userId === '') return
-		EmKit.addConversation(userId, CONVERSATION_TYPE.SINGLE_CHAT)
-		uni.navigateTo({ url: `/sub-im/pages/chat/chat?conversationId=${userId}&chatType=${CONVERSATION_TYPE.SINGLE_CHAT}` })
 	}
 
 	onLoad((query) => {
@@ -196,32 +147,5 @@
 		height: 100%;
 		min-height: 0;
 		background-color: var(--em-chat-bg);
-	}
-
-	/* 输入栏上方业务工具条：胶囊按钮横排（#input-toolbar 固定位） */
-	.toolbar {
-		display: flex;
-		flex-direction: row;
-		padding: 6px 12px;
-	}
-
-	.toolbar__chip {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		padding: 6px 12px;
-		margin-right: 8px;
-		border-radius: 16px;
-		background-color: var(--em-bg-secondary);
-	}
-
-	.toolbar__chip-icon {
-		color: var(--em-text-secondary);
-		margin-right: 4px;
-	}
-
-	.toolbar__chip-text {
-		font-size: 13px;
-		color: var(--em-text-primary);
 	}
 </style>

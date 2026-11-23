@@ -23,7 +23,7 @@
 <script setup lang="ts">
 	import { onLoad } from '@dcloudio/uni-app'
 	import { ref } from 'vue'
-	import { avatarOf, displayNameOf, EmKit, useLocale, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { avatarOf, displayNameOf, EmKit, useLocale, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 
 	// 黑名单管理（对齐 vue3 demo 黑名单能力；uikit 未内置，经 EmKit.getSDKClient() 的 ContactManager 实现）
 	interface BlocklistRow {
@@ -32,7 +32,7 @@
 		avatar: string
 	}
 
-	const { themeClass } = useTheme()
+	const { themeClass } = useThemeChrome({ tabBarPages: [] })
 	const { t } = useLocale()
 
 	const list = ref<BlocklistRow[]>([])

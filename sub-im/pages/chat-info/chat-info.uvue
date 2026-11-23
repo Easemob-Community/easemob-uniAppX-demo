@@ -16,10 +16,10 @@
 <script setup lang="ts">
 	import { ref } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
-	import { CONVERSATION_TYPE, EmKit, useTheme } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { CONVERSATION_TYPE, EmKit, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 	import type { ConversationTypeValue } from '@/uni_modules/easemob-uikit-uni/libs'
 
-	const { themeClass } = useTheme()
+	const { themeClass } = useThemeChrome({ tabBarPages: [] })
 	const conversationId = ref('')
 	const chatType = ref<ConversationTypeValue>(CONVERSATION_TYPE.SINGLE_CHAT)
 
