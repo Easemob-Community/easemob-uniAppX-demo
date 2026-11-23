@@ -21,7 +21,7 @@
         <em-search-bar v-if="showSearch" v-model="keyword" :placeholder="t('conversation.searchPlaceholder')" />
 
         <scroll-view :class="ns.e('scroll')" scroll-y>
-          <!-- 首次同步骨架：条目形态对齐 em-conversation-item（头像 + 名字/时间行 + 摘要/未读行，逐行变宽） -->
+          <!-- 首次同步骨架：条目形态对齐 em-conversation-item（全局形状头像 + 名字/时间行 + 摘要/未读行，逐行变宽） -->
           <view v-if="syncing && items.length === 0" :class="ns.e('skeleton')">
             <view v-for="(nameWidth, index) in SKELETON_NAME_WIDTHS" :key="index" :class="ns.e('skeleton-item')">
               <em-skeleton variant="avatar" :shape="resolvedAvatarShape" width="48px" height="48px" />

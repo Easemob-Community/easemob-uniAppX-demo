@@ -176,7 +176,6 @@ export default {
 
   'contact.entryGroup': 'Groups',
   'contact.entryContact': 'Contacts',
-  'contact.entryBlocklist': 'Blocklist',
 
   'contact.selectMembers': 'Select Members',
 

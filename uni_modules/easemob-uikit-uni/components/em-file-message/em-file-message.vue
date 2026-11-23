@@ -5,9 +5,7 @@
     </view>
     <view :class="ns.e('info')">
       <view :class="ns.e('name-row')">
-        <view :class="ns.e('name-stem')">
-          <em-text :text="fileNameParts.stem" :text-class="nameClass" :text-style="nameStyle" />
-        </view>
+        <em-text :text="fileNameParts.stem" :text-class="nameClass" :text-style="nameStyle" :class="ns.e('name-stem')" />
         <text :class="[nameClass, ns.e('name-extension')]" :style="nameStyle">{{ fileNameParts.extension }}</text>
       </view>
       <text v-if="sizeText !== ''" :class="[ns.e('size'), message.self ? 'em-file-message__size--self' : '']">{{ sizeText }}</text>
@@ -66,7 +64,7 @@ const fileNameParts = computed(() => {
   return { stem: name.slice(0, dotIndex), extension }
 })
 
-// 文字样式经 textClass 透传；原生 name-stem view 承接 flex 收缩与裁剪，避免 iOS 自定义组件宿主按内容撑宽
+// 文字样式经 textClass 透传（宿主只参与布局；info 列已有 flex:1 + min-width:0 + overflow:hidden 约束链）
 const nameClass = computed(() => props.message.self
   ? 'em-file-message__name em-file-message__name--self'
   : 'em-file-message__name')

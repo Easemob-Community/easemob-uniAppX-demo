@@ -2,7 +2,7 @@
 
 环信 IM 的 uni-app x 版 UIKit（蒸汽模式），一套代码覆盖 Android / iOS / 鸿蒙 / H5 / 微信小程序。
 
-> 当前版本：**1.0.0-rc.2**（未发布）。已包含登录接入、会话列表、聊天页（文本/图片/语音/视频/文件 + 复合消息接收展示 + 引用/撤回/重发/已读回执 + AI 流式消息）、群聊、联系人/好友申请、聊天详情、连接状态条与日志导出；内置中英文并支持扩展语言，语言偏好可持久化。逻辑层在 `libs/`，组件层在 `components/`。
+> 当前版本：**1.0.0**。已包含登录接入、会话列表、聊天页（文本/图片/语音/视频/文件 + 复合消息接收展示 + 引用/撤回/重发/已读回执 + AI 流式消息）、群聊、联系人/好友申请、聊天详情、连接状态条与日志导出；内置中英文并支持扩展语言，语言偏好可持久化。逻辑层在 `libs/`，组件层在 `components/`。
 >
 > 完整接入步骤、常见问题与平台边界见仓库 `docs/QUICKSTART.md`；本文给出最短可运行路径。
 > 用 AI 接入时，可直接加载仓库 `skills/` 下的宿主接入 Agent Skills（入口 `em-host-integration`）。
@@ -36,6 +36,23 @@ npm install easemob-websdk@5.2.0
 ```
 
 把 `uni_modules/easemob-uikit-uni/` 放入宿主工程（插件市场导入或直接拷贝）。
+
+**HBuilderX 5.34**：若引入 SDK 后报 `Identifier "h" has already been declared`，在宿主工程根目录新增 `vite.config.ts`：
+
+```ts
+import { defineConfig } from 'vite';
+import uni from '@dcloudio/vite-plugin-uni';
+
+export default defineConfig({
+	plugins: [uni({
+		autoImportOptions: {
+			ignore: ['h']
+		}
+	})],
+});
+```
+
+已有配置时合并 `autoImportOptions`，不要覆盖其他插件，也无需修改或重打包 `node_modules`。DCloud 已在 [issue #34492](https://issues.dcloud.net.cn/pages/issues/detail?id=34492) 中确认该问题，并回复将由 HBuilderX 后续修复。
 
 ### 2. pages.json：页面组件 easycom
 
@@ -170,7 +187,7 @@ HBuilderX GUI 开发时保持 `npm run watch:mp` 运行。既有工程需按实�
 | 视频消息：发送 | ✅ | ✅ | ✅ |
 | 视频消息：播放 | ✅ 内置全屏播放器 | ✅ 内置全屏播放器 | ✅ 内置全屏播放器 |
 | 文件消息：发送 | ✅ | ✅ | ✅ 需注册附件能力 |
-| 文件消息：打开/下载 | ⏳ 仅展示 | ⏳ 仅展示 | ⏳ 仅展示 |
+| 文件消息：打开/下载 | ✅ 浏览器下载 | ✅ 下载并尝试文档预览 | ✅ 下载并尝试文档预览 |
 | 语音消息：发送 | ⏳ 入口隐藏 | ✅ | ✅ |
 
 > **App 发行必要配置**：Android、iOS 都要在 manifest 的 `app-android` / `app-ios` → `distribute.modules` 显式声明 `"uni-websocket": {}`。环信 SDK 通过运行时适配对象调用 `connectSocket`，静态摇树可能漏掉该模块，导致发行包无法建立 IM 长连接。其他直接调用的网络、文件和媒体模块通常能自动扫描，无需全量声明。
@@ -198,13 +215,13 @@ EmKit.setAttachmentProvider({
 ## 已知限制（1.0）
 
 - 视频播放依赖系统/浏览器解码能力；冷门编码会提示「视频加载失败」。App 端会先整包下载视频再播放（chatfiles 直链不支持 Range），大视频需要等待下载完成；H5 浏览器可能拦截带声音的自动播放，点播放器内的播放键即可。
-- 文件打开/下载全端未接入，文件气泡为纯展示。
+- 图片、视频与文件下载入口位于消息长按菜单。App/小程序把图片和视频保存到系统相册，文件下载后尝试系统文档预览；H5 走浏览器下载。微信小程序需配置 `downloadFile` 合法域名，文档预览类型以平台支持范围为准。
 - App 端发送文件需宿主注册附件能力（见上节）；未注册时「文件」入口保持隐藏。
 - H5 为移动端布局，未做桌面宽屏适配。
 - 语音发送仅 App/小程序；录音 60s 上限自动发送，麦克风权限失败只 toast（不自动跳系统设置）。
 - iOS 相机权限被拒绝后，系统拍摄页可能停在黑屏且不再弹窗；UIKit 在拍摄前预检 `uni.getAppAuthorizeSetting`，`denied` 时弹窗引导去设置。iOS 发布包需在 `manifest.json` 的 `app-ios.distribute.privacyDescription` 声明相机/相册/麦克风用途描述，改后重新打包生效。
 - 鸿蒙需在工程 `harmony-configs/entry/src/main/module.json5` 的 `requestPermissions` 声明 `ohos.permission.MICROPHONE`（语音）、`ohos.permission.CAMERA`（拍摄）与 `ohos.permission.GET_NETWORK_INFO`（网络状态检测；生成工程已包含时保留即可）。麦克风与相机需带 `$string:` 资源形式的 `reason` 和 `usedScene.inuse`，并在 `resources/base/element/string.json` 配置文案。未声明时系统直接拒绝，不会出现授权弹窗，表现为「录音失败」或点拍摄无反应。该目录是**整文件覆盖**而非按节点合并，文件须含完整 `module` 结构并保留已有权限。选择相册/文件走系统 Picker，保存图片/视频走系统保存确认框，均无需额外声明相册或文件权限。完整示例与拒绝后的处理见 `docs/HARMONY-REALDEVICE-RUN.md`。
-- `@` 提及为追加式插入（uni `<input>` 无光标位置 API）；消息列表仍为 `scroll-view` 全量渲染（长会话性能优化在 1.1）。
+- `@` 提及为追加式插入（uni `<input>` 无光标位置 API）；消息列表仍为 `scroll-view` 全量渲染，长会话需控制单页消息量并评估滚动性能。
 - 非当前会话只保留最近 100 条内存消息，回会话时重拉最新页；完整本地历史需宿主自行持久化。
 - 日志原始 payload 默认关闭（`logPayload`），生产排查请临时开启并及时关闭。
 

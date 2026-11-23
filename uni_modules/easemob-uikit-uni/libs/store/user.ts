@@ -75,6 +75,15 @@ export function avatarOf(userId: string): string {
   return userStore.infoByUserId[userId]?.avatarUrl ?? ''
 }
 
+// 重连时允许失败项补拉；已成功缓存项仍由 ensureUserInfos 判重跳过
+export function clearUserInfoFetchFailures(userIds?: string[]): void {
+  if (userIds == null) {
+    userStore.failedByUserId = {}
+    return
+  }
+  userIds.forEach((id) => { delete userStore.failedByUserId[id] })
+}
+
 // 登出/换账号清空用户资料缓存（昵称/头像/请求态/业务注入均按账号隔离，宿主在 login 后重新注入）
 export function clearUsers(): void {
   userStore.infoByUserId = {}

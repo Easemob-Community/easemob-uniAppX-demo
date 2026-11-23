@@ -176,7 +176,6 @@ export default {
 
   'contact.entryGroup': '群组列表',
   'contact.entryContact': '好友列表',
-  'contact.entryBlocklist': '黑名单',
 
   'contact.selectMembers': '选择成员',
 

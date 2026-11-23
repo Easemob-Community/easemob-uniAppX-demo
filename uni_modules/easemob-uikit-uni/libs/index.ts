@@ -4,7 +4,7 @@ import { normalizeLoginOptions } from './client/login'
 import { EmChat } from './chat'
 import { EmContact } from './chat/contact'
 import { EmGroupDomain } from './chat/group'
-import { ensureUserInfos } from './chat/user-info'
+import { ensureUserInfos, resetUserInfoRequests } from './chat/user-info'
 import { connectionStore } from './store/connection'
 import { contactRequestUnreadCount, contactStore } from './store/contact'
 import { clearConversations, conversationStore, conversationUnreadCountOf as unreadCountOfConversation, setConversationPresentation as setConversationPresentationImpl, totalConversationUnread } from './store/conversation'
@@ -155,6 +155,7 @@ class EmKitImpl {
   // 登出先失效账号代次并注销旧 handler，再断开 SDK 和清空私有状态。
   async logout(): Promise<void> {
     invalidateAccountEpoch()
+    resetUserInfoRequests()
     try {
       this.chat.leaveConversation()
     } catch (e) {}
@@ -366,7 +367,7 @@ class EmKitImpl {
     return this.chat.onStreamMessage(handler)
   }
 
-  // 按需确保一批用户的昵称/头像已缓存（微任务合批，单次请求）
+  // 按需确保一批用户的昵称/头像已缓存（微任务合批、单飞、100 人串行分片）
   ensureUserInfos(userIds: string[]): void {
     ensureUserInfos(userIds)
   }
@@ -536,7 +537,7 @@ class EmKitImpl {
     this.chat.insertGroupNotice(groupId, text)
   }
 
-  // 导出调试日志全文（最多 2000 行 / 256 Ki 字符，单条最多 4096 字符，含被 level 过滤掉的 debug 行）：
+  // 导出调试日志全文（环形缓冲，含被 level 过滤掉的 debug 行）：
   // H5 触发浏览器下载返回 'download'；小程序/App 写用户数据目录返回文件路径
   // （并 best-effort 复制全文到剪贴板）；写文件失败兜底剪贴板返回 'clipboard'
   async exportLogs(): Promise<string> {

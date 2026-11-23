@@ -645,7 +645,7 @@ export class EmMessageDomain {
       conversationType: chatType,
       data,
       filename: file.name,
-      ...(file.size > 0 ? { fileSize: file.size } : {})
+      fileSize: file.size
     })
     return this.deliver(message, to, '', undefined, file.path, undefined, file.webFile ?? null)
   }
@@ -1313,13 +1313,13 @@ export class EmMessageDomain {
         })
     } else if (item.type === MESSAGE_TYPE.FILE) {
       message = remote
-        ? chatManager.createFileMessage({ conversationId, conversationType: chatType, originalUrl: item.url, filename: item.fileName, ...(item.fileSize > 0 ? { fileSize: item.fileSize } : {}) })
+        ? chatManager.createFileMessage({ conversationId, conversationType: chatType, originalUrl: item.url, filename: item.fileName, fileSize: item.fileSize })
         : chatManager.createFileMessage({
           conversationId,
           conversationType: chatType,
           data: this.asCompatibleFile(item.url, item.fileName, item.fileSize, cachedFile ?? await this.webFileOf(item.url, item.fileName)),
           filename: item.fileName,
-          ...(item.fileSize > 0 ? { fileSize: item.fileSize } : {})
+          fileSize: item.fileSize
         })
     } else if (item.type === MESSAGE_TYPE.CUSTOM) {
       // 自定义消息重发：event/params 从消息体还原，业务 ext 原样带上（引用等内部 key 不适用于 custom）

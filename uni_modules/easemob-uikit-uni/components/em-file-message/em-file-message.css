@@ -80,7 +80,6 @@
 .em-file-message__name-stem {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .em-file-message__name-extension {

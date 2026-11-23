@@ -59,7 +59,7 @@ import { useLocale } from '../../../libs/use/useLocale'
 import { useWatermark } from '../../../libs/use/useWatermark'
 
 // 通讯录入口页（对齐 vue 版 address-book-container home 视图）：
-// 四入口顺序 = 好友列表 / 群组 / 新请求 / 黑名单（黑名单为 demo 需要补回的裁剪项，透出 key 由宿主接线路由）；
+// 三入口顺序 = 好友列表 / 群组 / 新请求（对齐 vue entryOrder contact/group/notice，黑名单为二期裁剪项）；
 // 新请求带 pending 计数 + hot 红点；入口无左图标（vue 默认 entry.icon undefined）；
 // 好友字母列表已迁至 em-contact-list-page，点击入口原样透出 key 由宿主接线路由
 defineOptions({ styleIsolation: 'app-and-page' })
@@ -119,10 +119,6 @@ const allEntries = computed<EmContactNavEntry[]>(() => {
       label: t('contact.newRequests'),
       count: pendingCount,
       hot: pendingCount > 0
-    },
-    {
-      key: CONTACT_ENTRY_KEY.BLOCKLIST,
-      label: t('contact.entryBlocklist')
     }
   ]
 })
