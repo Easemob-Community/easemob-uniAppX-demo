@@ -1,7 +1,6 @@
 <template>
 	<view class="page" :class="themeClass">
 		<em-conversation-page
-			:show-connection-banner="uikitFeatures.conversationConnectionBanner"
 			:show-search="uikitFeatures.conversationSearch"
 			:show-tabs="uikitFeatures.conversationTabs"
 			@select="onSelect"

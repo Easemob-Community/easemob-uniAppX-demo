@@ -168,7 +168,7 @@
 								</view>
 							</template>
 
-							<text v-if="errorText !== ''" class="login__error">{{ errorText }}</text>
+							<text v-if="displayError !== ''" class="login__error">{{ displayError }}</text>
 							<text v-if="noticeText !== ''" class="login__notice">{{ noticeText }}</text>
 
 							<button class="login__submit" :class="{ 'login__submit--busy': loginLoading }" :disabled="loginLoading" @click="onLogin">
@@ -199,7 +199,7 @@
 
 		<view class="login__footer" :style="{ paddingBottom: (24 + safeBottom) + 'px' }">
 			<text class="login__footer-copyright">{{ t('demo.login.copyright') }}</text>
-			<text class="login__footer-version">{{ t('demo.login.versionLine', { sdk: '5.2.0', uikit: UIKIT_VERSION, demo: '1.0.0' }) }}</text>
+			<text class="login__footer-version">{{ t('demo.login.versionLine', { sdk: '5.2.0', uikit: UIKIT_VERSION, demo: demoVersion }) }}</text>
 			<text class="login__logs-entry" @click="openLogs">{{ t('demo.login.logsEntry') }}</text>
 		</view>
 
@@ -259,10 +259,11 @@
 <script setup lang="ts">
 	import { loginByPhone, mapLoginSmsError, mapPhoneLoginError, sendLoginSms } from '@/common/auth-api'
 	import { clearPhoneCredentials, getPhoneCredentials, savePhoneCredentials, clearLoginCredentials, getLoginCredentials, saveLoginCredentials } from '@/common/account-state'
+	import { getDemoVersion } from '@/common/app-version'
 	import { CAPTCHA_PREFIX, CAPTCHA_SCENE_ID, CAPTCHA_SECRET, DEFAULT_APP_KEY } from '@/common/config'
 	import { tokenExpiredHandler, tokenWillExpireHandler } from '@/common/token-renewal'
 	import { DevConfig, getDevConfig, getEffectiveAppKey, getPersistEnabled, setDevConfig, setPersistEnabled } from '@/common/dev-config'
-	import { EmKit, getLogLevel, UIKIT_VERSION, useLocale, createLogger } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { EmKit, getLogLevel, UIKIT_VERSION, useLocale, createLogger, checkNetworkOnce, subscribeNetworkStatus } from '@/uni_modules/easemob-uikit-uni/libs'
 	import EmPopup from '@/uni_modules/easemob-uikit-uni/components/em-popup/em-popup'
 	import LoginSmsCaptcha from '@/pages/login/login-sms-captcha'
 
@@ -272,6 +273,7 @@
 	const loginLogger = createLogger('login')
 
 	const DEV_ICON = '</>'
+	const demoVersion = getDemoVersion()
 	const windowInfo = uni.getWindowInfo()
 	const safeTop = windowInfo.safeAreaInsets?.top ?? 0
 	const safeBottom = windowInfo.safeAreaInsets?.bottom ?? 0
@@ -283,6 +285,7 @@
 	const pendingAgreementAction = ref<PendingAgreementAction | null>(null)
 	const focused = ref('')
 	const loginLoading = ref(false)
+	const networkOnline = ref<boolean | null>(null)
 	const errorText = ref('')
 	const noticeText = ref('')
 	const logsVisible = ref(false)
@@ -301,6 +304,7 @@
 	const devImServer = ref('')
 	const devRestServer = ref('')
 	const devSaveState = ref('idle')
+	const displayError = computed((): string => networkOnline.value === false ? t('demo.login.networkOffline') : errorText.value)
 	const devSaveText = computed((): string => {
 		if (devSaveState.value === 'success') return t('demo.login.devSaved')
 		if (devSaveState.value === 'error') return t('demo.login.devSaveError')
@@ -313,6 +317,7 @@
 	let smsTimer: number | null = null
 	let devResetTimer: number | null = null
 	let devSaveTimer: number | null = null
+	let stopNetworkWatch: (() => void) | null = null
 
 	const canSendSms = computed((): boolean => phone.value.length === 11 && smsCountdown.value === 0 && !smsLoading.value)
 	const smsButtonText = computed((): string => {
@@ -346,8 +351,21 @@
 		}
 	}
 
+	async function refreshNetworkStatus(): Promise<boolean | null> {
+		const online = await checkNetworkOnce()
+		if (online !== null) networkOnline.value = online
+		return online
+	}
+
+	async function ensureNetworkAvailable(): Promise<boolean> {
+		return await refreshNetworkStatus() !== false
+	}
+
 	onMounted(() => {
 		loginLogger.info('login page mounted')
+		stopNetworkWatch = subscribeNetworkStatus((online) => {
+			networkOnline.value = online
+		})
 		const config = getDevConfig()
 		devAppKey.value = config.appKey
 		devImServer.value = config.imServer
@@ -370,6 +388,7 @@
 		const creds = getLoginCredentials()
 		if (creds == null) {
 			loginLogger.info('auto login skipped: no credentials')
+			void refreshNetworkStatus()
 			splashVisible.value = false
 			return
 		}
@@ -377,12 +396,18 @@
 		loginLogger.info('auto login started')
 		loginLoading.value = true
 		try {
+			if (!await ensureNetworkAvailable()) {
+				loginLogger.info('auto login skipped: system offline')
+				splashVisible.value = false
+				return
+			}
 			const appkey = getPhoneCredentials() != null ? DEFAULT_APP_KEY : getEffectiveAppKey()
 			await loginIm(creds.userId, creds.token, appkey)
 		} catch (error: any) {
 			logLoginError('auto login failed:', error, [creds.userId, creds.token])
 			clearLoginCredentials()
-			errorText.value = errorMessage(error)
+			await refreshNetworkStatus()
+			errorText.value = networkOnline.value === false ? '' : errorMessage(error)
 			splashVisible.value = false
 		} finally {
 			loginLogger.info('auto login finished:', `${Date.now() - start}ms`)
@@ -391,6 +416,8 @@
 	}
 
 	onUnmounted(() => {
+		stopNetworkWatch?.()
+		stopNetworkWatch = null
 		clearSmsTimer()
 		clearDevResetTimer()
 		clearDevSaveTimer()
@@ -554,7 +581,7 @@
 		return /^1[3-9]\d{9}$/.test(phone.value)
 	}
 
-	function onGetSms() {
+	async function onGetSms(): Promise<void> {
 		errorText.value = ''
 		noticeText.value = ''
 		if (!validPhone()) {
@@ -570,6 +597,7 @@
 			errorText.value = t('demo.login.captchaConfigMissing')
 			return
 		}
+		if (!await ensureNetworkAvailable()) return
 		smsCaptchaVisible.value = true
 	}
 
@@ -589,11 +617,13 @@
 		noticeText.value = ''
 		smsLoading.value = true
 		try {
+			if (!await ensureNetworkAvailable()) return
 			await sendLoginSms(phone.value, captchaVerifyParam)
 			startSmsCountdown()
 			noticeText.value = t('demo.login.smsSentNotice')
 		} catch (error: any) {
-			errorText.value = mapLoginSmsError(errorMessage(error))
+			await refreshNetworkStatus()
+			errorText.value = networkOnline.value === false ? '' : mapLoginSmsError(errorMessage(error))
 		} finally {
 			smsLoading.value = false
 		}
@@ -641,18 +671,20 @@
 				errorText.value = t('demo.login.needUserToken')
 				return
 			}
-			const config = getDevConfig()
-			setDevConfig(new DevConfig(config.appKey, config.imServer, config.restServer, config.usePrivateServer, userId.value.trim(), token.value.trim()))
-			clearLoginCredentials()
-			// userId/token 登录不支持注销账户，清除可能残留的手机号凭证
-			clearPhoneCredentials()
-			loginLogger.info('developer login started')
 			loginLoading.value = true
 			try {
+				if (!await ensureNetworkAvailable()) return
+				const config = getDevConfig()
+				setDevConfig(new DevConfig(config.appKey, config.imServer, config.restServer, config.usePrivateServer, userId.value.trim(), token.value.trim()))
+				clearLoginCredentials()
+				// userId/token 登录不支持注销账户，清除可能残留的手机号凭证
+				clearPhoneCredentials()
+				loginLogger.info('developer login started')
 				await loginIm(userId.value.trim(), token.value.trim(), getEffectiveAppKey())
 			} catch (error: any) {
 				logLoginError('developer login failed:', error)
-				errorText.value = errorMessage(error)
+				await refreshNetworkStatus()
+				errorText.value = networkOnline.value === false ? '' : errorMessage(error)
 			} finally {
 				loginLoading.value = false
 			}
@@ -670,10 +702,11 @@
 			errorText.value = t('demo.login.smsRequired')
 			return
 		}
-		const start = Date.now()
-		loginLogger.info('phone login started')
 		loginLoading.value = true
 		try {
+			if (!await ensureNetworkAvailable()) return
+			const start = Date.now()
+			loginLogger.info('phone login started')
 			const result = await loginByPhone(phone.value, smsCode.value)
 			loginLogger.info('App Server login succeeded:', `${Date.now() - start}ms`)
 			clearLoginCredentials()
@@ -682,7 +715,8 @@
 			await loginIm(result.chatUserName, result.token, DEFAULT_APP_KEY)
 		} catch (error: any) {
 			logLoginError('phone login failed:', error)
-			errorText.value = mapPhoneLoginError(errorMessage(error), phone.value)
+			await refreshNetworkStatus()
+			errorText.value = networkOnline.value === false ? '' : mapPhoneLoginError(errorMessage(error), phone.value)
 		} finally {
 			loginLoading.value = false
 		}
