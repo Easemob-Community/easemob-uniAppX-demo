@@ -2,7 +2,6 @@ import type { DemoFeatureKeyValue } from './settings-state'
 import type { UIKitFeatureKey } from './uikit-feature-state'
 
 export type FeatureActionKey = 'aiStream' | 'exportLogs' | 'sdkCheck' | 'components' | 'states'
-export type UIKitChoiceKey = 'inputMode' | 'quickReplyMode' | 'messageStatusPosition'
 
 export interface SwitchDef {
 	kind: 'switch'
@@ -12,20 +11,6 @@ export interface SwitchDef {
 	source: 'uikit' | 'demo'
 }
 
-export interface ChoiceOptionDef {
-	value: string
-	labelKey: string
-}
-
-export interface ChoiceDef {
-	kind: 'choice'
-	key: UIKitChoiceKey
-	labelKey: string
-	hintKey: string
-	source: 'uikit'
-	options: ChoiceOptionDef[]
-}
-
 export interface ActionDef {
 	kind: 'action'
 	key: FeatureActionKey
@@ -33,7 +18,7 @@ export interface ActionDef {
 	hintKey: string
 }
 
-export type FeatureItemDef = SwitchDef | ChoiceDef | ActionDef
+export type FeatureItemDef = SwitchDef | ActionDef
 
 export interface FeatureGroup {
 	key: string
@@ -50,10 +35,6 @@ function demo(key: keyof DemoFeatureKeyValue, labelKey: string): SwitchDef {
 	return { kind: 'switch', key, labelKey, hintKey: `${labelKey}Hint`, source: 'demo' }
 }
 
-function choice(key: UIKitChoiceKey, labelKey: string, options: ChoiceOptionDef[]): ChoiceDef {
-	return { kind: 'choice', key, labelKey, hintKey: `${labelKey}Hint`, source: 'uikit', options }
-}
-
 function action(key: FeatureActionKey, labelKey: string): ActionDef {
 	return { kind: 'action', key, labelKey, hintKey: `${labelKey}Hint` }
 }
@@ -68,13 +49,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 			uikit('enableDraft', 'demo.settings.features.enableDraft'),
 			uikit('showReadStatus', 'demo.settings.features.showReadStatus'),
 			uikit('enableGroupReadReceipt', 'demo.settings.features.enableGroupReadReceipt'),
-			uikit('enableReEdit', 'demo.settings.features.enableReEdit'),
-			uikit('enableStreamMessage', 'demo.settings.features.enableStreamMessage'),
-			choice('messageStatusPosition', 'demo.settings.features.messageStatusPosition', [
-				{ value: 'left', labelKey: 'demo.settings.features.positionLeft' },
-				{ value: 'right', labelKey: 'demo.settings.features.positionRight' }
-			]),
-			demo('messageForward', 'demo.settings.features.messageForward')
+			uikit('enableStreamMessage', 'demo.settings.features.enableStreamMessage')
 		]
 	},
 	{
@@ -88,16 +63,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 			uikit('inputCamera', 'demo.settings.features.inputCamera'),
 			uikit('inputVideo', 'demo.settings.features.inputVideo'),
 			uikit('inputFile', 'demo.settings.features.inputFile'),
-			choice('inputMode', 'demo.settings.features.inputMode', [
-				{ value: 'default', labelKey: 'demo.settings.features.optionDefault' },
-				{ value: 'single', labelKey: 'demo.settings.features.inputSingle' },
-				{ value: 'multiline', labelKey: 'demo.settings.features.inputMultiline' }
-			]),
-			uikit('chatQuickReplies', 'demo.settings.features.quickReplies'),
-			choice('quickReplyMode', 'demo.settings.features.quickReplyMode', [
-				{ value: 'fill', labelKey: 'demo.settings.features.quickReplyFill' },
-				{ value: 'send', labelKey: 'demo.settings.features.quickReplySend' }
-			])
+			uikit('chatQuickReplies', 'demo.settings.features.quickReplies')
 		]
 	},
 	{
@@ -105,14 +71,12 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 		titleKey: 'demo.features.group.message',
 		subKey: 'demo.features.group.messageSub',
 		items: [
-			uikit('messageCopy', 'demo.settings.features.messageCopy'),
 			uikit('messageQuote', 'demo.settings.features.messageQuote'),
 			uikit('messageEdit', 'demo.settings.features.messageEdit'),
 			uikit('messagePin', 'demo.settings.features.messagePin'),
-			uikit('messageDownload', 'demo.settings.features.messageDownload'),
 			uikit('messageRecall', 'demo.settings.features.messageRecall'),
-			uikit('messageResend', 'demo.settings.features.messageResend'),
-			uikit('messageDelete', 'demo.settings.features.messageDelete')
+			uikit('enableReEdit', 'demo.settings.features.enableReEdit'),
+			demo('messageForward', 'demo.settings.features.messageForward')
 		]
 	},
 	{
@@ -123,7 +87,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 			uikit('conversationPin', 'demo.settings.features.conversationPin'),
 			uikit('conversationMute', 'demo.settings.features.conversationMute'),
 			uikit('conversationDelete', 'demo.settings.features.conversationDelete'),
-			uikit('conversationConnectionBanner', 'demo.settings.features.connectionBanner'),
 			uikit('conversationSearch', 'demo.settings.features.conversationSearch'),
 			uikit('conversationTabs', 'demo.settings.features.conversationTabs')
 		]
@@ -133,9 +96,6 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
 		titleKey: 'demo.features.group.chat',
 		subKey: 'demo.features.group.chatSub',
 		items: [
-			demo('contactCard', 'demo.settings.features.contactCard'),
-			uikit('chatConnectionBanner', 'demo.settings.features.connectionBanner'),
-			uikit('chatDetailEntry', 'demo.settings.features.chatDetailEntry'),
 			uikit('chatMemberCount', 'demo.settings.features.chatMemberCount'),
 			uikit('chatAnnouncement', 'demo.settings.features.chatAnnouncement'),
 			uikit('chatMention', 'demo.settings.features.chatMention'),

@@ -5,14 +5,12 @@ import { ref } from 'vue'
 // 与 uiConfig 解耦：这些是 demo 宿主侧能力，不进 uikit 配置容器
 
 export interface DemoFeatureKeyValue {
-	contactCard: boolean
 	messageForward: boolean
 }
 
 const STORAGE_KEY = 'demo_feature_toggles'
 
 const DEFAULTS: DemoFeatureKeyValue = {
-	contactCard: true,
 	messageForward: true
 }
 

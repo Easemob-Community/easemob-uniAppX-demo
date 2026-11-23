@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import {
-	CHAT_INPUT_MODE,
 	CONTACT_MENU_KEY,
 	CONVERSATION_MENU_KEY,
 	LOG_LEVEL,
@@ -9,18 +8,13 @@ import {
 	setLogLevel
 } from '@/uni_modules/easemob-uikit-uni/libs'
 import type {
-	ChatInputModeValue,
 	ContactMenuKeyValue,
 	ConversationMenuKeyValue,
 	EmAvatarShape,
 	EmInputFeatures,
 	EmQuickReply,
-	EmQuickReplyMode,
 	MessageMenuKeyValue
 } from '@/uni_modules/easemob-uikit-uni/libs'
-
-export type DemoInputMode = 'default' | ChatInputModeValue
-export type DemoMessageStatusPosition = 'left' | 'right'
 
 export interface UIKitFeatureKeyValue {
 	enableTyping: boolean
@@ -37,31 +31,21 @@ export interface UIKitFeatureKeyValue {
 	inputCamera: boolean
 	inputVideo: boolean
 	inputFile: boolean
-	inputMode: DemoInputMode
-	messageCopy: boolean
 	messageQuote: boolean
 	messageEdit: boolean
 	messagePin: boolean
-	messageDownload: boolean
 	messageRecall: boolean
-	messageResend: boolean
-	messageDelete: boolean
 	conversationPin: boolean
 	conversationMute: boolean
 	conversationDelete: boolean
-	conversationConnectionBanner: boolean
 	conversationSearch: boolean
 	conversationTabs: boolean
-	chatConnectionBanner: boolean
-	chatDetailEntry: boolean
 	chatMemberCount: boolean
 	chatAnnouncement: boolean
 	chatMention: boolean
 	chatSenderName: boolean
 	chatQuickReplies: boolean
-	quickReplyMode: EmQuickReplyMode
 	avatarShape: EmAvatarShape
-	messageStatusPosition: DemoMessageStatusPosition
 	contactRemark: boolean
 	contactDelete: boolean
 }
@@ -86,31 +70,21 @@ const DEFAULTS: UIKitFeatureKeyValue = {
 	inputCamera: true,
 	inputVideo: true,
 	inputFile: true,
-	inputMode: 'default',
-	messageCopy: true,
 	messageQuote: true,
 	messageEdit: true,
 	messagePin: true,
-	messageDownload: true,
 	messageRecall: true,
-	messageResend: true,
-	messageDelete: true,
 	conversationPin: true,
 	conversationMute: true,
 	conversationDelete: true,
-	conversationConnectionBanner: true,
 	conversationSearch: true,
 	conversationTabs: true,
-	chatConnectionBanner: true,
-	chatDetailEntry: true,
 	chatMemberCount: true,
 	chatAnnouncement: true,
 	chatMention: true,
 	chatSenderName: true,
 	chatQuickReplies: false,
-	quickReplyMode: 'fill',
 	avatarShape: 'circle',
-	messageStatusPosition: 'left',
 	contactRemark: true,
 	contactDelete: true
 }
@@ -130,10 +104,7 @@ function loadPreferences(): UIKitFeatureKeyValue {
 				;(merged as unknown as Record<string, unknown>)[key] = parsed[key]
 			}
 		})
-		merged.inputMode = choiceValue(parsed['inputMode'], ['default', CHAT_INPUT_MODE.SINGLE, CHAT_INPUT_MODE.MULTILINE], DEFAULTS.inputMode)
-		merged.quickReplyMode = choiceValue(parsed['quickReplyMode'], ['fill', 'send'], DEFAULTS.quickReplyMode)
 		merged.avatarShape = choiceValue(parsed['avatarShape'], ['circle', 'square'], DEFAULTS.avatarShape)
-		merged.messageStatusPosition = choiceValue(parsed['messageStatusPosition'], ['left', 'right'], DEFAULTS.messageStatusPosition)
 	} catch (e) {}
 	return merged
 }
@@ -147,15 +118,13 @@ export const demoQuickReplies: EmQuickReply[] = [
 ]
 
 function enabledMessageKeys(state: UIKitFeatureKeyValue): MessageMenuKeyValue[] {
-	const keys: MessageMenuKeyValue[] = []
-	if (state.messageCopy) keys.push(MESSAGE_MENU_KEY.COPY)
+	const keys: MessageMenuKeyValue[] = [MESSAGE_MENU_KEY.COPY]
 	if (state.messageQuote) keys.push(MESSAGE_MENU_KEY.QUOTE)
 	if (state.messageEdit) keys.push(MESSAGE_MENU_KEY.EDIT)
 	if (state.messagePin) keys.push(MESSAGE_MENU_KEY.PIN)
-	if (state.messageDownload) keys.push(MESSAGE_MENU_KEY.DOWNLOAD)
+	keys.push(MESSAGE_MENU_KEY.DOWNLOAD)
 	if (state.messageRecall) keys.push(MESSAGE_MENU_KEY.RECALL)
-	if (state.messageResend) keys.push(MESSAGE_MENU_KEY.RESEND)
-	if (state.messageDelete) keys.push(MESSAGE_MENU_KEY.DELETE)
+	keys.push(MESSAGE_MENU_KEY.RESEND, MESSAGE_MENU_KEY.DELETE)
 	return keys
 }
 
@@ -184,7 +153,6 @@ export function applyUIKitFeatures(): void {
 		camera: state.inputCamera,
 		video: state.inputVideo,
 		file: state.inputFile,
-		inputMode: state.inputMode === 'default' ? undefined : state.inputMode,
 		sendOnReturn: true
 	}
 	setConfig({
@@ -200,7 +168,6 @@ export function applyUIKitFeatures(): void {
 		messageMenuKeys: enabledMessageKeys(state),
 		conversationMenuKeys: enabledConversationKeys(state),
 		contactMenuKeys: enabledContactKeys(state),
-		messageStatus: { position: state.messageStatusPosition },
 		avatarShape: state.avatarShape
 	})
 }

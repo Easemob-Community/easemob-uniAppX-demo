@@ -165,6 +165,7 @@ export function uploadAvatar(userId: string, filePath: string, accessToken: stri
 			name: 'file',
 			header: { Authorization: `Bearer ${accessToken}` },
 			success: (res) => {
+				console.info('[avatar] upload response:', res.statusCode, res.data)
 				if (res.statusCode < 200 || res.statusCode >= 300) {
 					let info = `请求失败（${res.statusCode}）`
 					try {
@@ -187,6 +188,7 @@ export function uploadAvatar(userId: string, filePath: string, accessToken: stri
 				}
 			},
 			fail: (error) => {
+				console.error('[avatar] upload request failed:', error.errMsg)
 				reject(new Error(error.errMsg))
 			}
 		})
