@@ -1,6 +1,6 @@
 {
 	"name": "easemob-uniappx-demo",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"private": true,
 	"description": "环信 IM uni-app x demo（easemob-uikit-uni 宿主接入示例）",
 	"dependencies": {
