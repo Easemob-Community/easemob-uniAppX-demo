@@ -200,7 +200,7 @@
 		<view class="login__footer" :style="{ paddingBottom: (24 + safeBottom) + 'px' }">
 			<text class="login__footer-copyright">{{ t('demo.login.copyright') }}</text>
 			<text class="login__footer-version">{{ t('demo.login.versionLine', { sdk: '5.2.0', uikit: UIKIT_VERSION, demo: demoVersion }) }}</text>
-			<text class="login__logs-entry" @click="openLogs">{{ t('demo.login.logsEntry') }}</text>
+			<text v-if="devEnabled" class="login__logs-entry" @click="openLogs">{{ t('demo.login.logsEntry') }}</text>
 		</view>
 
 		<view v-if="logsVisible" class="login__logs-panel">
