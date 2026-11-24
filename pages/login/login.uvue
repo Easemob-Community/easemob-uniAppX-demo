@@ -740,6 +740,8 @@
 </script>
 
 <style>
+	@import '@/uni_modules/easemob-uikit-uni/libs/style/variables.css';
+
 	.login {
 		display: flex;
 		flex-direction: column;
@@ -1284,7 +1286,7 @@
 		font-size: 18px;
 		font-weight: 600;
 		line-height: 26px;
-		color: #1f2937;
+		color: var(--em-text-primary);
 	}
 
 	.login__agreement-content {
@@ -1298,11 +1300,11 @@
 	.login__agreement-link {
 		font-size: 14px;
 		line-height: 22px;
-		color: #4b5563;
+		color: var(--em-text-secondary);
 	}
 
 	.login__agreement-link {
-		color: #009eff;
+		color: var(--em-primary-color);
 	}
 
 	.login__agreement-actions {
@@ -1324,12 +1326,12 @@
 
 	.login__agreement-action-text {
 		font-size: 15px;
-		color: #6b7280;
+		color: var(--em-text-secondary);
 	}
 
 	.login__agreement-action-text--confirm {
 		font-weight: 600;
-		color: #009eff;
+		color: var(--em-primary-color);
 	}
 
 	.login__footer {
