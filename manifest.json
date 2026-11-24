@@ -2,8 +2,8 @@
 	"name": "环信",
 	"appid": "__UNI__B1A0E44",
 	"description": "",
-	"versionName": "1.0.2",
-	"versionCode": "123",
+	"versionName": "1.0.3",
+	"versionCode": "124",
 	"uni-app-x": {
 		"vapor": true,
 		"styleIsolationVersion": "2",
