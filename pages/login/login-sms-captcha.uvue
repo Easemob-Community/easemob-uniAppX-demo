@@ -38,14 +38,15 @@
 		const sceneId = encodeURIComponent(props.sceneId)
 		const prefix = encodeURIComponent(props.prefix)
 		const secret = encodeURIComponent(props.secret)
-		return `/static/sms-captcha/index.html?telephone=${encodeURIComponent(props.phone)}&lang=${language}&sceneId=${sceneId}&prefix=${prefix}&secret=${secret}`
+		let channel = 'native'
+		// #ifdef H5
+		channel = 'h5'
+		// #endif
+		return `/static/sms-captcha/index.html?telephone=${encodeURIComponent(props.phone)}&lang=${language}&sceneId=${sceneId}&prefix=${prefix}&secret=${secret}&channel=${channel}`
 	})
 	const captchaSrc = computed((): string | null => props.visible ? captchaUrl.value : null)
 
-	function onMessage(event: any) {
-		if (!props.visible) return
-		const data = event.detail?.data
-		const payload = Array.isArray(data) ? data[0] : data
+	function handleCaptchaPayload(payload: any) {
 		const captchaVerifyParam = payload?.['captchaVerifyParam']
 		if (typeof captchaVerifyParam === 'string' && captchaVerifyParam !== '') {
 			emit('verified', captchaVerifyParam)
@@ -53,6 +54,25 @@
 		}
 		emit('error', props.errorText)
 	}
+
+	function onMessage(event: any) {
+		if (!props.visible) return
+		const data = event.detail?.data
+		const payload = Array.isArray(data) ? data[0] : data
+		handleCaptchaPayload(payload)
+	}
+
+	// #ifdef H5
+	function onH5Message(event: MessageEvent) {
+		if (!props.visible || event.origin === 'null' || event.origin !== window.location.origin) return
+		const message = event.data
+		if (message?.type !== 'easemob-sms-captcha') return
+		handleCaptchaPayload(message.data)
+	}
+
+	onMounted(() => window.addEventListener('message', onH5Message))
+	onUnmounted(() => window.removeEventListener('message', onH5Message))
+	// #endif
 
 	function onError() {
 		if (!props.visible) return

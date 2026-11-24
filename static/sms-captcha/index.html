@@ -26,6 +26,10 @@
 					window.uni.webView.postMessage({ data: data });
 					return true;
 				}
+				if (captchaQuery.get('channel') === 'h5' && window.parent !== window) {
+					window.parent.postMessage({ type: 'easemob-sms-captcha', data: data }, window.location.origin);
+					return true;
+				}
 				return false;
 			}
 			function onCaptchaScriptError() {
