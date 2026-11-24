@@ -570,7 +570,7 @@ export const EmKit = new EmKitImpl()
 
 export * from './types'
 export * from './constants'
-export { setStorage, getStorage, chooseImage, previewImage, chooseVideo, chooseFile, startRecord, stopRecord, isRecording, playAudio, stopAudio, PLATFORM_CAPABILITIES, isPageVisible, copyText, getCameraAuthorizeState, openAppAuthorizeSetting } from './platform'
+export { setStorage, getStorage, chooseImage, previewImage, chooseVideo, chooseFile, startRecord, stopRecord, isRecording, playAudio, stopAudio, PLATFORM_CAPABILITIES, isPageVisible, copyText, getCameraAuthorizeState, openAppAuthorizeSetting, checkNetworkOnce, subscribeNetworkStatus } from './platform'
 export type { EmPickedVideo, EmPickedFile, EmPickedImage, EmRecordResult, EmRecordOptions, EmPlatformCapabilities, EmCameraAuthorizeState } from './platform'
 export {
   setAttachmentProvider,

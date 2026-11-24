@@ -1,5 +1,7 @@
 # 更新日志
 
+## 1.0.3 (2026-11-23)
+公共入口补充导出 checkNetworkOnce() 与 subscribeNetworkStatus()，修复宿主编译失败。
 ## 1.0.0（2026-11-23）
 
 首个正式版本。基于 uni-app x 蒸汽模式，覆盖 Android、iOS、鸿蒙、H5 与微信小程序，依赖 `easemob-websdk 5.2.0`。
