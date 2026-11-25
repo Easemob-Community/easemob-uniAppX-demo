@@ -2,7 +2,7 @@
   "id": "easemob-uikit-uni",
   "name": "环信 IM UIKit（uni-app x）",
   "displayName": "环信 IM UIKit（uni-app x）",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "环信 IM 的 uni-app x 版 UIKit：会话列表、聊天页、群聊、联系人、5 种消息气泡，支持 Android/iOS/鸿蒙/H5/微信小程序。",
   "keywords": [
     "环信",

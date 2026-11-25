@@ -92,6 +92,8 @@ export default {
   'chat.cameraPermission.denied': 'Allow camera access in Settings before taking a photo.',
   'chat.cameraPermission.config': 'This build does not declare camera permission. Repackage the app and try again.',
   'chat.cameraPermission.openSetting': 'Open Settings',
+  'chat.mediaPermission.title': 'Photo and Video Permission Issue',
+  'chat.mediaPermission.denied': 'Photo and video access is unavailable. Allow it again in Settings. If it already appears allowed, deny it, allow it again, and restart the app.',
 
   'chat.memberCount': '{count} members',
   'chat.announcementBanner.title': 'Group Announcement',

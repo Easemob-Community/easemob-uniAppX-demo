@@ -570,7 +570,7 @@ export const EmKit = new EmKitImpl()
 
 export * from './types'
 export * from './constants'
-export { setStorage, getStorage, chooseImage, previewImage, chooseVideo, chooseFile, startRecord, stopRecord, isRecording, playAudio, stopAudio, PLATFORM_CAPABILITIES, isPageVisible, copyText, getCameraAuthorizeState, openAppAuthorizeSetting, checkNetworkOnce, subscribeNetworkStatus } from './platform'
+export { setStorage, getStorage, chooseImage, previewImage, chooseVideo, chooseFile, startRecord, stopRecord, isRecording, playAudio, stopAudio, PLATFORM_CAPABILITIES, isPageVisible, copyText, getCameraAuthorizeState, openAppAuthorizeSetting, canOpenAuthorizeSetting, isAlbumAuthDenied, checkNetworkOnce, subscribeNetworkStatus } from './platform'
 export type { EmPickedVideo, EmPickedFile, EmPickedImage, EmRecordResult, EmRecordOptions, EmPlatformCapabilities, EmCameraAuthorizeState } from './platform'
 export {
   setAttachmentProvider,
@@ -610,7 +610,7 @@ export type { EmTabBarBadgeOptions, EmTabBarBadgeController } from './use/useTab
 export { groupStore, groupDisplayNameOf, groupAvatarOf, setGroupPresentation, groupMemberDisplayNameOf, sortGroupMembers } from './store/group'
 export { ensureUserInfos } from './chat/user-info'
 export { setPinyinAdapter, groupContacts, matchContact, resolveAlphabetKeyByOffsetY } from './utils/pinyin'
-export { downloadAttachment, attachmentFileNameOf, downloadKindOf, downloadUrlOf } from './utils/download'
+export { downloadAttachment, attachmentFileNameOf, downloadKindOf, downloadUrlOf, downloadRequestUrlOf } from './utils/download'
 export type { EmPinyinResult, EmContactGroup } from './utils/pinyin'
 export { filterActiveMentions, parseMentions } from './utils/mention'
 export type { EmMentionSegment } from './utils/mention'

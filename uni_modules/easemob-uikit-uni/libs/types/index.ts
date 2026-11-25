@@ -606,6 +606,8 @@ export interface EmChatEmojiPanelScope {
   emojis: string[]
   disabled: boolean
   selectEmoji: (emoji: string) => void
+  /** 删除草稿末尾一个完整字素；空草稿无操作，禁用态走统一上报，面板保持展开 */
+  deleteEmoji: () => void
   closePanel: () => void
   notifyDisabledTap: () => void
 }
@@ -650,7 +652,7 @@ export interface EmChatInputBarScope {
   panel: EmChatComposerPanel
   /** 自绘面板的内联样式（高度跟随最近键盘高度 + safe-bottom padding），直接绑到面板根节点 */
   panelStyle: string
-  /** 开/关指定面板（开面板前自动收键盘，键盘位与面板位不叠加） */
+  /** 开/关指定面板（开面板前自动收键盘并退出语音模式，键盘/面板/语音输入互斥） */
   togglePanel: (kind: EmChatComposerPanelKind) => void
   /** 收起面板 + 收键盘 */
   collapsePanel: () => void

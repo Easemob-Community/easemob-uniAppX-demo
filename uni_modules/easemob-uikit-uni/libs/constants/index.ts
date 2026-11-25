@@ -51,7 +51,7 @@ export const STREAM_CURSOR_CHAR = '▍'
 /** UIKit 版本号：与 uni_modules/easemob-uikit-uni/package.json 的 version 保持同步（发版时手动对齐）。
  *  当前消费方：自动派生 deviceId 的三段式中间段（Platform_uikitVersion_uuid）；
  *  升级后版本段变化，服务端会视为新设备。不运行时读 package.json（小程序端不可靠） */
-export const UIKIT_VERSION = '1.0.3'
+export const UIKIT_VERSION = '1.0.4'
 
 /** 流式消息业务自定义类型（stream.customType）：内核只内置纯文本渲染，
  *  markdown 等富格式由宿主经 em-chat-page 的 #stream-message 插槽接管 */

@@ -1,6 +1,19 @@
 @import '../../../libs/style/variables.css';
 @import '../../../libs/style/bubble.css';
 
+.em-chat-page__nav-title-host {
+  width: 100%;
+  min-width: 0;
+}
+
+.em-chat-page__nav-title {
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-16);
+  font-weight: var(--em-font-weight-medium);
+  line-height: 22px;
+  color: var(--em-text-primary);
+}
+
 .em-chat-page {
   display: flex;
   flex-direction: column;

@@ -25,9 +25,17 @@ export type { EmChatComposerPanel, EmChatComposerPanelKind, EmChatComposerTouchE
 
 /** 底部面板三态 / 可切换面板种类 / 录音手势触摸事件结构统一在 libs/types 定义（此处 re-export 便于消费方单点导入） */
 
+export interface UseChatComposerAvailability {
+  voice: boolean
+  emoji: boolean
+  media: boolean
+}
+
 export interface UseChatComposerOptions {
   /** 禁用态（全员禁言等）：guard 拦截新操作，翻转瞬间复位面板/语音/焦点 */
   disabled: Readonly<Ref<boolean>>
+  /** 运行期功能可用性；关闭已生效的语音/面板能力时同步退出对应状态 */
+  availability?: Readonly<Ref<UseChatComposerAvailability>>
   /** 禁用态下的任何操作尝试统一出口（父组件据此 toast 提示） */
   onDisabledTap: () => void
   /** 录音结果出口（手动松开与 60s 自动停共用；过短/失败内部已 toast，不回调） */
@@ -55,7 +63,7 @@ export interface UseChatComposerResult {
   panelStyle: ComputedRef<string>
   /** 禁用守卫：禁用态下 emit onDisabledTap 并返回 true（调用方应直接 return） */
   guardDisabled: () => boolean
-  /** 开/关指定面板（开面板前先收键盘，键盘位与面板位不叠加） */
+  /** 开/关指定面板（开面板前收键盘并退出语音模式，键盘/面板/语音输入互斥） */
   togglePanel: (kind: EmChatComposerPanelKind) => void
   /** 收起面板 + 收键盘（聊天区点击等外部收起入口） */
   collapse: () => void
@@ -67,7 +75,7 @@ export interface UseChatComposerResult {
   onInputBlur: () => void
   /** 切换语音模式（进入时收面板/焦点；退出时取消进行中的录音） */
   toggleVoiceMode: () => void
-  /** 退出语音模式（禁用翻转等被动场景） */
+  /** 退出语音模式（开面板、禁用翻转等场景；进行中的录音会取消） */
   exitVoiceMode: () => void
   onRecordTouchStart: (e: EmChatComposerTouchEvent) => void
   onRecordTouchMove: (e: EmChatComposerTouchEvent) => void
@@ -159,13 +167,15 @@ export function useChatComposer(options: UseChatComposerOptions): UseChatCompose
   function togglePanel(kind: EmChatComposerPanelKind): void {
     if (guardDisabled()) return
     const open = panel.value !== kind
-    // 开面板前先收键盘（对齐 vue 版 h5-input：togglePanel 先 blur textarea 再开面板，键盘位与面板位不叠加）
-    if (open) closeKeyboardIfVisible()
-    panel.value = open ? kind : 'none'
     if (open) {
+      // 面板与语音输入互斥；进行中的录音按取消处理，不交付旧音频
+      exitVoiceMode()
+      // 开面板前先收键盘（对齐 vue 版 h5-input：togglePanel 先 blur textarea 再开面板，键盘位与面板位不叠加）
+      closeKeyboardIfVisible()
       // 焦点交给面板（收起软键盘）
       inputFocus.value = false
     }
+    panel.value = open ? kind : 'none'
   }
 
   function onInputFocus(): void {
@@ -206,6 +216,13 @@ export function useChatComposer(options: UseChatComposerOptions): UseChatCompose
     }
     voiceMode.value = false
   }
+
+  watch(() => options.availability?.value, (availability) => {
+    if (availability == null) return
+    if (!availability.voice) exitVoiceMode()
+    if (!availability.emoji && panel.value === 'emoji') panel.value = 'none'
+    if (!availability.media && panel.value === 'media') panel.value = 'none'
+  }, { deep: true })
 
   // 录音结果统一出口：手动松开与 60s 自动停止共用（自动停止不再静默丢音频）
   function onRecordResult(res: { path: string, duration: number }): void {

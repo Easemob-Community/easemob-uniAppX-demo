@@ -2,8 +2,8 @@
 // 平台差异（H5 浏览器下载 / App·小程序 downloadFile + 相册·openDocument）全部在 libs/platform.ts，
 // 本文件只做消息类型判别、文件名生成与结果归一，组件层不写条件编译。
 
-import { ERROR_CODE, MESSAGE_TYPE } from '../constants'
-import { downloadFileToLocal, openDownloadedFile, saveMediaToAlbum } from '../platform'
+import { ERROR_CODE, MESSAGE_STATUS, MESSAGE_TYPE } from '../constants'
+import { downloadFileToLocal, normalizeAttachmentUrl, openDownloadedFile, saveMediaToAlbum } from '../platform'
 import { getMessageSource } from '../store/message'
 import { errorWithCode } from './error'
 import type {
@@ -58,6 +58,7 @@ export function downloadRequestUrlOf(message: EmMessageItem, kind: EmMessageDown
     secret = typeof body['secret'] === 'string' ? body['secret'] : ''
   }
   if (url === '') return ''
+  url = normalizeAttachmentUrl(url)
   if (!url.includes('em-redirect')) url = appendQueryParam(url, 'em-redirect', 'true')
   if (secret !== '' && !url.includes('share-secret=')) url = appendQueryParam(url, 'share-secret', secret)
   return url
@@ -105,6 +106,22 @@ export function attachmentFileNameOf(message: EmMessageItem, kind: EmMessageDown
   if (fromUrl !== '' && MEDIA_FILE_NAME_RE.test(fromUrl)) return fromUrl
   const stamp = `${Date.now()}`
   return kind === 'image' ? `image-${stamp}.jpg` : `video-${stamp}.mp4`
+}
+
+/** 自己已发送且仍在本地的文件路径；远端、blob/data 与其他消息类型一律回退下载。 */
+export function localFilePathOf(message: EmMessageItem): string {
+  if (message.type !== MESSAGE_TYPE.FILE || !message.self || message.status !== MESSAGE_STATUS.SENT) return ''
+  const path = message.url
+  if (path === '' || path.indexOf('//') === 0 || path.indexOf('http://') === 0 || path.indexOf('https://') === 0) return ''
+  if (path.indexOf('blob:') === 0 || path.indexOf('data:') === 0) return ''
+  return path
+}
+
+/** 本地打开成功返回 true；没有可用本地文件或系统打开失败均返回 false，由调用方回退远端下载。 */
+export async function openLocalFileAttachment(message: EmMessageItem): Promise<boolean> {
+  const filePath = localFilePathOf(message)
+  if (filePath === '') return false
+  return openDownloadedFile(filePath, attachmentFileNameOf(message, 'file'))
 }
 
 /**

@@ -137,6 +137,7 @@
   /* 页面语义背景 */
   --em-chat-bg: #FFFFFF;
   --em-input-bg: #FFFFFF;
+  --em-chat-emoji-delete-bg: rgba(255, 255, 255, 0.72);
   --em-conversation-list-bg: #FFFFFF;
   --em-input-border-color: #C9CDCF;
 
@@ -200,6 +201,7 @@
 
   --em-chat-bg: #1E1E23;
   --em-input-bg: #1E2123;
+  --em-chat-emoji-delete-bg: rgba(42, 42, 48, 0.78);
   --em-conversation-list-bg: #1E2123;
   --em-input-border-color: #3C3F42;
 

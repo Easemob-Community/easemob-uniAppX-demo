@@ -99,6 +99,7 @@
         :emojis="emojis"
         :disabled="disabled"
         :select-emoji="onEmoji"
+        :delete-emoji="onDeleteEmoji"
         :close-panel="closeEmojiPanel"
         :notify-disabled-tap="notifyDisabledTap"
       >
@@ -109,6 +110,9 @@
             </view>
           </view>
         </scroll-view>
+        <view :class="ns.e('emoji-delete')" @click="onDeleteEmoji">
+          <EmIcon name="rect-lftarrow" :size="24" />
+        </view>
       </slot>
     </view>
     <view v-else-if="panel === 'media'" :class="ns.e('panel')" :style="panelStyle">
@@ -149,6 +153,7 @@ import { canPickAttachment } from '../../libs/attachment'
 import { useChatComposer } from '../../libs/use/useChatComposer'
 import type { EmChatInputMode, EmInputFeatures, EmQuickReply, EmQuoteInfo } from '../../libs/types'
 import { quoteIconNameOf, quoteSuffixOf } from '../../libs/utils/quote'
+import { removeLastGrapheme } from '../../libs/utils/unicode'
 import { useNamespace } from '../../libs/use/useNamespace'
 import { useLocale } from '../../libs/use/useLocale'
 
@@ -172,6 +177,8 @@ interface Props {
   /** 外部收起信号：数值变化即收起 emoji/媒体面板并隐藏软键盘（聊天页点击消息区时递增）。
    *  面板状态归组件内部，父级不持有，故用递增信号而非 $refs 调组件实例方法——蒸汽端/小程序/H5 行为一致 */
   collapseSignal?: number
+  /** 外部文本输入意图信号：数值变化即退出语音模式并显示文本输入框，不主动弹键盘 */
+  textInputSignal?: number
   customClass?: string   // 宿主自定义类，追加到根节点 class（H5 与小程序页面级样式生效；跨端覆盖优先 customStyle）
   customStyle?: string   // 宿主自定义内联样式，拼接到根节点 style 末尾（五端生效，var() 可用）
 }
@@ -186,6 +193,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: '',
   quickReplies: () => [],
   collapseSignal: 0,
+  textInputSignal: 0,
   customClass: '',
   customStyle: ''
 })
@@ -226,6 +234,11 @@ const quotebarTextStyle = 'font-size: var(--em-font-size-13); color: var(--em-te
 const { t } = useLocale()
 
 const showVoice = computed(() => props.features.voice && VOICE_SUPPORTED)
+const composerAvailability = computed(() => ({
+  voice: showVoice.value,
+  emoji: props.features.emoji,
+  media: props.features.image || props.features.camera || props.features.video || (props.features.file && canPickAttachment())
+}))
 
 // 发送位显隐：草稿 trim 后非空才显示纸飞机发送键，空草稿仍显示「+」媒体入口。
 // 两者同槽互斥，收起态不再常驻文字「发送」按钮——省出的宽度全部给输入框，
@@ -263,12 +276,14 @@ const {
   onInputFocus,
   onInputBlur,
   toggleVoiceMode: onToggleVoiceMode,
+  exitVoiceMode,
   onRecordTouchStart,
   onRecordTouchMove,
   onRecordTouchEnd,
   onRecordTouchCancel
 } = useChatComposer({
   disabled: toRef(props, 'disabled'),
+  availability: composerAvailability,
   onDisabledTap: () => emit('disabled-tap'),
   onVoiceSend: (path, duration) => emit('voice-send', path, duration)
 })
@@ -330,6 +345,11 @@ watch(() => props.collapseSignal, () => {
   collapse()
 })
 
+// 外部文本填充/编辑意图：恢复文本输入控件，不主动聚焦或弹键盘
+watch(() => props.textInputSignal, () => {
+  exitVoiceMode()
+})
+
 // ========== 引用条显示 ==========
 
 // 引用条展示昵称快照；老数据（无 fromName）回落 userId
@@ -357,6 +377,11 @@ function onSend(): void {
 function onEmoji(emoji: string): void {
   if (guardDisabled()) return
   emit('update:modelValue', props.modelValue + emoji)
+}
+
+function onDeleteEmoji(): void {
+  if (guardDisabled() || props.modelValue === '') return
+  emit('update:modelValue', removeLastGrapheme(props.modelValue))
 }
 
 function closeEmojiPanel(): void {

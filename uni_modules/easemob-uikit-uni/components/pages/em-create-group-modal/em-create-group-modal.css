@@ -1,0 +1,34 @@
+@import '../../../libs/style/variables.css';
+
+.em-create-group-modal__form {
+  display: flex;
+  flex-direction: column;
+  padding: var(--em-spacing-3) var(--em-spacing-4);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--em-divider-color);
+  flex-shrink: 0;
+}
+
+.em-create-group-modal__name-input {
+  height: 40px;
+  background-color: var(--em-control-bg);
+  border-radius: var(--em-radius);
+  padding: 0 var(--em-spacing-3);
+  font-size: var(--em-font-size-15);
+  color: var(--em-text-primary);
+}
+
+.em-create-group-modal__switch-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 44px;
+}
+
+.em-create-group-modal__switch-label {
+  flex: 1;
+  font-family: var(--em-font-family);
+  font-size: var(--em-font-size-15);
+  color: var(--em-text-primary);
+}

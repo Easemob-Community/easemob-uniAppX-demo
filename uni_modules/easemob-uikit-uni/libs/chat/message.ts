@@ -174,8 +174,8 @@ export class EmMessageDomain {
   // 失败消息的原始上传文件（H5 File）：SDK web 上传只认 File/Blob，而 EmMessageItem 只持久化 URL/path；
   // 只在内存持有，发送成功 / 删除本地消息 / 登出时释放（重发 H5 图片/视频/文件需要它）。
   private uploadFileByLocalId: Record<string, unknown> = {}
-  // 宿主附件能力提供的临时副本：path → release。发送成功/重发成功/删除消息/登出时清理；
-  // 发送失败保留路径，重发仍能读到文件（与 uploadFileByLocalId 的生命周期一致）。
+  // 宿主附件能力提供的临时副本：path → release。文件发送/重发成功后保留供本地即时预览，
+  // 删除消息/其他端删除/登出时清理；其他媒体发送成功后释放，失败均保留供重发。
   private releaseByPath: Record<string, (path: string) => void> = {}
   // 历史加载飞行中去重（会话页预热 + 聊天页 mount 会并发调用同一会话）
   private historyPromiseByConversationId: Record<string, Promise<void>> = {}
@@ -237,6 +237,16 @@ export class EmMessageDomain {
     } catch (e) {
       logger.warn('release temporary attachment failed:', path, e)
     }
+  }
+
+  // 转发会让多条消息共享同一本地路径；删除最后一条引用前不能释放，否则其他消息无法预览或重发
+  private releaseTemporaryIfUnused(path: string): void {
+    if (path === '') return
+    const lists = messageStore.messagesByConversationId
+    const used = Object.keys(lists).some((conversationId) =>
+      (lists[conversationId] ?? []).some((message) => message.url === path)
+    )
+    if (!used) this.releaseTemporary(path)
   }
 
   /** 会话域进入/离开时同步当前会话：进入后该会话不再被内存上限裁剪 */
@@ -714,8 +724,8 @@ export class EmMessageDomain {
       delete stored.uploadProgress
       logger.debug('message sent:', sent.msgLocalId, sent.sendStatus as string, sent.isContentReplaced === true ? '(content replaced)' : '')
       delete this.uploadFileByLocalId[item.localId]
-      // 临时副本只在发送成功后清理；失败保留，用户点重发仍能读到同一路径
-      this.releaseTemporary(stored.url)
+      // 文件本地副本保留给单击即时预览，删除消息或登出时统一清理；其他媒体维持成功后释放
+      if (stored.type !== MESSAGE_TYPE.FILE) this.releaseTemporary(stored.url)
       this.applyMediaBody(stored, sent)
       this.applySentModeration(stored, sent)
     } catch (e) {
@@ -1092,21 +1102,21 @@ export class EmMessageDomain {
       if (id !== '') idSet[id] = true
     })
     const kept: EmMessageItem[] = []
-    let removed = 0
+    const removedItems: EmMessageItem[] = []
     list.forEach((m) => {
       const hitId = m.id !== '' && idSet[m.id] === true
       const hitBefore = before > 0 && m.time > 0 && m.time < before
       if (hitId || hitBefore) {
-        removed += 1
+        removedItems.push(m)
         delete this.uploadFileByLocalId[m.localId]
         removeMessageSource(m.localId)
-        this.releaseTemporary(m.url)
         return
       }
       kept.push(m)
     })
-    if (removed === 0) return false
+    if (removedItems.length === 0) return false
     messageStore.messagesByConversationId[event.conversationId] = kept
+    removedItems.forEach((m) => this.releaseTemporaryIfUnused(m.url))
     // 置顶条同样不能残留被删消息（审核删除/其他端删除后 pinned 列表同步过滤）
     const pinned = messageStore.pinnedByConversationId[event.conversationId]
     if (pinned != null) {
@@ -1219,9 +1229,9 @@ export class EmMessageDomain {
     }
     delete this.uploadFileByLocalId[localId]
     removeMessageSource(localId)
-    // 删除失败/本地消息时顺手清掉宿主附件临时副本（发送成功的已在 deliver 清理，重复调用是 no-op）
-    this.releaseTemporary(target.url)
     messageStore.messagesByConversationId[conversationId] = list.filter((m) => m.localId !== localId)
+    // 其他媒体已成功释放；文件仅在最后一条本地引用删除后释放预览副本
+    this.releaseTemporaryIfUnused(target.url)
     return true
   }
 
@@ -1376,8 +1386,8 @@ export class EmMessageDomain {
       delete item.failCode
       delete item.uploadProgress
       delete this.uploadFileByLocalId[localId]
-      // 重发成功同样释放宿主附件临时副本（失败则保留，允许再次重发）
-      this.releaseTemporary(item.url)
+      // 文件重发成功后同样保留本地副本供即时预览；其他媒体重发成功即释放
+      if (item.type !== MESSAGE_TYPE.FILE) this.releaseTemporary(item.url)
       this.applyMediaBody(item, sent)
       this.applySentModeration(item, sent)
     } catch (e) {

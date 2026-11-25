@@ -92,6 +92,8 @@ export default {
   'chat.cameraPermission.denied': '请在系统设置中允许访问相机后再拍摄。',
   'chat.cameraPermission.config': '当前安装包未声明相机权限，请重新打包后再试。',
   'chat.cameraPermission.openSetting': '去设置',
+  'chat.mediaPermission.title': '照片和视频权限异常',
+  'chat.mediaPermission.denied': '未获得照片和视频读取权限。请在系统设置中重新允许；若系统显示已允许，请先禁止再重新允许，并重启应用。',
 
   'chat.memberCount': '{count} 名成员',
   'chat.announcementBanner.title': '群公告',

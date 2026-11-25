@@ -68,44 +68,14 @@
         </view>
       </view>
 
-      <!-- 建群弹层（控制器裁定落在本组件内）：em-select-contact multiple + #panel-top 注入群名/开关表单
-           （对齐 vue create-group-modal = contact-transfer-modal + panel-top 的移动端形态；
-           群名输入框/群设置区默认隐藏，由 showNameInput/showSettings 门控，对齐 vue config 默认 false） -->
-      <em-select-contact
-        :items="contactItems"
+      <em-create-group-modal
         :show="createVisible"
-        :select-mode="SELECT_CONTACT_MODE.MULTIPLE"
-        :submitting="creating"
-        :title="t('conversation.menu.createGroup')"
+        :items="contactItems"
+        :show-name-input="showNameInput"
+        :show-settings="showSettings"
         @update:show="createVisible = $event"
-        @confirm="onCreateConfirm"
-      >
-        <template #panel-top>
-          <view v-if="showNameInput || showSettings" :class="ns.e('form')">
-            <input
-              v-if="showNameInput"
-              :class="ns.e('name-input')"
-              v-model="createName"
-              :placeholder="t('group.createNamePlaceholder')"
-              :maxlength="GROUP_NAME_MAX_LENGTH"
-            />
-            <block v-if="showSettings">
-              <view :class="ns.e('switch-row')" @click="createPublic = !createPublic">
-                <text :class="ns.e('switch-label')">{{ t('group.createPublic') }}</text>
-                <view :class="ns.e('switch-hit')" @click.stop>
-                  <EmSwitch v-model="createPublic" />
-                </view>
-              </view>
-              <view :class="ns.e('switch-row')" @click="createAllowInvites = !createAllowInvites">
-                <text :class="ns.e('switch-label')">{{ t('group.createAllowInvites') }}</text>
-                <view :class="ns.e('switch-hit')" @click.stop>
-                  <EmSwitch v-model="createAllowInvites" />
-                </view>
-              </view>
-            </block>
-          </view>
-        </template>
-      </em-select-contact>
+        @created="emit('created', $event)"
+      />
     </view>
   </view>
 </template>
@@ -118,13 +88,12 @@ import EmButton from '../../em-button/em-button.vue'
 import EmLoadMore from '../../em-load-more/em-load-more.vue'
 import EmNavBar from '../../em-nav-bar/em-nav-bar.vue'
 import EmSearchBar from '../../em-search-bar/em-search-bar.vue'
-import EmSelectContact from '../../em-select-contact/em-select-contact.vue'
+import EmCreateGroupModal from '../em-create-group-modal/em-create-group-modal.vue'
 import EmWatermark from '../../em-watermark/em-watermark.vue'
 import EmSkeleton from '../../em-skeleton/em-skeleton.vue'
 import EmText from '../../em-text/em-text.vue'
-import EmSwitch from '../../em-switch/em-switch.vue'
 import { EmKit } from '../../../libs'
-import { CONVERSATION_TYPE, GROUP_NAME_MAX_LENGTH, LOAD_MORE_STATE, SELECT_CONTACT_MODE } from '../../../libs/constants'
+import { LOAD_MORE_STATE } from '../../../libs/constants'
 import { groupAvatarOf, groupDisplayNameOf, groupStore } from '../../../libs/store/group'
 import { contactDisplayNameOf, contactStore } from '../../../libs/store/contact'
 import { primaryColorStyle, useConfig } from '../../../libs/store/config'
@@ -162,7 +131,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'click-group', groupId: string): void
-  // 建群成功（库内已 addConversation + 建群系统通知；宿主接线跳聊天页，对齐 vue selectConversation 语义）
+  // 建群成功（库内已写建群系统通知，不创建空会话；宿主接线跳聊天页）
   (e: 'created', groupId: string): void
   (e: 'back'): void
 }>()
@@ -253,12 +222,7 @@ onMounted(() => {
   syncList()
 })
 
-// ===== 建群弹层 =====
 const createVisible = ref(false)
-const createName = ref('')
-const createPublic = ref(false)
-const createAllowInvites = ref(false)
-const creating = ref(false)
 
 // 选人数据源：联系人展示名走 remark > nickname > userId 回落链（与 em-conversation-page 同口径）
 const contactItems = computed<EmSelectContactItem[]>(() =>
@@ -270,45 +234,7 @@ const contactItems = computed<EmSelectContactItem[]>(() =>
 )
 
 function onOpenCreate(): void {
-  createName.value = ''
-  createPublic.value = false
-  createAllowInvites.value = false
   createVisible.value = true
-}
-
-// 自动群名（对齐 vue generatedName）：取前 3 名成员昵称「、」拼接，>3 人补「...」，空选兜底「群聊」
-function autoGroupName(userIds: string[]): string {
-  const names = userIds.slice(0, 3).map((id) => contactDisplayNameOf(id))
-  if (userIds.length > 3) names.push('...')
-  return names.join('、') || t('group.createDefaultName')
-}
-
-// 建群确认：群名 = 输入框值（showNameInput 开启时）或自动群名（对齐 vue finalName 回落链）→
-// EmKit.createGroup（成功即 upsert 群 store，列表自动刷新）→ 本地构造群会话（对齐 vue addConversation）→
-// 建群系统通知 + 成功 toast + emit created（宿主跳聊天页，对齐 vue selectConversation）；
-// confirm 不自动关窗，成功才关（失败保留已选与表单）
-async function onCreateConfirm(userIds: string[]): Promise<void> {
-  const name = createName.value.trim() !== '' ? createName.value.trim() : autoGroupName(userIds)
-  if (creating.value) return
-  creating.value = true
-  try {
-    const groupId = await EmKit.createGroup({
-      name,
-      members: userIds,
-      public: createPublic.value,
-      allowInvites: createAllowInvites.value
-    })
-    EmKit.addConversation(groupId, CONVERSATION_TYPE.GROUP_CHAT)
-    // 建群成功系统通知（本地灰条，不发服务端；对齐 vue groupCreated 通知时机）
-    EmKit.insertGroupNotice(groupId, t('group.notice.groupCreated'))
-    createVisible.value = false
-    uni.showToast({ title: t('group.createSuccess'), icon: 'none' })
-    emit('created', groupId)
-  } catch (e) {
-    uni.showToast({ title: t('group.createFailed'), icon: 'none' })
-  } finally {
-    creating.value = false
-  }
 }
 </script>
 

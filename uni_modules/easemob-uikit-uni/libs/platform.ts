@@ -18,7 +18,7 @@ export interface EmPlatformCapabilities {
   videoPreview: boolean
   /** 内置文件选择：小程序 + H5；App 无内置选择器（宿主注入附件能力后由 libs/attachment.ts 调起） */
   filePick: boolean
-  /** 文件打开/下载：一期全端未接，气泡点击入口先隐藏 */
+  /** 文件打开/下载：全端支持；App/小程序本地优先，H5 走浏览器下载 */
   fileOpen: boolean
 }
 
@@ -26,7 +26,7 @@ function detectPlatformCapabilities(): EmPlatformCapabilities {
   const caps: EmPlatformCapabilities = {
     videoPreview: true,
     filePick: true,
-    fileOpen: false
+    fileOpen: true
   }
   // #ifdef APP
   // 内置选择器在 App 端不可用；宿主可经 EmKit.setAttachmentProvider 注入平台文件选择能力，
@@ -169,13 +169,30 @@ export function getCameraAuthorizeState(): EmCameraAuthorizeState {
   // #endif
 }
 
-/** 打开系统应用授权设置页（仅 App；基座缺模块/调用失败时静默，由调用方文案兜底） */
+export function canOpenAuthorizeSetting(): boolean {
+  // #ifdef APP
+  return true
+  // #endif
+  // #ifdef MP-WEIXIN
+  return true
+  // #endif
+  return false
+}
+
+/** 打开系统授权设置页（App/微信小程序；基座缺模块或调用失败时静默，由调用方文案兜底） */
 export function openAppAuthorizeSetting(): void {
   // #ifdef APP
   try {
     uni.openAppAuthorizeSetting({})
   } catch (e) {
     logger.warn('openAppAuthorizeSetting unavailable:', e)
+  }
+  // #endif
+  // #ifdef MP-WEIXIN
+  try {
+    uni.openSetting({})
+  } catch (e) {
+    logger.warn('openSetting unavailable:', e)
   }
   // #endif
 }
@@ -226,6 +243,15 @@ export function previewImage(urls: string[], current: string): void {
 export function normalizeVideoUrl(url: string): string {
   if (url.indexOf('//') === 0) return `https:${url}`
   // #ifdef APP-IOS
+  if (url.indexOf('http://') === 0) return `https://${url.slice(7)}`
+  // #endif
+  return url
+}
+
+/** App 下载环信附件时统一使用 HTTPS，避免 Android cleartext 策略拦截；查询参数由调用方保留。 */
+export function normalizeAttachmentUrl(url: string): string {
+  if (url.indexOf('//') === 0) return `https:${url}`
+  // #ifdef APP
   if (url.indexOf('http://') === 0) return `https://${url.slice(7)}`
   // #endif
   return url
@@ -748,7 +774,7 @@ function errMsgOf(e: unknown): string {
 }
 
 /** 相册权限拒绝的跨端兜底识别：App/小程序失败 errMsg 含 auth/deny/permission/authorize，或 errCode=1101005（未获取权限） */
-function isAlbumAuthDenied(e: unknown): boolean {
+export function isAlbumAuthDenied(e: unknown): boolean {
   const code = (e as { errCode?: unknown } | null)?.errCode
   if (code === 1101005 || code === '1101005') return true
   return /auth|denied|deny|permission|authorize/i.test(errMsgOf(e))

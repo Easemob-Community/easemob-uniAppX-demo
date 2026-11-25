@@ -113,6 +113,12 @@
         @update:show="selectContactVisible = $event"
         @select="onSelectContact"
       />
+      <em-create-group-modal
+        :items="contactItems"
+        :show="createGroupVisible"
+        @update:show="createGroupVisible = $event"
+        @created="onGroupCreated"
+      />
     </view>
   </view>
 </template>
@@ -129,6 +135,7 @@ import EmEmpty from '../../em-empty/em-empty.vue'
 import EmButton from '../../em-button/em-button.vue'
 import EmSkeleton from '../../em-skeleton/em-skeleton.vue'
 import EmSelectContact from '../../em-select-contact/em-select-contact.vue'
+import EmCreateGroupModal from '../em-create-group-modal/em-create-group-modal.vue'
 import EmWatermark from '../../em-watermark/em-watermark.vue'
 import { EmKit } from '../../../libs'
 import { CONVERSATION_MENU_KEY, CONVERSATION_TAB_KEY, CONVERSATION_TYPE, DEFAULT_CONVERSATION_TABS } from '../../../libs/constants'
@@ -186,7 +193,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'select', conversationId: string, chatType: ConversationTypeValue): void
-  (e: 'menu', key: string): void
 }>()
 
 const ns = useNamespace('conversation-page')
@@ -350,7 +356,13 @@ function onSelectContact(userId: string): void {
   emit('select', userId, CONVERSATION_TYPE.SINGLE_CHAT)
 }
 
-// 右上角加号：内置 action-sheet，菜单项选择后统一以 menu 事件透出
+const createGroupVisible = ref(false)
+
+function onGroupCreated(groupId: string): void {
+  emit('select', groupId, CONVERSATION_TYPE.GROUP_CHAT)
+}
+
+// 右上角加号：内置 action-sheet，单聊与建群均在当前页完成
 const createSheetVisible = ref(false)
 const itemSheetVisible = ref(false)
 const activeItem = ref<EmConversationData | null>(null)
@@ -394,12 +406,13 @@ function onOpenCreate(): void {
 }
 
 function onCreateAction(action: EmActionSheetAction): void {
-  // new-chat 内置选人闭环（em-select-contact）；create-group 直接 emit 由宿主接群列表页（建群已落地）
   if (action.key === CONVERSATION_MENU_KEY.NEW_CHAT) {
     selectContactVisible.value = true
     return
   }
-  emit('menu', action.key)
+  if (action.key === CONVERSATION_MENU_KEY.CREATE_GROUP) {
+    createGroupVisible.value = true
+  }
 }
 
 function onLongPress(conversationId: string): void {

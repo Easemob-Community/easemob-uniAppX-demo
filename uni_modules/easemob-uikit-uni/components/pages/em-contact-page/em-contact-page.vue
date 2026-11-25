@@ -12,21 +12,13 @@
           @action="emit('add')"
         />
 
-        <!-- 搜索只过滤入口项（label/key 命中，对齐 vue 版 address-book home 语义） -->
-        <em-search-bar v-model="keyword" :placeholder="t('contact.searchPlaceholder')" />
-
         <scroll-view :class="ns.e('scroll')" scroll-y>
-          <em-contact-nav :entries="entries" @entry-click="onEntryClick" />
-          <em-empty
-            v-if="entries.length === 0"
-            icon="search"
-            :description="t('contact.noSearchResult')"
-          />
+          <em-contact-nav :entries="allEntries" @entry-click="onEntryClick" />
         </scroll-view>
 
-        <!-- 水印覆盖层（#watermark：铺满 nav/搜索/入口列表，pointer-events:none 穿透；层级低于弹层基准 2000） -->
+        <!-- 水印覆盖层（#watermark：铺满 nav/入口列表，pointer-events:none 穿透；层级低于弹层基准 2000） -->
         <view v-if="hasWatermark" :class="ns.e('watermark')">
-          <slot name="watermark" :keyword="keyword">
+          <slot name="watermark">
             <em-watermark
               :text="wmText"
               :font-size="wmFontSize"
@@ -42,11 +34,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useSlots } from 'vue'
+import { computed, useSlots } from 'vue'
 import EmContactNav from '../../em-contact-nav/em-contact-nav.vue'
-import EmEmpty from '../../em-empty/em-empty.vue'
 import EmNavBar from '../../em-nav-bar/em-nav-bar.vue'
-import EmSearchBar from '../../em-search-bar/em-search-bar.vue'
 import EmWatermark from '../../em-watermark/em-watermark.vue'
 import { CONTACT_ENTRY_KEY } from '../../../libs/constants'
 import { contactStore, pendingInviteCount } from '../../../libs/store/contact'
@@ -88,8 +78,6 @@ const ns = useNamespace('contact-page')
 const { themeClass } = useTheme()
 const { t } = useLocale()
 
-const keyword = ref('')
-
 // 水印（M2.27）：slot 存在性为实例级常量；文案为空串时 em-watermark 自行隐藏，壳节点不增删
 const slots = useSlots()
 const {
@@ -121,15 +109,6 @@ const allEntries = computed<EmContactNavEntry[]>(() => {
       hot: pendingCount > 0
     }
   ]
-})
-
-// home 搜索语义：label/key 子串命中（大小写不敏感），不过滤好友本体（对齐 vue navEntries 过滤）
-const entries = computed<EmContactNavEntry[]>(() => {
-  const kw = keyword.value.trim().toLowerCase()
-  if (kw === '') return allEntries.value
-  return allEntries.value.filter(
-    (e) => e.label.toLowerCase().indexOf(kw) >= 0 || e.key.toLowerCase().indexOf(kw) >= 0
-  )
 })
 
 function onEntryClick(key: string): void {

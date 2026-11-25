@@ -24,7 +24,7 @@
             :size="16"
             :class="[ns.e('icon'), action.danger === true ? 'em-action-sheet__icon--danger' : '']"
           />
-          <em-text :text="action.text" :text-class="actionTextClass(action)" :text-style="actionTextStyle(action)" />
+          <em-text :text="action.text" :lines="1" :text-class="actionTextClass(action)" :text-style="actionTextStyle(action)" />
         </view>
       </view>
       <view v-if="showCancel" :class="ns.e('gap')"></view>

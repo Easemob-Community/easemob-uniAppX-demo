@@ -2,7 +2,7 @@
 
 环信 IM 的 uni-app x 版 UIKit（蒸汽模式），一套代码覆盖 Android / iOS / 鸿蒙 / H5 / 微信小程序。
 
-> 当前版本：**1.0.0**。已包含登录接入、会话列表、聊天页（文本/图片/语音/视频/文件 + 复合消息接收展示 + 引用/撤回/重发/已读回执 + AI 流式消息）、群聊、联系人/好友申请、聊天详情、连接状态条与日志导出；内置中英文并支持扩展语言，语言偏好可持久化。逻辑层在 `libs/`，组件层在 `components/`。
+> 当前版本：**1.0.4**。已包含登录接入、会话列表、聊天页（文本/图片/语音/视频/文件 + 复合消息接收展示 + 引用/撤回/重发/已读回执 + AI 流式消息）、群聊、联系人/好友申请、聊天详情、连接状态条与日志导出；内置中英文并支持扩展语言，语言偏好可持久化。逻辑层在 `libs/`，组件层在 `components/`。
 >
 > 完整接入步骤、常见问题与平台边界见仓库 `docs/QUICKSTART.md`；本文给出最短可运行路径。
 > 用 AI 接入时，可直接加载仓库 `skills/` 下的宿主接入 Agent Skills（入口 `em-host-integration`）。
@@ -35,7 +35,7 @@
 npm install easemob-websdk@5.2.0
 ```
 
-把 `uni_modules/easemob-uikit-uni/` 放入宿主工程（[插件市场](https://ext.dcloud.net.cn/plugin?id=30940)导入或直接拷贝）。
+把 `uni_modules/easemob-uikit-uni/` 放入宿主工程（插件市场导入或直接拷贝）。
 
 **HBuilderX 5.34**：若引入 SDK 后报 `Identifier "h" has already been declared`，在宿主工程根目录新增 `vite.config.ts`：
 

@@ -19,7 +19,13 @@
           <template #title>
             <!-- fallback 内联样式双通道：app-and-page 隔离下 nav-bar 组件样式不外泄，缺省标题需自带字重与主题色 -->
             <slot name="title" :name="peerDisplayName" :ext="titleExt" :conversation-id="conversationId">
-              <text :style="fallbackTitleTextStyle">{{ navTitle }}</text>
+              <em-text
+                :text="navTitle"
+                :lines="1"
+                :text-class="ns.e('nav-title')"
+                :text-style="fallbackTitleTextStyle"
+                :class="ns.e('nav-title-host')"
+              />
             </slot>
           </template>
         </em-nav-bar>
@@ -347,6 +353,7 @@
         :emojis="config.emojiList"
         :quick-replies="quickReplies"
         :collapse-signal="inputbarCollapseSignal"
+        :text-input-signal="inputbarTextSignal"
         :disabled="isMutedAll"
         :submitting="sendingText"
         :placeholder="isMutedAll ? t('group.muteAllPlaceholder') : ''"
@@ -365,6 +372,7 @@
             :emojis="scope.emojis"
             :disabled="scope.disabled"
             :select-emoji="scope.selectEmoji"
+            :delete-emoji="scope.deleteEmoji"
             :close-panel="scope.closePanel"
             :notify-disabled-tap="scope.notifyDisabledTap"
           />
@@ -447,7 +455,7 @@ import EmWatermark from '../../em-watermark/em-watermark.vue'
 import type { EmIconName } from '../../em-icon/em-icons'
 import { CONNECTION_STATUS, CONVERSATION_TYPE, ERROR_CODE, FILE_SEND_CONCURRENCY, GROUP_MEMBER_ROLE, MEDIA_PANEL_KEY, MESSAGE_MENU_KEY, MESSAGE_MODIFY_COUNT_LIMIT, MESSAGE_STATUS, MESSAGE_TYPE, PINNED_PREVIEW_MAX_LENGTH } from '../../../libs/constants'
 import type { ConversationTypeValue, MessageMenuKeyValue } from '../../../libs/constants'
-import { EmKit, PLATFORM_CAPABILITIES, canPickAttachment, chooseImage, chooseVideo, copyText, downloadAttachment, getCameraAuthorizeState, openAppAuthorizeSetting, pickAttachments, previewImage, stopAudio } from '../../../libs'
+import { EmKit, PLATFORM_CAPABILITIES, canPickAttachment, chooseImage, chooseVideo, copyText, downloadAttachment, getCameraAuthorizeState, isAlbumAuthDenied, canOpenAuthorizeSetting, openAppAuthorizeSetting, pickAttachments, previewImage, stopAudio } from '../../../libs'
 import type { EmCameraAuthorizeState, EmPickedFile } from '../../../libs'
 import { filterActiveMentions } from '../../../libs/utils/mention'
 import { errorCodeOf, sendFailureKeyOf, sendFailureKeyOfCode } from '../../../libs/utils/error'
@@ -469,6 +477,7 @@ import { useChatComposer } from '../../../libs/use/useChatComposer'
 import { formatDividerTime } from '../../../libs/utils/time'
 import { isRichStream } from '../../../libs/utils/stream'
 import { multiBodyPreviewOf } from '../../../libs/utils/multi-body'
+import { openLocalFileAttachment } from '../../../libs/utils/download'
 import { quoteHasIcon, quoteIconNameOf, quoteSenderOf, quoteSuffixOf, quoteTextClassOf, quoteTextStyleOf } from '../../../libs/utils/quote'
 import { createLogger } from '../../../libs/utils/logger'
 
@@ -708,7 +717,7 @@ const peerDisplayName = computed(() => {
 const navTitle = computed(() => props.title !== '' ? props.title : peerDisplayName.value)
 // 与 em-nav-bar__title 同档的内联样式（小程序侧父组件样式进不了 nav-bar，text-style 内联不受隔离限制）
 const fallbackTitleTextStyle =
-  'font-family: var(--em-font-family); font-size: var(--em-font-size-16); font-weight: var(--em-font-weight-medium); line-height: 22px; color: var(--em-text-primary);'
+  'font-family: var(--em-font-family); font-size: var(--em-font-size-16); font-weight: var(--em-font-weight-medium); line-height: 22px; color: var(--em-text-primary); white-space: nowrap;'
 const titleExt = computed(() =>
   conversationStore.overrideByConversationId[props.conversationId]?.ext
   ?? groupStore.overrideByGroupId[props.conversationId]?.ext
@@ -823,9 +832,15 @@ const {
   color: wmColor
 } = useWatermark({ watermark: () => props.watermark, hasSlot: slots.watermark != null })
 const hasCustomInputBar = slots['input-bar'] != null
+const composerAvailability = computed(() => ({
+  voice: resolvedInputFeatures.value.voice,
+  emoji: resolvedInputFeatures.value.emoji,
+  media: resolvedInputFeatures.value.image || resolvedInputFeatures.value.camera || resolvedInputFeatures.value.video || (resolvedInputFeatures.value.file && canPickAttachment())
+}))
 const composer = hasCustomInputBar
   ? useChatComposer({
       disabled: isMutedAll,
+      availability: composerAvailability,
       onDisabledTap: onMuteAllTap,
       onVoiceSend: (path, duration) => {
         onVoiceSend(path, duration).catch(() => {})
@@ -1098,6 +1113,16 @@ watch(keyboardHeight, (h, prev) => {
 // composer，直接 collapse。点消息区任意位置即收，对齐 vue 版 chat__content 的 onChatContentClick →
 // messageInput.blur()；无展开态时为空操作。
 const inputbarCollapseSignal = ref(0)
+const inputbarTextSignal = ref(0)
+
+// 快捷回复填充、编辑/重编辑等外部文本输入意图：语音模式下先恢复文本输入控件
+function revealTextInput(): void {
+  if (composer != null) {
+    composer.exitVoiceMode()
+    return
+  }
+  inputbarTextSignal.value += 1
+}
 
 function onChatAreaClick(): void {
   if (composer != null) {
@@ -1515,6 +1540,7 @@ function onQuickReply(item: EmQuickReply): void {
     sendQuickReplyText(text)
   } else {
     // 整句替换而非追加：常用语是完整话术，与已有半句拼接容易出怪文案
+    revealTextInput()
     draft.value = text
   }
 }
@@ -1535,6 +1561,27 @@ async function sendQuickReplyText(text: string): Promise<void> {
   }
 }
 
+function showMediaPickFailure(e: unknown, fallbackKey: string, sourceType: 'album' | 'camera' | 'video' = 'album'): void {
+  if (!isAlbumAuthDenied(e)) {
+    uni.showToast({ title: t(fallbackKey), icon: 'none' })
+    return
+  }
+  if (sourceType === 'camera') {
+    showCameraPermissionGuide('denied')
+    return
+  }
+  const canOpenSetting = canOpenAuthorizeSetting()
+  uni.showModal({
+    title: t('chat.mediaPermission.title'),
+    content: t('chat.mediaPermission.denied'),
+    showCancel: canOpenSetting,
+    confirmText: canOpenSetting ? t('chat.cameraPermission.openSetting') : t('button.confirm'),
+    success: (res) => {
+      if (res.confirm && canOpenSetting) openAppAuthorizeSetting()
+    }
+  })
+}
+
 async function onPickImage(sourceType: 'album' | 'camera' = 'album'): Promise<void> {
   const request = capturePageRequest()
   // iOS 相机权限被拒后，uni.chooseImage 仍会拉起拍摄页并停在纯黑画面（系统不再弹窗）；
@@ -1552,7 +1599,7 @@ async function onPickImage(sourceType: 'album' | 'camera' = 'album'): Promise<vo
   // 平台层将用户取消归一为空数组；只有真实选择/读取失败进入 catch。
   const images = await chooseImage(1, sourceType).catch((e) => {
     logger.error('chooseImage fail:', e)
-    uni.showToast({ title: t('error.imagePickFailed'), icon: 'none' })
+    showMediaPickFailure(e, 'error.imagePickFailed', sourceType)
     return null
   })
   if (images == null || images.length === 0 || !isPageRequestCurrent(request)) return
@@ -1569,21 +1616,22 @@ async function onPickImage(sourceType: 'album' | 'camera' = 'album'): Promise<vo
 // 相机授权被拒/安装包缺权限描述：不再拉起系统拍摄页（iOS 会停在黑屏），改为明确引导
 function showCameraPermissionGuide(state: EmCameraAuthorizeState): void {
   const configError = state === 'config error'
+  const canOpenSetting = !configError && canOpenAuthorizeSetting()
   const content = configError ? t('chat.cameraPermission.config') : t('chat.cameraPermission.denied')
   uni.showModal({
     title: t('chat.cameraPermission.title'),
     content,
-    showCancel: !configError,
-    confirmText: configError ? t('button.confirm') : t('chat.cameraPermission.openSetting'),
+    showCancel: canOpenSetting,
+    confirmText: canOpenSetting ? t('chat.cameraPermission.openSetting') : t('button.confirm'),
     success: (res) => {
-      if (!res.confirm || configError) return
-      openAppAuthorizeSetting()
+      if (res.confirm && canOpenSetting) openAppAuthorizeSetting()
     }
   })
 }
 
 // 输入栏「+」面板选择（语音由 inputbar 内部消化，这里只有 album/camera/video/file）
 async function onMediaSelect(key: string): Promise<void> {
+  composer?.collapse()
   if (key === MEDIA_PANEL_KEY.ALBUM) {
     await onPickImage()
   } else if (key === MEDIA_PANEL_KEY.CAMERA) {
@@ -1599,7 +1647,7 @@ async function onPickVideo(): Promise<void> {
   const request = capturePageRequest()
   const video = await chooseVideo().catch((e) => {
     logger.error('chooseVideo fail:', e)
-    uni.showToast({ title: t('error.videoPickFailed'), icon: 'none' })
+    showMediaPickFailure(e, 'error.videoPickFailed')
     return null
   })
   if (video == null || !isPageRequestCurrent(request)) return
@@ -1708,10 +1756,9 @@ function onVideoPreview(m: EmMessageItem): void {
   videoPreviewVisible.value = true
 }
 
-// 文件消息点击默认行为（从 em-file-message 上移，组件本身纯 emit 透传）：
-// 文件打开/下载一期全端未接（platform.fileOpen=false），气泡侧不发事件；接入后在此实现下载/打开。
+// 文件消息点击与长按下载共用本地优先链路：自己刚发送的文件直接打开，其他情况下载后打开。
 function onFileDownload(m: EmMessageItem): void {
-  if (!PLATFORM_CAPABILITIES.fileOpen) return
+  void downloadMessage(m)
 }
 
 function onMultiBodyFileDownload(m: EmMessageItem): void {
@@ -1736,6 +1783,7 @@ const modifyingByLocalId: Record<string, boolean> = {}
 function enterEditMode(m: EmMessageItem): void {
   if (m.type !== MESSAGE_TYPE.TEXT || m.status === MESSAGE_STATUS.RECALLED) return
   // 编辑与引用互斥：编辑提交只走 modifyMessage，不挂引用快照
+  revealTextInput()
   quoteInfo.value = null
   editingMessage.value = m
   setDraftValue(m.text)
@@ -1759,6 +1807,7 @@ function showReedit(m: EmMessageItem): boolean {
 
 // vue 对齐 onReedit：先退出编辑态再回显，避免编辑态残留把提交分流到旧消息
 function onReeditMessage(m: EmMessageItem): void {
+  revealTextInput()
   exitEditMode()
   setDraftValue(m.text)
 }
@@ -2052,23 +2101,20 @@ async function deleteMessage(m: EmMessageItem): Promise<void> {
   }
 }
 
-// 附件下载（M2.24）：长按图片/视频/文件消息菜单触发。App/小程序展示下载进度并保存到相册/打开文档；
+// 附件下载（M2.24）：长按图片/视频/文件消息菜单触发。App/小程序展示下载状态并保存到相册/打开文档；
 // H5 交给浏览器下载，不出现进度。单条消息加锁防重复点击；失败只 toast，不影响其它消息操作。
 async function downloadMessage(m: EmMessageItem): Promise<void> {
   if (downloadingByLocalId[m.localId] === true) return
   downloadingByLocalId[m.localId] = true
   let loadingShown = false
-  let lastPercent = -1
   try {
+    if (await openLocalFileAttachment(m)) {
+      uni.showToast({ title: t('message.download.opened'), icon: 'none' })
+      return
+    }
     uni.showLoading({ title: t('message.download.downloading'), mask: false })
     loadingShown = true
-    const result = await downloadAttachment(m, {
-      onProgress: (percent: number) => {
-        if (!loadingShown || percent === lastPercent) return
-        lastPercent = percent
-        uni.showLoading({ title: t('message.download.progress', { percent }), mask: false })
-      }
-    })
+    const result = await downloadAttachment(m)
     if (loadingShown) {
       uni.hideLoading()
       loadingShown = false

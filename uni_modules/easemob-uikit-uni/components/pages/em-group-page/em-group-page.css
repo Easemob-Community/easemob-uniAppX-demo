@@ -76,40 +76,6 @@
   flex-shrink: 0;
 }
 
-/* 建群表单（em-select-contact #panel-top 注入区）：群名输入 + 开关组，底部 1px 分隔（对齐 vue create-group-modal__form） */
-.em-group-page__form {
-  display: flex;
-  flex-direction: column;
-  padding: var(--em-spacing-3) var(--em-spacing-4);
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: var(--em-divider-color);
-  flex-shrink: 0;
-}
-
-.em-group-page__name-input {
-  height: 40px;
-  background-color: var(--em-control-bg);
-  border-radius: var(--em-radius);
-  padding: 0 var(--em-spacing-3);
-  font-size: var(--em-font-size-15);
-  color: var(--em-text-primary);
-}
-
-.em-group-page__switch-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  height: 44px;
-}
-
-.em-group-page__switch-label {
-  flex: 1;
-  font-family: var(--em-font-family);
-  font-size: var(--em-font-size-15);
-  color: var(--em-text-primary);
-}
-
 /* 品牌色内联变量作用域层：接替根的 flex 容器角色（flex:1 + height:0 保持滚动约束链） */
 .em-group-page__brand-scope {
   display: flex;
