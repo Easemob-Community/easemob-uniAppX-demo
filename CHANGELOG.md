@@ -2,6 +2,13 @@
 
 本文档记录环信 IM uni-app x Demo 各发布标签的主要变更，按版本倒序排列。UIKit 组件库的详细变更见 [UIKit 更新日志](uni_modules/easemob-uikit-uni/changelog.md)。
 
+## [v1.0.6] - 2026-11-25
+
+### 调整
+
+- UIKit 升级至 1.0.6，修复鸿蒙动作菜单短文案误省略，Android 图片与视频选择改用系统选择器。
+- 公共入口补充附件下载请求 URL 导出，共享本地临时附件仅在最后一条消息引用删除后清理。
+
 ## [v1.0.4] - 2026-11-25
 
 ### 新增
@@ -66,6 +73,7 @@
 - 修复 HBuilderX 5.34 引入 SDK 异常、深色模式双向切换和个人昵称缓存回退问题。
 - 统一登录用户 ID 为小写，并修正登录协议文案换行布局。
 
+[v1.0.6]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.4...v1.0.6
 [v1.0.4]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.3...v1.0.4
 [v1.0.3]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.2...v1.0.3
 [v1.0.2]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.1...v1.0.2
