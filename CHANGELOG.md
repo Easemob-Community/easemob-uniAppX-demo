@@ -2,6 +2,20 @@
 
 本文档记录环信 IM uni-app x Demo 各发布标签的主要变更，按版本倒序排列。UIKit 组件库的详细变更见 [UIKit 更新日志](uni_modules/easemob-uikit-uni/changelog.md)。
 
+## [v1.0.4] - 2026-11-25
+
+### 新增
+
+- 会话页支持直接创建群组，聊天表情面板支持按完整字素退格。
+- 消息转发支持本地附件直接重传，并补充转发中状态与分阶段错误详情。
+
+### 调整
+
+- UIKit 升级至 1.0.4，优化语音、面板与键盘状态切换，以及快捷回复和消息编辑的输入交互。
+- Android 选择 `content://` 附件后复制到应用沙箱，保证发送、转发与重发可重复读取。
+- 文件消息支持本地优先打开，完善附件 HTTPS 下载、媒体权限引导和群聊标题显示。
+- 修正登录页开关文字颜色与主题色选中样式。
+
 ## [v1.0.3] - 2026-11-24
 
 ### 调整
@@ -52,6 +66,7 @@
 - 修复 HBuilderX 5.34 引入 SDK 异常、深色模式双向切换和个人昵称缓存回退问题。
 - 统一登录用户 ID 为小写，并修正登录协议文案换行布局。
 
+[v1.0.4]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.3...v1.0.4
 [v1.0.3]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.2...v1.0.3
 [v1.0.2]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.1...v1.0.2
 [v1.0.1]: https://github.com/Easemob-Community/easemob-uniAppX-demo/releases/tag/v1.0.1
