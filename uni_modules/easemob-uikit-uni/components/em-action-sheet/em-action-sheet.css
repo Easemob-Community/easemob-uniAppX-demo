@@ -31,6 +31,7 @@
   align-items: center;
   justify-content: center;
   height: 56px;
+  padding: 0 var(--em-spacing-4);
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: var(--em-divider-color);
@@ -41,6 +42,7 @@
 }
 
 .em-action-sheet__icon {
+  flex-shrink: 0;
   margin-right: var(--em-spacing-2);
   color: var(--em-text-primary);
 }
@@ -50,6 +52,11 @@
 }
 
 .em-action-sheet__text {
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--em-font-size-16);
   color: var(--em-text-primary);
 }

@@ -202,6 +202,9 @@ export function chooseImage(count = 1, sourceType: 'album' | 'camera' = 'album')
     uni.chooseImage({
       count,
       sourceType: [sourceType],
+      // #ifdef APP-ANDROID
+      albumMode: sourceType === 'album' ? 'system' : 'custom',
+      // #endif
       success: (res) => {
         try {
           const paths = res.tempFilePaths as string[]
@@ -377,6 +380,9 @@ export function chooseVideo(): Promise<EmPickedVideo | null> {
     // H5 的 uni.chooseVideo 支持度有限（依赖浏览器文件选择与视频元数据解析）
     uni.chooseVideo({
       sourceType: ['album'],
+      // #ifdef APP-ANDROID
+      albumMode: 'system',
+      // #endif
       success: (res) => {
         try {
           resolve({

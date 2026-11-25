@@ -24,7 +24,8 @@
             :size="16"
             :class="[ns.e('icon'), action.danger === true ? 'em-action-sheet__icon--danger' : '']"
           />
-          <em-text :text="action.text" :lines="1" :text-class="actionTextClass(action)" :text-style="actionTextStyle(action)" />
+          <!-- 鸿蒙 text-overflow 会吃掉短文案末字；尾随空格只修正测量，不改 action.text -->
+          <text :class="actionTextClass(action)" :style="actionTextStyle(action)">{{ action.text + ' ' }}</text>
         </view>
       </view>
       <view v-if="showCancel" :class="ns.e('gap')"></view>
@@ -103,7 +104,7 @@ function actionTextClass(action: EmActionSheetAction): string {
     : 'em-action-sheet__text'
 }
 
-// 内联兜底（小程序样式隔离下本组件 wxss 够不到 em-text 内部 text，见 em-text 注释）
+// 标题仍走 em-text，内联兜底小程序样式隔离（见 em-text 注释）
 const titleTextStyle = 'font-size: var(--em-font-size-13); color: var(--em-text-tertiary);'
 function actionTextStyle(action: EmActionSheetAction): string {
   return action.danger === true
