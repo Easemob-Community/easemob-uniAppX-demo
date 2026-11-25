@@ -179,6 +179,12 @@ export const demoZhCN: Record<string, string> = {
 	'demo.chat.forwardTo': '转发给',
 	'demo.chat.forwardSuccess': '已转发',
 	'demo.chat.forwardFailed': '转发失败，请重试',
+	'demo.chat.forwarding': '正在转发...',
+	'demo.chat.forwardError.source': '附件地址无效',
+	'demo.chat.forwardError.download': '附件下载失败',
+	'demo.chat.forwardError.send': '消息发送失败',
+	'demo.chat.forwardErrorCode': '错误码：{code}',
+	'demo.chat.forwardErrorUnknown': '未返回具体错误信息',
 	'demo.chat.sticker.sendFailed': '表情发送失败，请重试',
 
 	'demo.blocklist.title': '黑名单',

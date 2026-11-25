@@ -179,6 +179,12 @@ export const demoEn: Record<string, string> = {
 	'demo.chat.forwardTo': 'Forward to',
 	'demo.chat.forwardSuccess': 'Forwarded',
 	'demo.chat.forwardFailed': 'Failed to forward, please try again',
+	'demo.chat.forwarding': 'Forwarding...',
+	'demo.chat.forwardError.source': 'Invalid attachment URL',
+	'demo.chat.forwardError.download': 'Attachment download failed',
+	'demo.chat.forwardError.send': 'Message sending failed',
+	'demo.chat.forwardErrorCode': 'Error code: {code}',
+	'demo.chat.forwardErrorUnknown': 'No detailed error was returned',
 	'demo.chat.sticker.sendFailed': 'Failed to send sticker, please try again',
 
 	'demo.blocklist.title': 'Blocklist',

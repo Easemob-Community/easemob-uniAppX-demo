@@ -29,7 +29,7 @@
   - `ai-stream-demo.ts`：AI 流式消息演示请求与本地分片模拟
   - `demo-stickers.ts`：Demo GIF 表情资源、`ext.isSticker` 图片消息发送与展示地址解析
   - `dev-config.ts`：开发者配置（自定义 AppKey / 私有服务器，内存 + 可选持久化）
-  - `attachment-provider.ts`：App 端附件能力（仅使用 `uni.chooseFile`，启动时注册到 `EmKit.setAttachmentProvider`）
+  - `attachment-provider.ts`：App 端附件能力（使用 `uni.chooseFile`，Android `content://` 选中后复制到应用沙箱并注册清理，启动时注册到 `EmKit.setAttachmentProvider`）
   - `locale/`：demo 外壳文案（zh-CN / en），经 uikit `mergeMessages` 注入，key 统一 `demo.*` 前缀；`t()` 缺 key 回退 zh-CN
 - 需要原生能力（kotlin/swift）时，通过 uts 插件扩展，不要在页面里混写 uts 原生模块；`.ts` 模块无法调用 uts 原生 API。
 
