@@ -35,7 +35,7 @@
 
 							<view class="login__dev-row">
 								<text class="login__dev-row-label">{{ t('demo.login.persistConfig') }}</text>
-								<em-switch v-model="persistEnabled" custom-style="--em-switch-off-bg: rgba(255, 255, 255, 0.12); --em-primary-color: rgba(0, 158, 255, 0.85);" @change="onPersistChange" />
+								<em-switch v-model="persistEnabled" custom-style="--em-switch-off-bg: rgba(255, 255, 255, 0.12); --em-primary-color: rgba(0, 158, 255, 0.85); --em-text-inverse: #ffffff;" @change="onPersistChange" />
 							</view>
 
 							<view class="login__dev-row">
@@ -58,7 +58,7 @@
 
 							<view class="login__dev-row">
 								<text class="login__dev-row-label">{{ t('demo.login.privateServer') }}</text>
-								<em-switch v-model="usePrivateServer" custom-style="--em-switch-off-bg: rgba(255, 255, 255, 0.12); --em-primary-color: rgba(0, 158, 255, 0.85);" />
+								<em-switch v-model="usePrivateServer" custom-style="--em-switch-off-bg: rgba(255, 255, 255, 0.12); --em-primary-color: rgba(0, 158, 255, 0.85); --em-text-inverse: #ffffff;" />
 							</view>
 
 							<template v-if="usePrivateServer">

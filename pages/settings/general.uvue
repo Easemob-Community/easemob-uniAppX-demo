@@ -262,7 +262,8 @@
 	}
 
 	.swatch--selected {
-		border-color: var(--em-text-primary);
+		border-color: var(--em-primary-color);
+		box-shadow: 0 0 0 2px var(--em-primary-color);
 	}
 
 	.swatch-text {
