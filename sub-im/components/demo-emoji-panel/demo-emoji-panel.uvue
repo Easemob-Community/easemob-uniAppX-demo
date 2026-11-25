@@ -36,11 +36,15 @@
 				</view>
 			</view>
 		</scroll-view>
+		<view v-if="activeTab === 'emoji'" class="emoji-panel__delete" @click="deleteEmoji">
+			<EmIcon name="rect-lftarrow" :size="24" />
+		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
 	import { ref } from 'vue'
+	import EmIcon from '@/uni_modules/easemob-uikit-uni/components/em-icon/em-icon.vue'
 	import { DEMO_STICKER_PACK } from '@/common/demo-stickers'
 	import type { DemoStickerItem } from '@/common/demo-stickers'
 
@@ -48,6 +52,7 @@
 		emojis: string[]
 		disabled: boolean
 		selectEmoji: (emoji: string) => void
+		deleteEmoji: () => void
 		closePanel: () => void
 		notifyDisabledTap: () => void
 	}
@@ -73,6 +78,7 @@
 
 <style>
 	.emoji-panel {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		height: 100%;
@@ -87,7 +93,22 @@
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
-		padding: 8px;
+		padding: 8px 8px 52px;
+	}
+
+	.emoji-panel__delete {
+		position: absolute;
+		right: 8px;
+		bottom: 8px;
+		z-index: 1;
+		width: 44px;
+		height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 999px;
+		background-color: var(--em-chat-emoji-delete-bg);
+		box-shadow: 0 2px 8px var(--em-divider-color);
 	}
 
 	.emoji-panel__emoji-cell {

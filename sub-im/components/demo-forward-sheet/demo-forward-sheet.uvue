@@ -16,12 +16,14 @@
 		contactDisplayNameOf,
 		contactStore,
 		CONVERSATION_TYPE,
+		MESSAGE_TYPE,
 		useLocale
 	} from '@/uni_modules/easemob-uikit-uni/libs'
 	import type { ConversationTypeValue, EmMessageItem, EmSelectContactItem } from '@/uni_modules/easemob-uikit-uni/libs'
-	import { forwardMessage } from '@/common/message-forward'
+	import { forwardFailureOf, forwardMessage } from '@/common/message-forward'
+	import type { ForwardFailure } from '@/common/message-forward'
 
-	// 逐条转发选人弹层：复用 uikit em-select-contact（单选形态），选中即转发并 toast
+	// 逐条转发选人弹层：复用 uikit em-select-contact（单选形态），选中即转发并提示结果
 	interface Props {
 		show: boolean
 		message: EmMessageItem | null
@@ -60,22 +62,38 @@
 		}
 	)
 
-	function onSelect(userId: string): void {
+	async function onSelect(userId: string): Promise<void> {
 		const message = props.message
 		if (message == null || forwarding.value) return
 		forwarding.value = true
 		const chatType: ConversationTypeValue = CONVERSATION_TYPE.SINGLE_CHAT
-		forwardMessage(message, userId, chatType)
-			.then(() => {
-				uni.showToast({ title: t('demo.chat.forwardSuccess'), icon: 'none' })
-				emit('update:show', false)
-				emit('forwarded', userId)
+		const loadingShown = message.type !== MESSAGE_TYPE.TEXT
+		if (loadingShown) {
+			uni.showLoading({ title: t('demo.chat.forwarding'), mask: true })
+		}
+		let failure: ForwardFailure | null = null
+		try {
+			await forwardMessage(message, userId, chatType)
+		} catch (error) {
+			failure = forwardFailureOf(error)
+		} finally {
+			if (loadingShown) uni.hideLoading()
+			forwarding.value = false
+		}
+		if (failure != null) {
+			const detail = failure.detail !== '' ? failure.detail : t('demo.chat.forwardErrorUnknown')
+			const code = failure.code == null ? '' : `\n${t('demo.chat.forwardErrorCode', { code: failure.code })}`
+			const stage = t(`demo.chat.forwardError.${failure.stage}`)
+			uni.showModal({
+				title: t('demo.chat.forwardFailed'),
+				content: `${stage}\n${detail}${code}`,
+				showCancel: false,
+				confirmText: t('button.confirm')
 			})
-			.catch(() => {
-				uni.showToast({ title: t('demo.chat.forwardFailed'), icon: 'none' })
-			})
-			.finally(() => {
-				forwarding.value = false
-			})
+			return
+		}
+		uni.showToast({ title: t('demo.chat.forwardSuccess'), icon: 'none' })
+		emit('update:show', false)
+		emit('forwarded', userId)
 	}
 </script>

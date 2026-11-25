@@ -4,7 +4,6 @@
 			:show-search="uikitFeatures.conversationSearch"
 			:show-tabs="uikitFeatures.conversationTabs"
 			@select="onSelect"
-			@menu="onMenu"
 		/>
 	</view>
 </template>
@@ -12,7 +11,7 @@
 <script setup lang="ts">
 	import { onShow } from '@dcloudio/uni-app'
 	import { watch } from 'vue'
-	import { CONVERSATION_MENU_KEY, conversationStore, EmKit, useLocale, useTabBarBadge, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
+	import { conversationStore, EmKit, useLocale, useTabBarBadge, useThemeChrome } from '@/uni_modules/easemob-uikit-uni/libs'
 	import type { ConversationTypeValue } from '@/uni_modules/easemob-uikit-uni/libs'
 	import { syncTabBarLocale } from '@/common/locale/index'
 	import { fillMissingProfiles } from '@/common/profile-provider'
@@ -66,13 +65,6 @@
 		EmKit.enterConversation(conversationId, chatType).catch(() => {})
 		EmKit.loadHistory(conversationId, chatType).catch(() => {})
 		uni.navigateTo({ url: `/sub-im/pages/chat/chat?conversationId=${conversationId}&chatType=${chatType}` })
-	}
-
-	// new-chat / pin / mute / delete 由页面组件内置；create-group 跳群列表页（建群弹窗在群页内）
-	function onMenu(key: string): void {
-		if (key === CONVERSATION_MENU_KEY.CREATE_GROUP) {
-			uni.navigateTo({ url: '/sub-im/pages/group/group' })
-		}
 	}
 </script>
 
