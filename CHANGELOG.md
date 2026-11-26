@@ -2,6 +2,13 @@
 
 本文档记录环信 IM uni-app x Demo 各发布标签的主要变更，按版本倒序排列。UIKit 组件库的详细变更见 [UIKit 更新日志](uni_modules/easemob-uikit-uni/changelog.md)。
 
+## [v1.0.7] - 2026-11-26
+
+### 调整
+
+- 环信 Web SDK 升级至 5.2.1，修复增量会话同步丢失、取消置顶误判及本地状态被旧响应覆盖，完善群组用户资料与群名片行为。
+- 登录页与项目说明同步 SDK 版本。
+
 ## [v1.0.6] - 2026-11-25
 
 ### 调整
@@ -73,6 +80,7 @@
 - 修复 HBuilderX 5.34 引入 SDK 异常、深色模式双向切换和个人昵称缓存回退问题。
 - 统一登录用户 ID 为小写，并修正登录协议文案换行布局。
 
+[v1.0.7]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.6...v1.0.7
 [v1.0.6]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.4...v1.0.6
 [v1.0.4]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.3...v1.0.4
 [v1.0.3]: https://github.com/Easemob-Community/easemob-uniAppX-demo/compare/v1.0.2...v1.0.3
